@@ -141,6 +141,26 @@ const VehicleSelectionLuxury = () => {
                 </div>
               </div>
 
+              {/* Vehicle Image - Positioned inside the container */}
+              {vehicle.image_url && (
+                <div className="mb-6 px-4">
+                  <div className="relative w-full" style={{ paddingBottom: '40%' }}>
+                    <img
+                      src={vehicle.image_url}
+                      alt={vehicle.display_name}
+                      className="absolute inset-0 w-full h-full"
+                      style={{ 
+                        objectFit: 'contain',
+                        objectPosition: 'center'
+                      }}
+                      onError={(e) => {
+                        e.target.style.display = 'none';
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Vehicle Details */}
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="flex items-center gap-2 text-sm text-luxury-gray/70">

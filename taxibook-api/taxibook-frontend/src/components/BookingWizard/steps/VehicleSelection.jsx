@@ -81,13 +81,24 @@ const VehicleSelection = () => {
                 )}
                 
                 <div className="flex items-start space-x-4">
-                  {vehicle.image_url && (
-                    <img
-                      src={vehicle.image_url}
-                      alt={vehicle.display_name}
-                      className="w-24 h-16 object-cover rounded"
-                    />
-                  )}
+                  <div className="flex-shrink-0">
+                    {vehicle.image_url ? (
+                      <img
+                        src={vehicle.image_url}
+                        alt={vehicle.display_name}
+                        className="w-32 h-20 object-cover rounded-lg"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <div className="w-32 h-20 bg-gray-100 rounded-lg flex items-center justify-center">
+                        <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7h12l-.757 10.602A2 2 0 0117.244 19H10.756a2 2 0 01-1.999-1.398L8 7zm0 0l-1-3h10l-1 3M8 7H5a1 1 0 00-1 1v1m4-2v0m8 0v0m0 0h3a1 1 0 011 1v1" />
+                        </svg>
+                      </div>
+                    )}
+                  </div>
                   
                   <div className="flex-1">
                     <h3 className="font-semibold text-gray-900">

@@ -43,6 +43,21 @@ class VehicleType extends Model
         ];
     }
 
+    public function getImageUrlAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+
+        // If it's already a full URL, return as is
+        if (filter_var($value, FILTER_VALIDATE_URL)) {
+            return $value;
+        }
+
+        // Otherwise, generate the storage URL
+        return asset('storage/' . $value);
+    }
+
     public function pricingTiers()
     {
         return $this->hasMany(VehiclePricingTier::class);

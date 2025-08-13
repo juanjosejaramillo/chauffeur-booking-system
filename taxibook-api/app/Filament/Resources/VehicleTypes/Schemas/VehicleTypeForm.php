@@ -57,7 +57,20 @@ class VehicleTypeForm
                 Textarea::make('features')
                     ->columnSpanFull(),
                 FileUpload::make('image_url')
-                    ->image(),
+                    ->image()
+                    ->disk('public')
+                    ->directory('vehicle-images')
+                    ->visibility('public')
+                    ->maxSize(5120) // 5MB max
+                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                    ->imageEditor()
+                    ->imageEditorAspectRatios([
+                        null, // Free crop
+                        '16:9',
+                        '4:3',
+                        '1:1',
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 }

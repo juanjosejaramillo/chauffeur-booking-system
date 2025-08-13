@@ -51,7 +51,11 @@ class VehicleTypesTable
                 TextColumn::make('sort_order')
                     ->numeric()
                     ->sortable(),
-                ImageColumn::make('image_url'),
+                ImageColumn::make('image_url')
+                    ->disk('public')
+                    ->width(100)
+                    ->height(60)
+                    ->defaultImageUrl(url('/images/default-vehicle.png')),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
