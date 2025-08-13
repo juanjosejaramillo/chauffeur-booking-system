@@ -43,8 +43,11 @@ class VehicleType extends Model
         ];
     }
 
-    public function getImageUrlAttribute($value)
+    // Create a computed attribute for the full image URL
+    public function getFullImageUrlAttribute()
     {
+        $value = $this->attributes['image_url'] ?? null;
+        
         if (!$value) {
             return null;
         }

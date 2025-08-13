@@ -61,8 +61,13 @@ class VehicleTypeForm
                     ->disk('public')
                     ->directory('vehicle-images')
                     ->visibility('public')
-                    ->maxSize(5120) // 5MB max
+                    ->maxSize(10240) // 10MB max
                     ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
+                    ->helperText('Maximum file size: 10MB. Accepted formats: JPEG, PNG, WebP')
+                    ->validationMessages([
+                        'maxSize' => 'The image must not be larger than 10MB.',
+                        'acceptedFileTypes' => 'Only JPEG, PNG, and WebP images are accepted.',
+                    ])
                     ->imageEditor()
                     ->imageEditorAspectRatios([
                         null, // Free crop

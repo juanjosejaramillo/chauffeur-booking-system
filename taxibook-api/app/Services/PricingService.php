@@ -44,7 +44,7 @@ class PricingService
                 'max_passengers' => $vehicleType->max_passengers,
                 'max_luggage' => $vehicleType->max_luggage,
                 'features' => $vehicleType->features ?? [],
-                'image_url' => $vehicleType->image_url,
+                'image_url' => $vehicleType->full_image_url,
                 'estimated_fare' => $fare,
                 'fare_breakdown' => $this->getFareBreakdown($vehicleType, $distance, $duration, $fare),
             ];
