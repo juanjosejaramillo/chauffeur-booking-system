@@ -32,8 +32,6 @@ class BookingForm
                             ->options([
                                 'pending' => 'Pending',
                                 'confirmed' => 'Confirmed',
-                                'assigned' => 'Assigned',
-                                'in_progress' => 'In Progress',
                                 'completed' => 'Completed',
                                 'cancelled' => 'Cancelled',
                             ])
@@ -124,14 +122,14 @@ class BookingForm
                             ->label('Distance (miles)')
                             ->numeric()
                             ->disabled()
-                            ->dehydrated()
+                            ->dehydrated(false)
                             ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
                         TextInput::make('estimated_duration')
                             ->label('Duration (minutes)')
                             ->numeric()
-                            ->formatStateUsing(fn ($state) => $state ? round($state / 60) : null)
+                            ->formatStateUsing(fn ($state) => $state ? round($state / 60) : 0)
                             ->disabled()
-                            ->dehydrated()
+                            ->dehydrated(false)
                             ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
                     ])
                     ->columns(['lg' => 4, 'md' => 2, 'sm' => 2]),

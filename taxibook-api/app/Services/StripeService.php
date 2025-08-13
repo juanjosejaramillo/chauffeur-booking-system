@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\Booking;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Events\PaymentCaptured;
+use App\Events\PaymentRefunded;
 use Stripe\StripeClient;
 
 class StripeService
@@ -125,7 +127,7 @@ class StripeService
         ]);
 
         // Create transaction record
-        Transaction::create([
+        $transaction = Transaction::create([
             'booking_id' => $booking->id,
             'type' => 'capture',
             'amount' => $amount ?? $booking->estimated_fare,
@@ -134,6 +136,9 @@ class StripeService
             'stripe_response' => $paymentIntent->toArray(),
             'processed_by' => auth()->user()->full_name ?? 'System',
         ]);
+
+        // Trigger payment captured event
+        event(new PaymentCaptured($booking->fresh(), $transaction));
 
         return $paymentIntent;
     }
@@ -198,7 +203,7 @@ class StripeService
         ]);
 
         // Create transaction record
-        Transaction::create([
+        $transaction = Transaction::create([
             'booking_id' => $booking->id,
             'type' => $amount && $amount < $booking->final_fare ? 'partial_refund' : 'refund',
             'amount' => $amount ?? $booking->final_fare,
@@ -208,6 +213,9 @@ class StripeService
             'notes' => $reason,
             'processed_by' => auth()->user()->full_name ?? 'System',
         ]);
+
+        // Trigger payment refunded event
+        event(new PaymentRefunded($booking->fresh(), $transaction, $reason));
 
         return $refund;
     }

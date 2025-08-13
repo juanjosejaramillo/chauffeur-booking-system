@@ -35,8 +35,6 @@ class BookingsTable
                     ->color(fn (string $state): string => match ($state) {
                         'pending' => 'warning',
                         'confirmed' => 'info',
-                        'assigned' => 'primary',
-                        'in_progress' => 'primary',
                         'completed' => 'success',
                         'cancelled' => 'danger',
                         default => 'gray',

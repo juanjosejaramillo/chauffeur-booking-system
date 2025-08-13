@@ -9,6 +9,8 @@ use App\Models\VehicleType;
 use App\Services\MapboxService;
 use App\Services\PricingService;
 use App\Services\StripeService;
+use App\Events\BookingConfirmed;
+use App\Events\BookingCreated;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -264,6 +266,9 @@ class BookingController extends Controller
                 'status' => 'confirmed',
                 'payment_status' => 'authorized',
             ]);
+
+            // Trigger booking confirmed event
+            event(new BookingConfirmed($booking->fresh()));
 
             return response()->json([
                 'booking' => $booking->fresh()->load('vehicleType'),

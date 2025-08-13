@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Bookings\Pages;
 
 use App\Filament\Resources\Bookings\BookingResource;
 use App\Services\StripeService;
+use App\Events\BookingCancelled;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
@@ -74,6 +75,9 @@ class EditBooking extends EditRecord
                         // Update booking status to cancelled
                         $this->record->update(['status' => 'cancelled']);
                         
+                        // Trigger booking cancelled event
+                        event(new BookingCancelled($this->record->fresh(), 'Payment authorization cancelled by admin'));
+                        
                         Notification::make()
                             ->title('Payment Cancelled')
                             ->body('Payment authorization has been cancelled.')
@@ -123,6 +127,8 @@ class EditBooking extends EditRecord
                         // Update booking status to cancelled if full refund
                         if ($data['amount'] >= ($this->record->final_fare ?? $this->record->estimated_fare)) {
                             $this->record->update(['status' => 'cancelled']);
+                            // Trigger booking cancelled event
+                            event(new BookingCancelled($this->record->fresh(), 'Full refund processed'));
                         }
                         
                         Notification::make()
