@@ -6,6 +6,20 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
+// Common Florida airports for better matching
+const FLORIDA_AIRPORTS = [
+  { code: 'TPA', name: 'Tampa International Airport', coords: [-82.5332, 27.9756] },
+  { code: 'MCO', name: 'Orlando International Airport', coords: [-81.3089, 28.4294] },
+  { code: 'MIA', name: 'Miami International Airport', coords: [-80.2906, 25.7932] },
+  { code: 'FLL', name: 'Fort Lauderdale-Hollywood International Airport', coords: [-80.1527, 26.0726] },
+  { code: 'PBI', name: 'Palm Beach International Airport', coords: [-80.0956, 26.6832] },
+  { code: 'JAX', name: 'Jacksonville International Airport', coords: [-81.6879, 30.4942] },
+  { code: 'RSW', name: 'Southwest Florida International Airport', coords: [-81.7552, 26.5362] },
+  { code: 'SRQ', name: 'Sarasota-Bradenton International Airport', coords: [-82.5543, 27.3954] },
+  { code: 'PIE', name: 'St. Pete-Clearwater International Airport', coords: [-82.6872, 27.9102] },
+  { code: 'TLH', name: 'Tallahassee International Airport', coords: [-84.3503, 30.3965] }
+];
+
 const TripDetails = () => {
   const {
     tripDetails,
@@ -58,7 +72,7 @@ const TripDetails = () => {
   }, []);
 
   const searchAddresses = async (query, type) => {
-    if (query.length < 3) {
+    if (query.length < 2) {  // Changed to 2 for better responsiveness
       if (type === 'pickup') {
         setPickupSuggestions([]);
         setShowPickupSuggestions(false);
@@ -76,26 +90,81 @@ const TripDetails = () => {
         setIsLoadingDropoff(true);
       }
 
-      const response = await fetch(
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(
-          query
-        )}.json?access_token=${mapboxgl.accessToken}&limit=5&country=US&types=poi,address,place`
-      );
+      // Use Mapbox Search Box API for better autocomplete results
+      // Session token for grouping requests (helps with billing and caching)
+      const sessionToken = `session-${Date.now()}`;
+      
+      // Search Box API endpoint with suggest mode for autocomplete
+      const searchBoxUrl = `https://api.mapbox.com/search/searchbox/v1/suggest`;
+      
+      // Build the request parameters
+      const params = new URLSearchParams({
+        q: query,
+        access_token: mapboxgl.accessToken,
+        session_token: sessionToken,
+        language: 'en',
+        limit: '10',
+        country: 'US',
+        // Use proximity for Florida area (longitude, latitude)
+        proximity: '-81.5158,27.6648',
+        // Include POI results which include airports
+        types: 'poi,address,place'
+      });
+
+      const response = await fetch(`${searchBoxUrl}?${params}`);
       const data = await response.json();
       
-      if (data.features && data.features.length > 0) {
-        const suggestions = data.features.map(feature => ({
-          id: feature.id,
-          place_name: feature.place_name,
-          center: feature.center,
-          place_type: feature.properties?.category || feature.place_type?.[0] || null,
-        }));
+      if (data.suggestions && data.suggestions.length > 0) {
+        const suggestions = data.suggestions.map(suggestion => {
+          // Search Box API returns different structure
+          const properties = suggestion.properties || {};
+          const context = properties.context || {};
+          
+          // Build the full place name
+          let placeName = suggestion.name || suggestion.place_name || '';
+          if (context.place) {
+            placeName += `, ${context.place.name}`;
+          }
+          if (context.region) {
+            placeName += `, ${context.region.name}`;
+          }
+          if (context.country) {
+            placeName += `, ${context.country.name}`;
+          }
+          
+          // Check if this is an airport
+          const nameAndCategory = (suggestion.name + ' ' + (properties.category || '')).toLowerCase();
+          const isAirport = nameAndCategory.includes('airport') || 
+                           nameAndCategory.includes('international') ||
+                           properties.poi_category?.includes('airport') ||
+                           suggestion.place_type?.includes('airport');
+          
+          return {
+            id: suggestion.mapbox_id || suggestion.id || `place-${Date.now()}-${Math.random()}`,
+            place_name: placeName,
+            center: properties.coordinates ? [properties.coordinates.longitude, properties.coordinates.latitude] : null,
+            place_type: properties.category || properties.poi_category || suggestion.place_type?.[0] || null,
+            isAirport: isAirport,
+            full_address: properties.full_address || properties.place_formatted || placeName,
+            mapbox_id: suggestion.mapbox_id // Store for retrieve API if needed
+          };
+        });
+        
+        // Sort suggestions: airports first
+        suggestions.sort((a, b) => {
+          if (a.isAirport && !b.isAirport) return -1;
+          if (!a.isAirport && b.isAirport) return 1;
+          return 0;
+        });
+        
+        // Limit to top 8 results
+        const finalSuggestions = suggestions.slice(0, 8);
         
         if (type === 'pickup') {
-          setPickupSuggestions(suggestions);
+          setPickupSuggestions(finalSuggestions);
           setShowPickupSuggestions(true);
         } else {
-          setDropoffSuggestions(suggestions);
+          setDropoffSuggestions(finalSuggestions);
           setShowDropoffSuggestions(true);
         }
       } else {
@@ -144,8 +213,38 @@ const TripDetails = () => {
     }
   };
 
-  const selectSuggestion = (suggestion, type) => {
-    const [lng, lat] = suggestion.center;
+  const selectSuggestion = async (suggestion, type) => {
+    let lng, lat;
+    
+    // If we don't have coordinates, we need to retrieve them using the mapbox_id
+    if (!suggestion.center && suggestion.mapbox_id) {
+      try {
+        const retrieveUrl = `https://api.mapbox.com/search/searchbox/v1/retrieve/${suggestion.mapbox_id}`;
+        const params = new URLSearchParams({
+          access_token: mapboxgl.accessToken,
+          session_token: `session-${Date.now()}`
+        });
+        
+        const response = await fetch(`${retrieveUrl}?${params}`);
+        const data = await response.json();
+        
+        if (data.features && data.features.length > 0) {
+          const feature = data.features[0];
+          if (feature.geometry && feature.geometry.coordinates) {
+            [lng, lat] = feature.geometry.coordinates;
+          }
+        }
+      } catch (error) {
+        console.error('Error retrieving full location details:', error);
+      }
+    } else if (suggestion.center) {
+      [lng, lat] = suggestion.center;
+    }
+    
+    if (!lng || !lat) {
+      console.error('Could not get coordinates for suggestion');
+      return;
+    }
     
     if (type === 'pickup') {
       setTripDetails({
@@ -262,9 +361,9 @@ const TripDetails = () => {
                 type="text"
                 value={tripDetails.pickupAddress}
                 onChange={(e) => handleAddressChange(e.target.value, 'pickup')}
-                onFocus={() => tripDetails.pickupAddress.length >= 3 && setShowPickupSuggestions(true)}
+                onFocus={() => tripDetails.pickupAddress.length >= 2 && setShowPickupSuggestions(true)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="e.g., TPA, Tampa Airport, hotel name..."
+                placeholder="Search airports (TPA), addresses, or places..."
                 required
               />
               
@@ -279,30 +378,22 @@ const TripDetails = () => {
               {showPickupSuggestions && pickupSuggestions.length > 0 && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
                   {pickupSuggestions.map((suggestion) => {
-                    // Determine icon based on place type
-                    let icon = '📍';
-                    if (suggestion.place_type?.includes('airport')) icon = '✈️';
-                    else if (suggestion.place_type?.includes('hotel')) icon = '🏨';
-                    else if (suggestion.place_type?.includes('restaurant')) icon = '🍴';
-                    else if (suggestion.place_type?.includes('hospital')) icon = '🏥';
-                    else if (suggestion.place_type?.includes('station')) icon = '🚉';
-                    else if (suggestion.place_type?.includes('poi')) icon = '🏢';
-                    
                     return (
                       <button
                         key={suggestion.id}
                         type="button"
                         onClick={() => selectSuggestion(suggestion, 'pickup')}
-                        className="w-full text-left px-3 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none border-b border-gray-100 last:border-b-0"
+                        className={`w-full text-left px-3 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none border-b border-gray-100 last:border-b-0 ${
+                          suggestion.isAirport ? 'bg-blue-50 hover:bg-blue-100' : ''
+                        }`}
                       >
                         <div className="flex items-start">
-                          <span className="mr-2 text-lg">{icon}</span>
                           <div className="flex-1">
                             <p className="text-sm text-gray-900 font-medium">
                               {suggestion.place_name.split(',')[0]}
                             </p>
                             <p className="text-xs text-gray-500">
-                              {suggestion.place_name.split(',').slice(1).join(',')}
+                              {suggestion.full_address || suggestion.place_name.split(',').slice(1).join(',')}
                             </p>
                           </div>
                         </div>
@@ -322,9 +413,9 @@ const TripDetails = () => {
                 type="text"
                 value={tripDetails.dropoffAddress}
                 onChange={(e) => handleAddressChange(e.target.value, 'dropoff')}
-                onFocus={() => tripDetails.dropoffAddress.length >= 3 && setShowDropoffSuggestions(true)}
+                onFocus={() => tripDetails.dropoffAddress.length >= 2 && setShowDropoffSuggestions(true)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                placeholder="e.g., airport code, hotel, address..."
+                placeholder="Search airports (MIA), addresses, or places..."
                 required
               />
               
@@ -339,30 +430,22 @@ const TripDetails = () => {
               {showDropoffSuggestions && dropoffSuggestions.length > 0 && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
                   {dropoffSuggestions.map((suggestion) => {
-                    // Determine icon based on place type
-                    let icon = '📍';
-                    if (suggestion.place_type?.includes('airport')) icon = '✈️';
-                    else if (suggestion.place_type?.includes('hotel')) icon = '🏨';
-                    else if (suggestion.place_type?.includes('restaurant')) icon = '🍴';
-                    else if (suggestion.place_type?.includes('hospital')) icon = '🏥';
-                    else if (suggestion.place_type?.includes('station')) icon = '🚉';
-                    else if (suggestion.place_type?.includes('poi')) icon = '🏢';
-                    
                     return (
                       <button
                         key={suggestion.id}
                         type="button"
                         onClick={() => selectSuggestion(suggestion, 'dropoff')}
-                        className="w-full text-left px-3 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none border-b border-gray-100 last:border-b-0"
+                        className={`w-full text-left px-3 py-2 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none border-b border-gray-100 last:border-b-0 ${
+                          suggestion.isAirport ? 'bg-blue-50 hover:bg-blue-100' : ''
+                        }`}
                       >
                         <div className="flex items-start">
-                          <span className="mr-2 text-lg">{icon}</span>
                           <div className="flex-1">
                             <p className="text-sm text-gray-900 font-medium">
                               {suggestion.place_name.split(',')[0]}
                             </p>
                             <p className="text-xs text-gray-500">
-                              {suggestion.place_name.split(',').slice(1).join(',')}
+                              {suggestion.full_address || suggestion.place_name.split(',').slice(1).join(',')}
                             </p>
                           </div>
                         </div>
