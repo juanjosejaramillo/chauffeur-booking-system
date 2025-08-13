@@ -1,11 +1,11 @@
 import { useEffect } from 'react';
 import useBookingStore from '../../store/bookingStore';
-import TripDetails from './steps/TripDetails';
-import VehicleSelection from './steps/VehicleSelection';
-import CustomerInfo from './steps/CustomerInfo';
-import ReviewBooking from './steps/ReviewBooking';
-import Payment from './steps/Payment';
-import WizardProgress from './WizardProgress';
+import TripDetailsLuxury from './steps/TripDetailsLuxury';
+import VehicleSelectionLuxury from './steps/VehicleSelectionLuxury';
+import CustomerInfoLuxury from './steps/CustomerInfoLuxury';
+import ReviewBookingLuxury from './steps/ReviewBookingLuxury';
+import PaymentLuxury from './steps/PaymentLuxury';
+import WizardProgressLuxury from './WizardProgressLuxury';
 
 const BookingWizard = () => {
   const { currentStep, resetBooking } = useBookingStore();
@@ -20,35 +20,43 @@ const BookingWizard = () => {
   const renderStep = () => {
     switch (currentStep) {
       case 1:
-        return <TripDetails />;
+        return <TripDetailsLuxury />;
       case 2:
-        return <VehicleSelection />;
+        return <VehicleSelectionLuxury />;
       case 3:
-        return <CustomerInfo />;
+        return <CustomerInfoLuxury />;
       case 4:
-        return <ReviewBooking />;
+        return <ReviewBookingLuxury />;
       case 5:
-        return <Payment />;
+        return <PaymentLuxury />;
       default:
-        return <TripDetails />;
+        return <TripDetailsLuxury />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white shadow-xl rounded-lg">
-          <div className="px-4 py-6 sm:px-6">
-            <h1 className="text-3xl font-bold text-gray-900 text-center mb-8">
-              Book Your Ride
-            </h1>
-            <WizardProgress />
-          </div>
-          <div className="px-4 py-6 sm:px-6">
-            {renderStep()}
+    <div className="min-h-screen">
+      {currentStep === 1 ? (
+        // TripDetailsLuxury has its own full-screen layout
+        renderStep()
+      ) : (
+        // Other steps use the contained layout
+        <div className="min-h-screen bg-gradient-to-b from-luxury-cream to-luxury-light-gray py-12">
+          <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-8">
+              <h1 className="font-display text-4xl text-luxury-black mb-2">
+                Complete Your Booking
+              </h1>
+              <div className="mt-8">
+                <WizardProgressLuxury />
+              </div>
+            </div>
+            <div className="bg-luxury-white shadow-luxury p-8">
+              {renderStep()}
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

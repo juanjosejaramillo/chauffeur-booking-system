@@ -1,3 +1,93 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Global Luxury Styles */
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+  
+  body {
+    @apply bg-luxury-cream text-luxury-charcoal font-sans antialiased;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    line-height: 1.6;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-wide;
+  }
+  
+  /* Custom scrollbar for luxury feel */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-luxury-light-gray;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-luxury-gold rounded-full;
+    transition: background-color 0.3s ease;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-luxury-gold-dark;
+  }
+  
+  /* Focus styles for accessibility with luxury touch */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-luxury-gold ring-offset-2 ring-offset-luxury-cream;
+  }
+  
+  /* Selection color */
+  ::selection {
+    @apply bg-luxury-gold text-luxury-white;
+  }
+  
+  ::-moz-selection {
+    @apply bg-luxury-gold text-luxury-white;
+  }
+}
+
+/* Premium Button Styles */
+@layer components {
+  .btn-luxury {
+    @apply px-8 py-4 bg-luxury-black text-luxury-white font-medium tracking-wide 
+           transition-all duration-300 ease-out
+           hover:bg-luxury-charcoal hover:shadow-luxury
+           active:scale-[0.98];
+  }
+  
+  .btn-luxury-outline {
+    @apply px-8 py-4 border-2 border-luxury-black text-luxury-black font-medium tracking-wide
+           transition-all duration-300 ease-out
+           hover:bg-luxury-black hover:text-luxury-white hover:shadow-luxury
+           active:scale-[0.98];
+  }
+  
+  .btn-luxury-gold {
+    @apply px-8 py-4 bg-luxury-gold text-luxury-white font-medium tracking-wide
+           transition-all duration-300 ease-out
+           hover:bg-luxury-gold-dark hover:shadow-luxury
+           active:scale-[0.98];
+  }
+  
+  /* Premium Input Styles */
+  .input-luxury {
+    @apply w-full px-4 py-3 bg-transparent border-b-2 border-luxury-gray/20
+           text-luxury-charcoal placeholder-luxury-gray/50
+           transition-all duration-300
+           focus:border-luxury-gold focus:outline-none;
+  }
+  
+  /* Card with subtle elegance */
+  .card-luxury {
+    @apply bg-luxury-white rounded-none shadow-luxury 
+           transition-all duration-300
+           hover:shadow-luxury-lg;
+  }
+}
