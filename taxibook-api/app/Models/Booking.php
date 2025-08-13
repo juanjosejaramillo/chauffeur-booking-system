@@ -75,8 +75,16 @@ class Booking extends Model
 
     public static function generateBookingNumber(): string
     {
+        // Characters to use: A-Z (excluding O, I, L) and 0-9 (excluding 0, 1)
+        // This avoids confusion between O/0, I/1, L/1
+        $characters = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';
+        
         do {
-            $number = 'TB' . strtoupper(Str::random(8));
+            // Generate a 6-character alphanumeric booking number
+            $number = '';
+            for ($i = 0; $i < 6; $i++) {
+                $number .= $characters[random_int(0, strlen($characters) - 1)];
+            }
         } while (static::where('booking_number', $number)->exists());
 
         return $number;

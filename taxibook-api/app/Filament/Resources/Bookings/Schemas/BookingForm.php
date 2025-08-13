@@ -2,9 +2,13 @@
 
 namespace App\Filament\Resources\Bookings\Schemas;
 
+use App\Models\VehicleType;
 use Filament\Forms\Components\DateTimePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class BookingForm
@@ -12,69 +16,160 @@ class BookingForm
     public static function configure(Schema $schema): Schema
     {
         return $schema
+            ->columns(2)
             ->components([
-                TextInput::make('booking_number')
-                    ->required(),
-                TextInput::make('user_id')
-                    ->numeric(),
-                TextInput::make('vehicle_type_id')
-                    ->required()
-                    ->numeric(),
-                TextInput::make('customer_first_name')
-                    ->required(),
-                TextInput::make('customer_last_name')
-                    ->required(),
-                TextInput::make('customer_email')
-                    ->email()
-                    ->required(),
-                TextInput::make('customer_phone')
-                    ->tel()
-                    ->required(),
-                TextInput::make('pickup_address')
-                    ->required(),
-                TextInput::make('pickup_latitude')
-                    ->required()
-                    ->numeric(),
-                TextInput::make('pickup_longitude')
-                    ->required()
-                    ->numeric(),
-                TextInput::make('dropoff_address')
-                    ->required(),
-                TextInput::make('dropoff_latitude')
-                    ->required()
-                    ->numeric(),
-                TextInput::make('dropoff_longitude')
-                    ->required()
-                    ->numeric(),
-                DateTimePicker::make('pickup_date')
-                    ->required(),
-                TextInput::make('estimated_distance')
-                    ->required()
-                    ->numeric(),
-                TextInput::make('estimated_duration')
-                    ->required()
-                    ->numeric(),
-                TextInput::make('route_polyline'),
-                TextInput::make('estimated_fare')
-                    ->required()
-                    ->numeric(),
-                TextInput::make('final_fare')
-                    ->numeric(),
-                Textarea::make('fare_breakdown')
-                    ->columnSpanFull(),
-                TextInput::make('status')
-                    ->required(),
-                TextInput::make('payment_status')
-                    ->required()
-                    ->default('pending'),
-                TextInput::make('stripe_payment_intent_id'),
-                TextInput::make('stripe_payment_method_id'),
-                Textarea::make('special_instructions')
-                    ->columnSpanFull(),
-                Textarea::make('admin_notes')
-                    ->columnSpanFull(),
-                TextInput::make('cancellation_reason'),
-                DateTimePicker::make('cancelled_at'),
+                Section::make('Booking Information')
+                    ->description('Core booking details and status')
+                    ->schema([
+                        TextInput::make('booking_number')
+                            ->label('Booking Number')
+                            ->disabled()
+                            ->dehydrated()
+                            ->required()
+                            ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
+                        Select::make('status')
+                            ->label('Booking Status')
+                            ->options([
+                                'pending' => 'Pending',
+                                'confirmed' => 'Confirmed',
+                                'assigned' => 'Assigned',
+                                'in_progress' => 'In Progress',
+                                'completed' => 'Completed',
+                                'cancelled' => 'Cancelled',
+                            ])
+                            ->native(false)
+                            ->required()
+                            ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
+                        Select::make('payment_status')
+                            ->label('Payment Status')
+                            ->options([
+                                'pending' => 'Pending',
+                                'authorized' => 'Authorized',
+                                'captured' => 'Captured',
+                                'failed' => 'Failed',
+                                'refunded' => 'Refunded',
+                                'cancelled' => 'Cancelled',
+                            ])
+                            ->native(false)
+                            ->required()
+                            ->disabled(fn ($record) => $record && in_array($record->payment_status, ['captured', 'refunded']))
+                            ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
+                    ])
+                    ->columns(['lg' => 3, 'md' => 2, 'sm' => 2]),
+
+                Section::make('Customer Details')
+                    ->description('Customer contact information')
+                    ->schema([
+                        TextInput::make('customer_first_name')
+                            ->label('First Name')
+                            ->required(),
+                        TextInput::make('customer_last_name')
+                            ->label('Last Name')
+                            ->required(),
+                        TextInput::make('customer_email')
+                            ->label('Email')
+                            ->email()
+                            ->required(),
+                        TextInput::make('customer_phone')
+                            ->label('Phone')
+                            ->tel()
+                            ->required(),
+                    ])
+                    ->columns(2),
+
+                Section::make('Trip Details')
+                    ->description('Pickup, dropoff, and vehicle information')
+                    ->schema([
+                        Textarea::make('pickup_address')
+                            ->label('Pickup Address')
+                            ->required()
+                            ->rows(2)
+                            ->columnSpan(1),
+                        Textarea::make('dropoff_address')
+                            ->label('Dropoff Address')
+                            ->required()
+                            ->rows(2)
+                            ->columnSpan(1),
+                        DateTimePicker::make('pickup_date')
+                            ->label('Pickup Date & Time')
+                            ->required()
+                            ->native(false)
+                            ->displayFormat('M j, Y g:i A')
+                            ->columnSpan(1),
+                        Select::make('vehicle_type_id')
+                            ->label('Vehicle Type')
+                            ->options(VehicleType::pluck('display_name', 'id'))
+                            ->native(false)
+                            ->required()
+                            ->columnSpan(1),
+                    ])
+                    ->columns(2),
+
+                Section::make('Pricing & Distance')
+                    ->description('Fare calculation and trip metrics')
+                    ->schema([
+                        TextInput::make('estimated_fare')
+                            ->label('Estimated Fare')
+                            ->prefix('$')
+                            ->numeric()
+                            ->required()
+                            ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
+                        TextInput::make('final_fare')
+                            ->label('Final Fare')
+                            ->prefix('$')
+                            ->numeric()
+                            ->visible(fn ($record) => $record && $record->payment_status === 'captured')
+                            ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
+                        TextInput::make('estimated_distance')
+                            ->label('Distance (miles)')
+                            ->numeric()
+                            ->disabled()
+                            ->dehydrated()
+                            ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
+                        TextInput::make('estimated_duration')
+                            ->label('Duration (minutes)')
+                            ->numeric()
+                            ->formatStateUsing(fn ($state) => $state ? round($state / 60) : null)
+                            ->disabled()
+                            ->dehydrated()
+                            ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
+                    ])
+                    ->columns(['lg' => 4, 'md' => 2, 'sm' => 2]),
+
+                Section::make('Additional Information')
+                    ->description('Special instructions and notes')
+                    ->schema([
+                        Textarea::make('special_instructions')
+                            ->label('Customer Instructions')
+                            ->rows(3)
+                            ->columnSpanFull(),
+                        Textarea::make('admin_notes')
+                            ->label('Admin Notes')
+                            ->rows(3)
+                            ->helperText('Internal notes not visible to customer')
+                            ->columnSpanFull(),
+                    ])
+                    ->collapsed()
+                    ->collapsible(),
+
+                Section::make('Cancellation Details')
+                    ->description('Reason and timing for cancelled bookings')
+                    ->schema([
+                        Textarea::make('cancellation_reason')
+                            ->label('Cancellation Reason')
+                            ->rows(2)
+                            ->columnSpan(1),
+                        DateTimePicker::make('cancelled_at')
+                            ->label('Cancelled At')
+                            ->native(false)
+                            ->displayFormat('M j, Y g:i A')
+                            ->disabled()
+                            ->columnSpan(1),
+                    ])
+                    ->columns(2)
+                    ->visible(fn (Get $get) => $get('status') === 'cancelled')
+                    ->collapsed(fn (Get $get) => $get('status') !== 'cancelled')
+                    ->collapsible(),
             ]);
     }
 }
