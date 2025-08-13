@@ -1,0 +1,68 @@
+# Laravel
+/taxibook-api/vendor/
+/taxibook-api/node_modules/
+/taxibook-api/public/hot
+/taxibook-api/public/storage
+/taxibook-api/storage/*.key
+/taxibook-api/storage/app/public/*
+!/taxibook-api/storage/app/public/.gitkeep
+/taxibook-api/.env
+/taxibook-api/.env.backup
+/taxibook-api/.env.production
+/taxibook-api/.phpunit.result.cache
+/taxibook-api/Homestead.json
+/taxibook-api/Homestead.yaml
+/taxibook-api/auth.json
+/taxibook-api/npm-debug.log
+/taxibook-api/yarn-error.log
+/taxibook-api/.DS_Store
+/taxibook-api/storage/logs/*
+!/taxibook-api/storage/logs/.gitkeep
+
+# Frontend (React/Vue/etc.)
+/taxibook-api/taxibook-frontend/node_modules/
+/taxibook-api/taxibook-frontend/dist/
+/taxibook-api/taxibook-frontend/build/
+/taxibook-api/taxibook-frontend/.env
+/taxibook-api/taxibook-frontend/.env.local
+/taxibook-api/taxibook-frontend/.env.development.local
+/taxibook-api/taxibook-frontend/.env.test.local
+/taxibook-api/taxibook-frontend/.env.production.local
+/taxibook-api/taxibook-frontend/npm-debug.log*
+/taxibook-api/taxibook-frontend/yarn-debug.log*
+/taxibook-api/taxibook-frontend/yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+
+# Database
+*.sqlite
+*.sqlite3
+*.db
+
+# Composer
+composer.phar
+
+# NPM
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Cache
+.cache/

@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Test</title>
+</head>
+<body>
+    <h1>Test API Call</h1>
+    <button onclick="testAPI()">Test Validate Route</button>
+    <div id="result"></div>
+    
+    <script>
+        async function testAPI() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Loading...';
+            
+            const payload = {
+                pickup_lat: 27.9506,
+                pickup_lng: -82.4572,
+                dropoff_lat: 27.9772,
+                dropoff_lng: -82.5033,
+                pickup_date: "2025-08-14 10:00"
+            };
+            
+            console.log('Sending request:', payload);
+            
+            try {
+                const response = await fetch('http://localhost:8000/api/bookings/validate-route', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await response.json();
+                console.log('Response:', data);
+                
+                if (response.ok) {
+                    resultDiv.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                } else {
+                    resultDiv.innerHTML = 'Error: ' + JSON.stringify(data);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

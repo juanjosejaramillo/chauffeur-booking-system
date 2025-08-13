@@ -1,0 +1,30 @@
+<?php
+
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\StripeWebhookController;
+use Illuminate\Support\Facades\Route;
+
+// Public routes
+Route::post('/register', [AuthController::class, 'register']);
+Route::post('/login', [AuthController::class, 'login']);
+
+// Booking routes (partially public)
+Route::prefix('bookings')->group(function () {
+    Route::post('/validate-route', [BookingController::class, 'validateRoute']);
+    Route::post('/calculate-prices', [BookingController::class, 'calculatePrices']);
+    Route::post('/', [BookingController::class, 'store']);
+    Route::get('/{bookingNumber}', [BookingController::class, 'show']);
+    Route::post('/{bookingNumber}/payment-intent', [BookingController::class, 'createPaymentIntent']);
+    Route::post('/{bookingNumber}/confirm-payment', [BookingController::class, 'confirmPayment']);
+});
+
+// Stripe webhook endpoint (no CSRF protection)
+Route::post('/stripe/webhook', [StripeWebhookController::class, 'handle']);
+
+// Authenticated routes
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/user', [AuthController::class, 'user']);
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/user/bookings', [BookingController::class, 'userBookings']);
+});
