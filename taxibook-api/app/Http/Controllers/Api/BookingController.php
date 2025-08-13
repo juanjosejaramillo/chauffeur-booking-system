@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\User;
 use App\Models\VehicleType;
 use App\Services\MapboxService;
 use App\Services\PricingService;
@@ -161,9 +162,12 @@ class BookingController extends Controller
         DB::beginTransaction();
 
         try {
+            // Find user by email (should exist from verification)
+            $user = User::where('email', $validated['customer_email'])->first();
+            
             // Create booking
             $booking = Booking::create([
-                'user_id' => auth()->id(),
+                'user_id' => $user ? $user->id : null,
                 'vehicle_type_id' => $validated['vehicle_type_id'],
                 'customer_first_name' => $validated['customer_first_name'],
                 'customer_last_name' => $validated['customer_last_name'],

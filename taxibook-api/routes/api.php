@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BookingController;
+use App\Http\Controllers\Api\BookingVerificationController;
 use App\Http\Controllers\Api\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
@@ -13,6 +14,9 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::prefix('bookings')->group(function () {
     Route::post('/validate-route', [BookingController::class, 'validateRoute']);
     Route::post('/calculate-prices', [BookingController::class, 'calculatePrices']);
+    Route::post('/send-verification', [BookingVerificationController::class, 'sendVerificationCode']);
+    Route::post('/verify-email', [BookingVerificationController::class, 'verifyCode']);
+    Route::post('/resend-verification', [BookingVerificationController::class, 'resendCode']);
     Route::post('/', [BookingController::class, 'store']);
     Route::get('/{bookingNumber}', [BookingController::class, 'show']);
     Route::post('/{bookingNumber}/payment-intent', [BookingController::class, 'createPaymentIntent']);

@@ -29,6 +29,11 @@ const useBookingStore = create((set, get) => ({
     specialInstructions: '',
   },
   
+  // Email verification state
+  emailVerified: false,
+  verificationSent: false,
+  verificationError: null,
+  
   routeInfo: null,
   booking: null,
   paymentIntent: null,
@@ -194,6 +199,78 @@ const useBookingStore = create((set, get) => ({
     }
   },
   
+  // Email verification methods
+  sendVerificationCode: async () => {
+    set({ loading: true, verificationError: null });
+    try {
+      const { customerInfo, tripDetails } = get();
+      
+      const payload = {
+        email: customerInfo.email,
+        customer_first_name: customerInfo.firstName,
+        customer_last_name: customerInfo.lastName,
+        customer_phone: customerInfo.phone,
+        pickup_address: tripDetails.pickupAddress,
+        dropoff_address: tripDetails.dropoffAddress,
+        pickup_date: `${tripDetails.pickupDate} ${tripDetails.pickupTime}`,
+      };
+      
+      console.log('Sending verification payload:', payload);
+      
+      const response = await api.post('/bookings/send-verification', payload);
+      
+      set({ verificationSent: true });
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || 'Failed to send verification code';
+      set({ verificationError: errorMessage });
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+  
+  verifyEmailCode: async (code) => {
+    set({ loading: true, verificationError: null });
+    try {
+      const { customerInfo } = get();
+      const response = await api.post('/bookings/verify-email', {
+        email: customerInfo.email,
+        code: code,
+      });
+      
+      if (response.data.verified) {
+        set({ emailVerified: true, verificationError: null });
+        return response.data;
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || 'Invalid verification code';
+      set({ verificationError: errorMessage });
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+  
+  resendVerificationCode: async () => {
+    set({ loading: true, verificationError: null });
+    try {
+      const { customerInfo } = get();
+      const response = await api.post('/bookings/resend-verification', {
+        email: customerInfo.email,
+      });
+      
+      set({ verificationError: null });
+      return response.data;
+    } catch (error) {
+      const errorMessage = error.response?.data?.error || 'Failed to resend verification code';
+      set({ verificationError: errorMessage });
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+  
   resetBooking: () => set({
     currentStep: 1,
     tripDetails: {
@@ -215,6 +292,9 @@ const useBookingStore = create((set, get) => ({
       phone: '',
       specialInstructions: '',
     },
+    emailVerified: false,
+    verificationSent: false,
+    verificationError: null,
     routeInfo: null,
     booking: null,
     paymentIntent: null,
