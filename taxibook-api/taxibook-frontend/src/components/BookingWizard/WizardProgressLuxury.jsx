@@ -6,6 +6,7 @@ const steps = [
   { id: 3, name: 'Details' },
   { id: 4, name: 'Review' },
   { id: 5, name: 'Payment' },
+  { id: 6, name: 'Confirmed' },
 ];
 
 const WizardProgressLuxury = () => {

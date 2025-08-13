@@ -16,8 +16,10 @@ const PaymentForm = () => {
   const {
     booking,
     selectedVehicle,
-    processPayment,
+    createPaymentIntent,
+    confirmPayment,
     prevStep,
+    nextStep,
     loading,
     error,
   } = useBookingStore();
@@ -36,13 +38,19 @@ const PaymentForm = () => {
     setLocalError('');
 
     try {
-      const card = elements.getElement(CardElement);
+      // Step 1: Create payment intent on backend
+      const paymentIntentData = await createPaymentIntent();
       
-      // Create payment method
-      const { error: stripeError, paymentMethod } = await stripe.createPaymentMethod({
-        type: 'card',
-        card,
-      });
+      // Step 2: Confirm payment with Stripe using card details
+      const card = elements.getElement(CardElement);
+      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
+        paymentIntentData.client_secret,
+        {
+          payment_method: {
+            card: card,
+          },
+        }
+      );
 
       if (stripeError) {
         setLocalError(stripeError.message);
@@ -50,8 +58,12 @@ const PaymentForm = () => {
         return;
       }
 
-      // Process payment through backend
-      await processPayment(paymentMethod.id);
+      // Step 3: Confirm payment on backend
+      if (paymentIntent.status === 'succeeded' || paymentIntent.status === 'requires_capture') {
+        await confirmPayment(paymentIntent.id);
+        // Move to next step (confirmation)
+        nextStep();
+      }
       
     } catch (error) {
       setLocalError(error.message || 'Payment failed. Please try again.');

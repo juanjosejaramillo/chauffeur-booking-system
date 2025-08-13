@@ -4,7 +4,7 @@ import api from '../config/api';
 const useBookingStore = create((set, get) => ({
   // Wizard state
   currentStep: 1,
-  maxStep: 5,
+  maxStep: 6,
   
   // Booking data
   tripDetails: {

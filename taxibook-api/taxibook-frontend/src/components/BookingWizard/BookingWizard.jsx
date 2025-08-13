@@ -5,6 +5,7 @@ import VehicleSelectionLuxury from './steps/VehicleSelectionLuxury';
 import CustomerInfoLuxury from './steps/CustomerInfoLuxury';
 import ReviewBookingLuxury from './steps/ReviewBookingLuxury';
 import PaymentLuxury from './steps/PaymentLuxury';
+import ConfirmationLuxury from './steps/ConfirmationLuxury';
 import WizardProgressLuxury from './WizardProgressLuxury';
 
 const BookingWizard = () => {
@@ -29,6 +30,8 @@ const BookingWizard = () => {
         return <ReviewBookingLuxury />;
       case 5:
         return <PaymentLuxury />;
+      case 6:
+        return <ConfirmationLuxury />;
       default:
         return <TripDetailsLuxury />;
     }
