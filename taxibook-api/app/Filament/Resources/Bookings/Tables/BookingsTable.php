@@ -18,80 +18,78 @@ class BookingsTable
         return $table
             ->columns([
                 TextColumn::make('booking_number')
-                    ->searchable(),
-                TextColumn::make('user_id')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('vehicle_type_id')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('customer_first_name')
-                    ->searchable(),
-                TextColumn::make('customer_last_name')
-                    ->searchable(),
-                TextColumn::make('customer_email')
-                    ->searchable(),
-                TextColumn::make('customer_phone')
-                    ->searchable(),
-                TextColumn::make('pickup_address')
-                    ->searchable(),
-                TextColumn::make('pickup_latitude')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('pickup_longitude')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('dropoff_address')
-                    ->searchable(),
-                TextColumn::make('dropoff_latitude')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('dropoff_longitude')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('pickup_date')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('estimated_distance')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('estimated_duration')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('route_polyline')
-                    ->searchable(),
-                TextColumn::make('estimated_fare')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('final_fare')
-                    ->numeric()
-                    ->sortable(),
+                    ->label('Booking #')
+                    ->searchable()
+                    ->sortable()
+                    ->copyable()
+                    ->weight('bold'),
                 TextColumn::make('status')
-                    ->searchable(),
-                TextColumn::make('payment_status')
-                    ->searchable(),
-                TextColumn::make('stripe_payment_intent_id')
-                    ->searchable(),
-                TextColumn::make('stripe_payment_method_id')
-                    ->searchable(),
-                TextColumn::make('cancellation_reason')
-                    ->searchable(),
-                TextColumn::make('cancelled_at')
-                    ->dateTime()
+                    ->label('Status')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'pending' => 'warning',
+                        'confirmed' => 'info',
+                        'assigned' => 'primary',
+                        'in_progress' => 'primary',
+                        'completed' => 'success',
+                        'cancelled' => 'danger',
+                        default => 'gray',
+                    }),
+                TextColumn::make('pickup_date')
+                    ->label('Pickup Date/Time')
+                    ->dateTime('M j, Y g:i A')
                     ->sortable(),
+                TextColumn::make('customer_name')
+                    ->label('Customer')
+                    ->getStateUsing(fn ($record) => $record->customer_first_name . ' ' . $record->customer_last_name)
+                    ->searchable(['customer_first_name', 'customer_last_name'])
+                    ->description(fn ($record) => $record->customer_phone),
+                TextColumn::make('pickup_address')
+                    ->label('Pickup')
+                    ->searchable()
+                    ->limit(40)
+                    ->tooltip(fn ($record) => $record->pickup_address),
+                TextColumn::make('dropoff_address')
+                    ->label('Destination')
+                    ->searchable()
+                    ->limit(40)
+                    ->tooltip(fn ($record) => $record->dropoff_address),
+                TextColumn::make('vehicleType.name')
+                    ->label('Vehicle')
+                    ->searchable()
+                    ->sortable(),
+                TextColumn::make('estimated_fare')
+                    ->label('Fare')
+                    ->money('USD')
+                    ->sortable()
+                    ->description(fn ($record) => $record->final_fare ? 'Final: $' . number_format($record->final_fare, 2) : null),
+                TextColumn::make('payment_status')
+                    ->label('Payment')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'pending' => 'warning',
+                        'authorized' => 'info',
+                        'captured' => 'success',
+                        'failed' => 'danger',
+                        'refunded' => 'gray',
+                        default => 'gray',
+                    }),
+                TextColumn::make('customer_email')
+                    ->label('Email')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->copyable(),
+                TextColumn::make('special_instructions')
+                    ->label('Instructions')
+                    ->limit(50)
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('deleted_at')
-                    ->dateTime()
+                    ->label('Booked At')
+                    ->dateTime('M j, Y g:i A')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('pickup_date', 'asc')
             ->filters([
                 TrashedFilter::make(),
             ])
