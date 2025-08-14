@@ -50,7 +50,9 @@ class BookingForm
                             ])
                             ->native(false)
                             ->required()
-                            ->disabled(fn ($record) => $record && in_array($record->payment_status, ['captured', 'refunded']))
+                            ->disabled()
+                            ->dehydrated()
+                            ->helperText('Payment status is managed through Stripe. Use action buttons to capture, cancel, or refund.')
                             ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
                     ])
                     ->columns(['lg' => 3, 'md' => 2, 'sm' => 2]),
@@ -133,6 +135,29 @@ class BookingForm
                             ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
                     ])
                     ->columns(['lg' => 4, 'md' => 2, 'sm' => 2]),
+
+                Section::make('Payment Information')
+                    ->description('Stripe payment details for tracking')
+                    ->schema([
+                        TextInput::make('stripe_payment_intent_id')
+                            ->label('Stripe Payment Intent ID')
+                            ->disabled()
+                            ->dehydrated()
+                            ->placeholder('Not yet created')
+                            ->helperText('View in Stripe Dashboard')
+                            ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
+                        TextInput::make('stripe_payment_method_id')
+                            ->label('Stripe Payment Method ID')
+                            ->disabled()
+                            ->dehydrated()
+                            ->placeholder('Not yet created')
+                            ->helperText('Customer payment method')
+                            ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
+                    ])
+                    ->columns(['lg' => 2, 'md' => 2, 'sm' => 2])
+                    ->collapsed()
+                    ->collapsible()
+                    ->visible(fn ($record) => $record && ($record->stripe_payment_intent_id || $record->stripe_payment_method_id)),
 
                 Section::make('Additional Information')
                     ->description('Special instructions and notes')
