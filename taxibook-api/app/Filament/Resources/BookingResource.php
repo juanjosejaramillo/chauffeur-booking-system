@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Filament\Resources\Bookings;
+namespace App\Filament\Resources;
 
 use App\Filament\Resources\Bookings\Pages\CreateBooking;
 use App\Filament\Resources\Bookings\Pages\EditBooking;
 use App\Filament\Resources\Bookings\Pages\ListBookings;
 use App\Filament\Resources\Bookings\Schemas\BookingForm;
 use App\Filament\Resources\Bookings\Tables\BookingsTable;
+use App\Filament\Resources\Bookings\RelationManagers\TransactionsRelationManager;
 use App\Models\Booking;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -35,7 +36,7 @@ class BookingResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\TransactionsRelationManager::class,
+            TransactionsRelationManager::class,
         ];
     }
 

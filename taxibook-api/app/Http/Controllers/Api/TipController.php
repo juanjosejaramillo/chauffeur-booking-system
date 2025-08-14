@@ -86,6 +86,7 @@ class TipController extends Controller
         
         if ($result['success']) {
             return response()->json([
+                'success' => true,
                 'message' => $result['message'],
                 'amount' => $result['amount'],
             ]);

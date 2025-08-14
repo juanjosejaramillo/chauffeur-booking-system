@@ -231,7 +231,7 @@ class BookingsTable
                         ->label('Capture with Tip')
                         ->icon('heroicon-o-currency-dollar')
                         ->color('success')
-                        ->visible(fn ($record) => $record->status === 'completed' && $record->payment_status === 'captured')
+                        ->visible(fn ($record) => in_array($record->status, ['confirmed', 'completed']) && $record->payment_status === 'captured' && !$record->hasTipped() && $record->hasSavedPaymentMethod())
                         ->form([
                             Select::make('tip_percentage')
                                 ->label('Gratuity')
@@ -291,7 +291,7 @@ class BookingsTable
                         ->label('Send Tip Link')
                         ->icon('heroicon-o-envelope')
                         ->color('info')
-                        ->visible(fn ($record) => $record->status === 'completed' && !$record->hasTipped())
+                        ->visible(fn ($record) => in_array($record->status, ['confirmed', 'completed']) && $record->payment_status === 'captured' && !$record->hasTipped())
                         ->action(function ($record) {
                             try {
                                 $tipService = app(TipService::class);
@@ -322,7 +322,7 @@ class BookingsTable
                         ->label('Show Tip QR')
                         ->icon('heroicon-o-qr-code')
                         ->color('gray')
-                        ->visible(fn ($record) => $record->status === 'completed' && !$record->hasTipped())
+                        ->visible(fn ($record) => in_array($record->status, ['confirmed', 'completed']) && $record->payment_status === 'captured' && !$record->hasTipped())
                         ->modalContent(function ($record) {
                             $tipService = app(TipService::class);
                             $result = $tipService->getQrCode($record);

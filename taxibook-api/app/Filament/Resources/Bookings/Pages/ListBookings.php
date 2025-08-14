@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Bookings\Pages;
 
-use App\Filament\Resources\Bookings\BookingResource;
+use App\Filament\Resources\BookingResource;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 

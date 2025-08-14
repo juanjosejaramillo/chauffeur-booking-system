@@ -7,9 +7,11 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Placeholder;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
+use Illuminate\Support\HtmlString;
 
 class BookingForm
 {
@@ -26,7 +28,7 @@ class BookingForm
                             ->disabled()
                             ->dehydrated()
                             ->required()
-                            ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
+                            ->columnSpan(1),
                         Select::make('status')
                             ->label('Booking Status')
                             ->options([
@@ -37,7 +39,7 @@ class BookingForm
                             ])
                             ->native(false)
                             ->required()
-                            ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
+                            ->columnSpan(1),
                         Select::make('payment_status')
                             ->label('Payment Status')
                             ->options([
@@ -53,9 +55,29 @@ class BookingForm
                             ->disabled()
                             ->dehydrated()
                             ->helperText('Payment status is managed through Stripe. Use action buttons to capture, cancel, or refund.')
-                            ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
+                            ->columnSpanFull(),
+                        Placeholder::make('saved_card_indicator')
+                            ->label('Saved Payment Method')
+                            ->content(function ($record) {
+                                if (!$record) return new HtmlString('<span class="text-gray-500">No booking data</span>');
+                                if ($record->hasSavedPaymentMethod()) {
+                                    return new HtmlString('
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-green-600 font-semibold">Yes</span>
+                                            <span class="text-sm text-gray-600">Customer can be charged for tips without re-entering card details</span>
+                                        </div>
+                                    ');
+                                }
+                                return new HtmlString('
+                                    <div class="flex items-center gap-3">
+                                        <span class="text-red-600 font-semibold">No</span>
+                                        <span class="text-sm text-gray-600">Customer must use tip link or QR code to add gratuity</span>
+                                    </div>
+                                ');
+                            })
+                            ->columnSpanFull(),
                     ])
-                    ->columns(['lg' => 3, 'md' => 2, 'sm' => 2]),
+                    ->columns(2),
 
                 Section::make('Customer Details')
                     ->description('Customer contact information')
@@ -113,32 +135,54 @@ class BookingForm
                             ->prefix('$')
                             ->numeric()
                             ->required()
-                            ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
+                            ->columnSpan(1),
                         TextInput::make('final_fare')
                             ->label('Final Fare')
                             ->prefix('$')
                             ->numeric()
                             ->visible(fn ($record) => $record && $record->payment_status === 'captured')
-                            ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
+                            ->columnSpan(1),
+                        TextInput::make('gratuity_amount')
+                            ->label('Gratuity')
+                            ->prefix('$')
+                            ->numeric()
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->placeholder('0.00')
+                            ->columnSpan(1),
+                        Placeholder::make('total_amount')
+                            ->label('Total (Fare + Tip)')
+                            ->content(fn ($record) => $record ? '$' . number_format(($record->final_fare ?? $record->estimated_fare) + $record->gratuity_amount, 2) : '$0.00')
+                            ->columnSpan(1),
                         TextInput::make('estimated_distance')
                             ->label('Distance (miles)')
                             ->numeric()
                             ->disabled()
                             ->dehydrated(false)
-                            ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
+                            ->columnSpan(1),
                         TextInput::make('estimated_duration')
                             ->label('Duration (minutes)')
                             ->numeric()
                             ->formatStateUsing(fn ($state) => $state ? round($state / 60) : 0)
                             ->disabled()
                             ->dehydrated(false)
-                            ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
+                            ->columnSpan(1),
                     ])
-                    ->columns(['lg' => 4, 'md' => 2, 'sm' => 2]),
+                    ->columns(3),
 
                 Section::make('Payment Information')
-                    ->description('Stripe payment details for tracking')
+                    ->description('Stripe payment details and saved card status')
                     ->schema([
+                        Placeholder::make('saved_card_status')
+                            ->label('Card Status')
+                            ->content(function ($record) {
+                                if (!$record) return new HtmlString('<span class="text-gray-500">-</span>');
+                                if ($record->hasSavedPaymentMethod()) {
+                                    return new HtmlString('<span class="text-green-600 font-semibold">Card on File</span>');
+                                }
+                                return new HtmlString('<span class="text-red-600 font-semibold">No Card Saved</span>');
+                            })
+                            ->columnSpan(['lg' => 2, 'md' => 2, 'sm' => 2]),
                         TextInput::make('stripe_payment_intent_id')
                             ->label('Stripe Payment Intent ID')
                             ->disabled()
@@ -153,11 +197,16 @@ class BookingForm
                             ->placeholder('Not yet created')
                             ->helperText('Customer payment method')
                             ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
+                        TextInput::make('stripe_customer_id')
+                            ->label('Stripe Customer ID')
+                            ->disabled()
+                            ->dehydrated()
+                            ->placeholder('Not yet created')
+                            ->helperText('Customer profile in Stripe')
+                            ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
                     ])
                     ->columns(['lg' => 2, 'md' => 2, 'sm' => 2])
-                    ->collapsed()
-                    ->collapsible()
-                    ->visible(fn ($record) => $record && ($record->stripe_payment_intent_id || $record->stripe_payment_method_id)),
+                    ->collapsible(),
 
                 Section::make('Additional Information')
                     ->description('Special instructions and notes')

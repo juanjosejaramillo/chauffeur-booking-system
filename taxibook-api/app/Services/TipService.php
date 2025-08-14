@@ -44,7 +44,9 @@ class TipService
         }
         
         // Generate QR code
-        $tipUrl = url("/tip/{$booking->tip_link_token}");
+        // Use frontend URL for React app
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+        $tipUrl = "{$frontendUrl}/tip/{$booking->tip_link_token}";
         $qrCode = QrCode::format('svg')
             ->size(300)
             ->margin(2)
@@ -76,7 +78,9 @@ class TipService
             $booking->tip_link_token = Str::random(40);
         }
         
-        $tipUrl = url("/tip/{$booking->tip_link_token}");
+        // Use frontend URL for React app
+        $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
+        $tipUrl = "{$frontendUrl}/tip/{$booking->tip_link_token}";
         
         // Generate or regenerate QR code
         $qrCode = QrCode::format('svg')
@@ -156,17 +160,20 @@ class TipService
             return null;
         }
         
+        $fare = $booking->final_fare ?? $booking->estimated_fare;
+        
         return [
             'booking_number' => $booking->booking_number,
             'pickup_date' => $booking->pickup_date->format('M d, Y'),
             'pickup_address' => $booking->pickup_address,
             'dropoff_address' => $booking->dropoff_address,
-            'fare_paid' => $booking->final_fare,
+            'fare_paid' => $fare,
             'already_tipped' => $booking->hasTipped(),
             'tip_amount' => $booking->gratuity_amount,
             'vehicle_type' => $booking->vehicleType->display_name,
             'has_saved_card' => !empty($booking->stripe_payment_method_id),
             'saved_card_last4' => null, // Would need to fetch from Stripe if needed
+            'suggested_tips' => $this->getSuggestedTips($fare),
         ];
     }
     

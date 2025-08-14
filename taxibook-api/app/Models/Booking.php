@@ -163,6 +163,11 @@ class Booking extends Model
     {
         return $this->status === 'completed' && !$this->hasTipped();
     }
+    
+    public function hasSavedPaymentMethod(): bool
+    {
+        return !empty($this->stripe_payment_method_id) && !empty($this->stripe_customer_id);
+    }
 
     public function getTotalAmountAttribute(): float
     {
