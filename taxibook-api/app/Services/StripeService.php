@@ -54,6 +54,7 @@ class StripeService
         $paymentIntentData = [
             'amount' => $amountInCents,
             'currency' => 'usd',
+            'payment_method_types' => ['card'], // Explicitly set to card only
             'capture_method' => 'manual',
             'metadata' => [
                 'booking_id' => $booking->id,
@@ -85,6 +86,136 @@ class StripeService
         ]);
 
         return $paymentIntent;
+    }
+    
+    public function chargeBooking(Booking $booking, string $paymentMethodId, float $amount, bool $saveCard = false): array
+    {
+        try {
+            $amountInCents = round($amount * 100);
+            
+            // Create or get customer if saving card
+            $customerId = null;
+            if ($saveCard) {
+                if ($booking->user && $booking->user->stripe_customer_id) {
+                    $customerId = $booking->user->stripe_customer_id;
+                } else {
+                    // Create new customer
+                    $customer = $this->stripe->customers->create([
+                        'email' => $booking->customer_email,
+                        'name' => $booking->customer_full_name,
+                        'phone' => $booking->customer_phone,
+                        'metadata' => [
+                            'booking_id' => $booking->id,
+                        ],
+                    ]);
+                    $customerId = $customer->id;
+                    
+                    // Update user with customer ID if exists
+                    if ($booking->user) {
+                        $booking->user->update(['stripe_customer_id' => $customerId]);
+                    }
+                }
+            }
+            
+            // Create payment intent data
+            $paymentIntentData = [
+                'amount' => $amountInCents,
+                'currency' => 'usd',
+                'payment_method' => $paymentMethodId,
+                'payment_method_types' => ['card'], // Explicitly set to card only
+                'confirm' => true,
+                'metadata' => [
+                    'booking_id' => $booking->id,
+                    'booking_number' => $booking->booking_number,
+                    'base_fare' => $booking->estimated_fare,
+                    'tip_amount' => $booking->gratuity_amount,
+                ],
+                'description' => "Booking {$booking->booking_number}",
+            ];
+            
+            // Add customer and save card if requested
+            if ($saveCard && $customerId) {
+                $paymentIntentData['customer'] = $customerId;
+                $paymentIntentData['setup_future_usage'] = 'off_session';
+            }
+            
+            // Create and confirm payment
+            $paymentIntent = $this->stripe->paymentIntents->create($paymentIntentData);
+            
+            return [
+                'success' => true,
+                'payment_intent_id' => $paymentIntent->id,
+                'payment_method_id' => $paymentMethodId,
+                'customer_id' => $customerId,
+            ];
+            
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
+    }
+    
+    public function chargeTip(Booking $booking, float $tipAmount, string $paymentMethodId = null): array
+    {
+        try {
+            $amountInCents = round($tipAmount * 100);
+            
+            $paymentIntentData = [
+                'amount' => $amountInCents,
+                'currency' => 'usd',
+                'payment_method_types' => ['card'], // Explicitly set to card only
+                'metadata' => [
+                    'booking_id' => $booking->id,
+                    'booking_number' => $booking->booking_number,
+                    'type' => 'tip',
+                ],
+                'description' => "Tip for booking {$booking->booking_number}",
+            ];
+            
+            // If booking has saved payment method, use it
+            if (!$paymentMethodId && $booking->stripe_payment_method_id && $booking->stripe_customer_id) {
+                $paymentIntentData['customer'] = $booking->stripe_customer_id;
+                $paymentIntentData['payment_method'] = $booking->stripe_payment_method_id;
+                $paymentIntentData['off_session'] = true;
+                $paymentIntentData['confirm'] = true;
+            } else if ($paymentMethodId) {
+                $paymentIntentData['payment_method'] = $paymentMethodId;
+                $paymentIntentData['confirm'] = true;
+            } else {
+                throw new \Exception('No payment method available for tip');
+            }
+            
+            $paymentIntent = $this->stripe->paymentIntents->create($paymentIntentData);
+            
+            // Update booking with tip
+            $booking->update([
+                'gratuity_amount' => $tipAmount,
+                'gratuity_added_at' => now(),
+            ]);
+            
+            // Create transaction record
+            Transaction::create([
+                'booking_id' => $booking->id,
+                'type' => 'tip',
+                'amount' => $tipAmount,
+                'status' => 'succeeded',
+                'stripe_transaction_id' => $paymentIntent->id,
+                'stripe_response' => $paymentIntent->toArray(),
+            ]);
+            
+            return [
+                'success' => true,
+                'payment_intent_id' => $paymentIntent->id,
+            ];
+            
+        } catch (\Exception $e) {
+            return [
+                'success' => false,
+                'error' => $e->getMessage(),
+            ];
+        }
     }
 
     public function confirmPaymentIntent(Booking $booking, string $paymentIntentId)

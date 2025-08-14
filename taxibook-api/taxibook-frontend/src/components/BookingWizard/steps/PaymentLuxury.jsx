@@ -16,16 +16,49 @@ const PaymentForm = () => {
   const {
     booking,
     selectedVehicle,
-    createPaymentIntent,
-    confirmPayment,
+    processBookingPayment,
     prevStep,
     nextStep,
     loading,
     error,
+    gratuityAmount,
+    gratuityPercentage,
+    savePaymentMethod,
+    setGratuity,
+    setSavePaymentMethod,
   } = useBookingStore();
 
   const [localError, setLocalError] = useState('');
   const [processing, setProcessing] = useState(false);
+  const [customTip, setCustomTip] = useState('');
+
+  const baseFare = selectedVehicle?.estimated_fare || selectedVehicle?.total_price || 0;
+  const totalAmount = baseFare + gratuityAmount;
+
+  const gratuityOptions = [
+    { percentage: 0, label: 'No tip' },
+    { percentage: 15, label: '15%' },
+    { percentage: 20, label: '20%' },
+    { percentage: 25, label: '25%' },
+  ];
+
+  const calculateTip = (percentage) => {
+    return baseFare * (percentage / 100);
+  };
+
+  const selectGratuity = (percentage) => {
+    setCustomTip('');
+    const amount = calculateTip(percentage);
+    setGratuity(percentage, amount);
+  };
+
+  const handleCustomTip = (value) => {
+    setCustomTip(value);
+    const amount = parseFloat(value) || 0;
+    if (amount >= 0) {
+      setGratuity('custom', amount);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,19 +71,12 @@ const PaymentForm = () => {
     setLocalError('');
 
     try {
-      // Step 1: Create payment intent on backend
-      const paymentIntentData = await createPaymentIntent();
-      
-      // Step 2: Confirm payment with Stripe using card details
+      // Create payment method with Stripe
       const card = elements.getElement(CardElement);
-      const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
-        paymentIntentData.client_secret,
-        {
-          payment_method: {
-            card: card,
-          },
-        }
-      );
+      const { error: stripeError, paymentMethod } = await stripe.createPaymentMethod({
+        type: 'card',
+        card: card,
+      });
 
       if (stripeError) {
         setLocalError(stripeError.message);
@@ -58,12 +84,11 @@ const PaymentForm = () => {
         return;
       }
 
-      // Step 3: Confirm payment on backend
-      if (paymentIntent.status === 'succeeded' || paymentIntent.status === 'requires_capture') {
-        await confirmPayment(paymentIntent.id);
-        // Move to next step (confirmation)
-        nextStep();
-      }
+      // Process payment for existing booking
+      await processBookingPayment(paymentMethod.id);
+      
+      // Move to confirmation step
+      nextStep();
       
     } catch (error) {
       setLocalError(error.message || 'Payment failed. Please try again.');
@@ -107,35 +132,97 @@ const PaymentForm = () => {
       {/* Header */}
       <div className="text-center mb-12">
         <h2 className="font-display text-3xl text-luxury-black mb-4">
-          Complete Your Booking
+          Complete Your Payment
         </h2>
+        {booking?.booking_number && (
+          <p className="text-luxury-gold text-sm font-semibold mb-2">
+            Booking #{booking.booking_number}
+          </p>
+        )}
         <p className="text-luxury-gray/60 text-sm tracking-wide">
-          Enter your card details to authorize the payment
+          Enter your payment details to confirm your booking
         </p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Left Column - Booking Summary */}
+        {/* Left Column - Payment Details */}
         <div className="lg:col-span-2">
-          {/* Booking Details */}
+          {/* Fare Summary with Gratuity */}
           <div className="bg-luxury-white shadow-luxury p-8 mb-8">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xs font-semibold text-luxury-gold uppercase tracking-luxury">
-                Booking Reference
-              </h3>
-              <span className="font-mono text-luxury-black text-lg tracking-wider">
-                {booking?.booking_number}
-              </span>
-            </div>
+            <h3 className="text-xs font-semibold text-luxury-gold uppercase tracking-luxury mb-6">
+              Fare Summary
+            </h3>
+            
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <span className="text-luxury-gray/60 text-sm">Base Fare</span>
+                <span className="font-display text-xl text-luxury-black">
+                  {formatPrice(baseFare)}
+                </span>
+              </div>
 
-            <div className="border-t border-luxury-gray/10 pt-6">
-              <h3 className="text-xs font-semibold text-luxury-gold uppercase tracking-luxury mb-4">
-                Authorization Amount
-              </h3>
-              <div className="flex items-baseline justify-between">
-                <span className="text-luxury-gray/60 text-sm">Amount to be held</span>
-                <span className="font-display text-3xl text-luxury-black">
-                  {formatPrice(selectedVehicle.estimated_fare || selectedVehicle.total_price)}
+              {/* Gratuity Section */}
+              <div className="pt-4 border-t border-luxury-gray/10">
+                <label className="block text-xs font-semibold text-luxury-gold uppercase tracking-luxury mb-4">
+                  Add Gratuity (Optional)
+                </label>
+                <p className="text-xs text-luxury-gray/60 mb-4">
+                  You can also add a tip after your trip
+                </p>
+                
+                <div className="grid grid-cols-4 gap-2 mb-4">
+                  {gratuityOptions.map(option => (
+                    <button
+                      key={option.percentage}
+                      type="button"
+                      onClick={() => selectGratuity(option.percentage)}
+                      className={`py-3 px-2 rounded border-2 transition-all text-center ${
+                        gratuityPercentage === option.percentage && gratuityPercentage !== 'custom'
+                          ? 'border-luxury-gold bg-luxury-light-gray'
+                          : 'border-luxury-gray/20 hover:border-luxury-gray/40'
+                      }`}
+                    >
+                      <div className="text-sm font-medium">{option.label}</div>
+                      <div className="text-xs text-luxury-gray/60">
+                        {formatPrice(calculateTip(option.percentage))}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <label className="text-sm text-luxury-gray/60">Custom amount:</label>
+                  <div className="relative flex-1">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-luxury-gray/60">$</span>
+                    <input
+                      type="number"
+                      value={customTip}
+                      onChange={(e) => handleCustomTip(e.target.value)}
+                      placeholder="0.00"
+                      min="0"
+                      step="0.01"
+                      className={`w-full pl-8 pr-3 py-2 border-2 rounded transition-colors ${
+                        gratuityPercentage === 'custom'
+                          ? 'border-luxury-gold bg-luxury-light-gray'
+                          : 'border-luxury-gray/20 focus:border-luxury-gold'
+                      } focus:outline-none`}
+                    />
+                  </div>
+                </div>
+
+                {gratuityAmount > 0 && (
+                  <div className="flex justify-between items-center mt-4 text-green-600">
+                    <span className="text-sm">Gratuity:</span>
+                    <span className="font-medium">+{formatPrice(gratuityAmount)}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Total */}
+              <div className="flex justify-between items-center pt-4 border-t border-luxury-gray/10">
+                <span className="text-luxury-black font-semibold">Total Amount</span>
+                <span className="font-display text-2xl text-luxury-black">
+                  {formatPrice(totalAmount)}
                 </span>
               </div>
             </div>
@@ -152,15 +239,35 @@ const PaymentForm = () => {
                 <CardElement options={cardElementOptions} />
               </div>
 
-              {/* Authorization Notice */}
+              {/* Save Card Option */}
+              <div className="mt-6 flex items-start">
+                <input
+                  type="checkbox"
+                  id="save-card"
+                  checked={savePaymentMethod}
+                  onChange={(e) => setSavePaymentMethod(e.target.checked)}
+                  className="mt-1 h-4 w-4 text-luxury-gold focus:ring-luxury-gold border-luxury-gray/30 rounded"
+                />
+                <label htmlFor="save-card" className="ml-3 text-sm">
+                  <span className="font-medium text-luxury-black">Save payment method for future use</span>
+                  <p className="text-xs text-luxury-gray/60 mt-1">
+                    Save your card for faster future bookings and easy post-trip tipping
+                  </p>
+                  <p className="text-xs text-luxury-gray/50 mt-1">
+                    🔒 Secured by Stripe • Remove anytime from your account
+                  </p>
+                </label>
+              </div>
+
+              {/* Payment Notice */}
               <div className="mt-6 p-6 bg-luxury-light-gray border-l-4 border-luxury-gold">
                 <h4 className="text-xs font-semibold text-luxury-black uppercase tracking-luxury mb-3">
-                  Authorization Only
+                  Immediate Payment
                 </h4>
                 <p className="text-xs text-luxury-gray/70 leading-relaxed">
-                  Your card will be authorized for the estimated fare amount but not charged immediately. 
-                  The actual charge will be processed after your trip is completed, and may be adjusted 
-                  based on the actual route taken.
+                  Your card will be charged {formatPrice(totalAmount)} immediately upon booking confirmation.
+                  {gratuityAmount > 0 && ` This includes a ${formatPrice(gratuityAmount)} gratuity.`}
+                  {' '}The charge is final and will be processed now.
                 </p>
               </div>
 
@@ -199,7 +306,7 @@ const PaymentForm = () => {
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                       </svg>
-                      Authorize {formatPrice(selectedVehicle.estimated_fare || selectedVehicle.total_price)}
+                      Pay {formatPrice(totalAmount)}
                     </>
                   )}
                 </button>
@@ -210,6 +317,33 @@ const PaymentForm = () => {
 
         {/* Right Column - Security & Summary */}
         <div className="space-y-8">
+          {/* Booking Summary */}
+          <div className="bg-luxury-white shadow-luxury p-8">
+            <h3 className="text-xs font-semibold text-luxury-gold uppercase tracking-luxury mb-4">
+              Booking Summary
+            </h3>
+            <div className="space-y-3 text-sm">
+              <div>
+                <p className="text-luxury-gray/60 text-xs">Vehicle</p>
+                <p className="text-luxury-black font-medium">{selectedVehicle?.display_name}</p>
+              </div>
+              <div>
+                <p className="text-luxury-gray/60 text-xs">Trip Fare</p>
+                <p className="text-luxury-black font-medium">{formatPrice(baseFare)}</p>
+              </div>
+              {gratuityAmount > 0 && (
+                <div>
+                  <p className="text-luxury-gray/60 text-xs">Gratuity</p>
+                  <p className="text-luxury-black font-medium">{formatPrice(gratuityAmount)}</p>
+                </div>
+              )}
+              <div className="pt-3 border-t border-luxury-gray/10">
+                <p className="text-luxury-gray/60 text-xs">Total to Pay</p>
+                <p className="text-luxury-black font-bold text-lg">{formatPrice(totalAmount)}</p>
+              </div>
+            </div>
+          </div>
+
           {/* Security Notice */}
           <div className="bg-luxury-white shadow-luxury p-8">
             <div className="flex items-center gap-3 mb-4">
@@ -234,23 +368,23 @@ const PaymentForm = () => {
             </div>
           </div>
 
-          {/* Cancellation Policy */}
+          {/* Tip Info */}
           <div className="bg-luxury-light-gray p-6">
             <h3 className="text-xs font-semibold text-luxury-black uppercase tracking-luxury mb-3">
-              Cancellation Policy
+              About Gratuity
             </h3>
             <ul className="space-y-2 text-xs text-luxury-gray/70">
               <li className="flex items-start gap-2">
                 <span className="text-luxury-gold mt-0.5">•</span>
-                <span>Free cancellation up to 24 hours before pickup</span>
+                <span>Tips are optional and go directly to your driver</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-luxury-gold mt-0.5">•</span>
-                <span>50% charge for cancellations within 24 hours</span>
+                <span>You can add a tip now or after your trip</span>
               </li>
               <li className="flex items-start gap-2">
                 <span className="text-luxury-gold mt-0.5">•</span>
-                <span>Full charge for no-shows</span>
+                <span>100% of the gratuity goes to your driver</span>
               </li>
             </ul>
           </div>

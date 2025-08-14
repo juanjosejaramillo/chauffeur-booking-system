@@ -4,7 +4,7 @@ import useBookingStore from '../../../store/bookingStore';
 
 const ConfirmationLuxury = () => {
   const navigate = useNavigate();
-  const { booking, selectedVehicle, tripDetails, customerInfo, resetBooking } = useBookingStore();
+  const { booking, selectedVehicle, tripDetails, customerInfo, gratuityAmount, resetBooking } = useBookingStore();
 
   const handleNewBooking = () => {
     resetBooking();
@@ -137,7 +137,7 @@ const ConfirmationLuxury = () => {
             </div>
           </div>
 
-          {/* Amount Authorized */}
+          {/* Payment Summary */}
           <div className="flex items-start gap-4 pt-4 border-t border-luxury-gray/10">
             <div className="flex-shrink-0 w-8 h-8 bg-luxury-gold/20 rounded-full flex items-center justify-center">
               <svg className="w-4 h-4 text-luxury-gold" fill="currentColor" viewBox="0 0 20 20">
@@ -146,12 +146,31 @@ const ConfirmationLuxury = () => {
               </svg>
             </div>
             <div className="flex-1">
-              <p className="text-xs text-luxury-gray/60 uppercase tracking-wide mb-1">Amount Authorized</p>
-              <p className="text-xl font-display text-luxury-black">
-                {formatPrice(selectedVehicle?.estimated_fare || selectedVehicle?.total_price)}
-              </p>
-              <p className="text-xs text-luxury-gray/60 mt-1">
-                Final charge will be based on actual route and time
+              <p className="text-xs text-luxury-gray/60 uppercase tracking-wide mb-1">Payment Summary</p>
+              <div className="space-y-1">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-luxury-gray/60">Trip Fare:</span>
+                  <span className="text-sm font-medium text-luxury-black">
+                    {formatPrice(selectedVehicle?.estimated_fare || selectedVehicle?.total_price)}
+                  </span>
+                </div>
+                {gratuityAmount > 0 && (
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-luxury-gray/60">Gratuity:</span>
+                    <span className="text-sm font-medium text-luxury-black">
+                      {formatPrice(gratuityAmount)}
+                    </span>
+                  </div>
+                )}
+                <div className="flex justify-between items-center pt-2 border-t border-luxury-gray/10">
+                  <span className="text-sm font-semibold text-luxury-black">Total Paid:</span>
+                  <span className="text-xl font-display text-luxury-black">
+                    {formatPrice((selectedVehicle?.estimated_fare || selectedVehicle?.total_price) + gratuityAmount)}
+                  </span>
+                </div>
+              </div>
+              <p className="text-xs text-luxury-gray/60 mt-2">
+                Payment has been processed successfully
               </p>
             </div>
           </div>

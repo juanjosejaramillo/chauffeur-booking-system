@@ -36,10 +36,17 @@ class Booking extends Model
         'estimated_fare',
         'final_fare',
         'fare_breakdown',
+        'gratuity_amount',
+        'gratuity_added_at',
+        'tip_link_token',
+        'tip_link_sent_at',
         'status',
         'payment_status',
         'stripe_payment_intent_id',
         'stripe_payment_method_id',
+        'save_payment_method',
+        'stripe_customer_id',
+        'qr_code_data',
         'special_instructions',
         'admin_notes',
         'cancellation_reason',
@@ -57,7 +64,11 @@ class Booking extends Model
             'estimated_distance' => 'decimal:2',
             'estimated_fare' => 'decimal:2',
             'final_fare' => 'decimal:2',
+            'gratuity_amount' => 'decimal:2',
+            'gratuity_added_at' => 'datetime',
+            'tip_link_sent_at' => 'datetime',
             'fare_breakdown' => 'array',
+            'save_payment_method' => 'boolean',
             'cancelled_at' => 'datetime',
         ];
     }
@@ -141,5 +152,28 @@ class Booking extends Model
     public function getCustomerFullNameAttribute(): string
     {
         return "{$this->customer_first_name} {$this->customer_last_name}";
+    }
+
+    public function hasTipped(): bool
+    {
+        return $this->gratuity_amount > 0;
+    }
+
+    public function canAddTip(): bool
+    {
+        return $this->status === 'completed' && !$this->hasTipped();
+    }
+
+    public function getTotalAmountAttribute(): float
+    {
+        return $this->final_fare + $this->gratuity_amount;
+    }
+
+    public function generateTipToken(): string
+    {
+        $this->tip_link_token = Str::random(40);
+        $this->save();
+        
+        return $this->tip_link_token;
     }
 }

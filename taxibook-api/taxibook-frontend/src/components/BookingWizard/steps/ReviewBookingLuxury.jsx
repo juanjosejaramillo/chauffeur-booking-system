@@ -26,10 +26,13 @@ const ReviewBookingLuxury = () => {
     }
 
     try {
+      // Create booking without payment
       await createBooking();
+      // Move to payment step
       nextStep();
     } catch (error) {
       console.error('Booking creation failed:', error);
+      // Error is already set in store, just log it
     }
   };
 

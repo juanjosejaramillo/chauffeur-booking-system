@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Bookings\Tables;
 
 use App\Services\StripeService;
+use App\Services\TipService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
@@ -12,6 +13,7 @@ use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
@@ -67,6 +69,12 @@ class BookingsTable
                     ->money('USD')
                     ->sortable()
                     ->description(fn ($record) => $record->final_fare ? 'Final: $' . number_format($record->final_fare, 2) : null),
+                TextColumn::make('gratuity_amount')
+                    ->label('Tip')
+                    ->money('USD')
+                    ->sortable()
+                    ->default('-')
+                    ->color(fn ($record) => $record->gratuity_amount > 0 ? 'success' : 'gray'),
                 TextColumn::make('payment_status')
                     ->label('Payment')
                     ->badge()
@@ -217,6 +225,117 @@ class BookingsTable
                         ->requiresConfirmation()
                         ->modalHeading('Refund Payment')
                         ->modalDescription(fn ($record) => 'Process refund for booking ' . $record->booking_number),
+                    
+                    // Tip Management Actions
+                    Action::make('captureWithTip')
+                        ->label('Capture with Tip')
+                        ->icon('heroicon-o-currency-dollar')
+                        ->color('success')
+                        ->visible(fn ($record) => $record->status === 'completed' && $record->payment_status === 'captured')
+                        ->form([
+                            Select::make('tip_percentage')
+                                ->label('Gratuity')
+                                ->options([
+                                    '0' => 'No tip',
+                                    '15' => '15%',
+                                    '20' => '20%',
+                                    '25' => '25%',
+                                    '30' => '30%',
+                                    'custom' => 'Custom amount',
+                                ])
+                                ->default('20')
+                                ->reactive()
+                                ->required(),
+                            TextInput::make('custom_tip')
+                                ->label('Custom Tip Amount')
+                                ->numeric()
+                                ->prefix('$')
+                                ->visible(fn ($get) => $get('tip_percentage') === 'custom')
+                                ->required(fn ($get) => $get('tip_percentage') === 'custom'),
+                        ])
+                        ->action(function ($record, array $data) {
+                            try {
+                                $tipAmount = 0;
+                                if ($data['tip_percentage'] === 'custom') {
+                                    $tipAmount = $data['custom_tip'];
+                                } elseif ($data['tip_percentage'] !== '0') {
+                                    $tipAmount = $record->final_fare * ($data['tip_percentage'] / 100);
+                                }
+                                
+                                if ($tipAmount > 0) {
+                                    $stripeService = app(StripeService::class);
+                                    $result = $stripeService->chargeTip($record, $tipAmount);
+                                    
+                                    if ($result['success']) {
+                                        Notification::make()
+                                            ->title('Tip Added')
+                                            ->body('Tip of $' . number_format($tipAmount, 2) . ' has been charged successfully.')
+                                            ->success()
+                                            ->send();
+                                    } else {
+                                        throw new \Exception($result['error']);
+                                    }
+                                }
+                            } catch (\Exception $e) {
+                                Notification::make()
+                                    ->title('Failed to Add Tip')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        })
+                        ->modalHeading('Add Gratuity')
+                        ->modalDescription(fn ($record) => 'Add tip for booking ' . $record->booking_number . ' (Fare: $' . number_format($record->final_fare, 2) . ')'),
+                    
+                    Action::make('sendTipLink')
+                        ->label('Send Tip Link')
+                        ->icon('heroicon-o-envelope')
+                        ->color('info')
+                        ->visible(fn ($record) => $record->status === 'completed' && !$record->hasTipped())
+                        ->action(function ($record) {
+                            try {
+                                $tipService = app(TipService::class);
+                                $result = $tipService->sendTipLink($record);
+                                
+                                if ($result['success']) {
+                                    Notification::make()
+                                        ->title('Tip Link Sent')
+                                        ->body('Tip link has been sent to ' . $record->customer_email)
+                                        ->success()
+                                        ->send();
+                                } else {
+                                    throw new \Exception($result['message']);
+                                }
+                            } catch (\Exception $e) {
+                                Notification::make()
+                                    ->title('Failed to Send Tip Link')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+                            }
+                        })
+                        ->requiresConfirmation()
+                        ->modalHeading('Send Tip Link')
+                        ->modalDescription(fn ($record) => 'Send optional tip link to ' . $record->customer_email),
+                    
+                    Action::make('showTipQr')
+                        ->label('Show Tip QR')
+                        ->icon('heroicon-o-qr-code')
+                        ->color('gray')
+                        ->visible(fn ($record) => $record->status === 'completed' && !$record->hasTipped())
+                        ->modalContent(function ($record) {
+                            $tipService = app(TipService::class);
+                            $result = $tipService->getQrCode($record);
+                            
+                            return view('filament.resources.bookings.tip-qr-modal', [
+                                'qrCode' => $result['qr_code'],
+                                'url' => $result['url'],
+                                'bookingNumber' => $record->booking_number,
+                            ]);
+                        })
+                        ->modalHeading('Tip Payment QR Code')
+                        ->modalSubmitAction(false)
+                        ->modalCancelActionLabel('Close'),
                 ]),
             ])
             ->toolbarActions([

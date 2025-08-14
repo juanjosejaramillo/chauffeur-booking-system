@@ -29,6 +29,11 @@ const useBookingStore = create((set, get) => ({
     specialInstructions: '',
   },
   
+  // Payment options
+  gratuityAmount: 0,
+  gratuityPercentage: 0,
+  savePaymentMethod: false,
+  
   // Email verification state
   emailVerified: false,
   verificationSent: false,
@@ -89,6 +94,14 @@ const useBookingStore = create((set, get) => ({
   setCustomerInfo: (info) => set((state) => ({
     customerInfo: { ...state.customerInfo, ...info }
   })),
+  
+  // Payment setters
+  setGratuity: (percentage, amount) => set({ 
+    gratuityPercentage: percentage, 
+    gratuityAmount: amount 
+  }),
+  
+  setSavePaymentMethod: (save) => set({ savePaymentMethod: save }),
   
   // API calls
   validateRoute: async () => {
@@ -181,12 +194,37 @@ const useBookingStore = create((set, get) => ({
         dropoff_lng: tripDetails.dropoffLng,
         pickup_date: `${tripDetails.pickupDate} ${tripDetails.pickupTime}`,
         special_instructions: customerInfo.specialInstructions,
+        // No payment_method_id - will be processed separately
       });
       
       set({ booking: response.data.booking });
       return response.data;
     } catch (error) {
       set({ error: error.response?.data?.error || 'Failed to create booking' });
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+  
+  processBookingPayment: async (paymentMethodId) => {
+    set({ loading: true, error: null });
+    try {
+      const { booking, gratuityAmount, savePaymentMethod } = get();
+      if (!booking || !booking.booking_number) {
+        throw new Error('No booking found to process payment');
+      }
+      
+      const response = await api.post(`/bookings/${booking.booking_number}/process-payment`, {
+        payment_method_id: paymentMethodId,
+        gratuity_amount: gratuityAmount,
+        save_payment_method: savePaymentMethod,
+      });
+      
+      set({ booking: response.data.booking });
+      return response.data;
+    } catch (error) {
+      set({ error: error.response?.data?.error || 'Failed to process payment' });
       throw error;
     } finally {
       set({ loading: false });
@@ -320,6 +358,9 @@ const useBookingStore = create((set, get) => ({
       phone: '',
       specialInstructions: '',
     },
+    gratuityAmount: 0,
+    gratuityPercentage: 0,
+    savePaymentMethod: false,
     emailVerified: false,
     verificationSent: false,
     verificationError: null,

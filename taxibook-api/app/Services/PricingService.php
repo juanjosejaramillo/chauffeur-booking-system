@@ -58,6 +58,13 @@ class PricingService
                 'polyline' => $route['polyline'],
             ],
             'vehicles' => $prices,
+            'gratuity_options' => [
+                ['percentage' => 0, 'label' => 'No tip'],
+                ['percentage' => 15, 'label' => '15%'],
+                ['percentage' => 20, 'label' => '20%'],
+                ['percentage' => 25, 'label' => '25%'],
+            ],
+            'payment_note' => 'Fare will be charged at booking. You can optionally add a tip now or after your trip.',
         ];
     }
 

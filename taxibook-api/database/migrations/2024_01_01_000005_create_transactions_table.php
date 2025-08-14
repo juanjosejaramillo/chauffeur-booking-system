@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('booking_id')->constrained()->cascadeOnDelete();
-            $table->enum('type', ['authorization', 'capture', 'refund', 'partial_refund', 'void']);
+            $table->enum('type', ['authorization', 'capture', 'refund', 'partial_refund', 'void', 'payment', 'tip']);
             $table->decimal('amount', 10, 2);
             $table->enum('status', ['pending', 'succeeded', 'failed']);
             $table->string('stripe_transaction_id')->nullable();

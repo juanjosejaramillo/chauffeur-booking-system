@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Booking;
 use App\Models\User;
 use App\Models\VehicleType;
+use App\Models\Transaction;
 use App\Services\MapboxService;
 use App\Services\PricingService;
 use App\Services\StripeService;
@@ -133,6 +134,9 @@ class BookingController extends Controller
             'dropoff_lng' => 'required|numeric|between:-180,180',
             'pickup_date' => 'required|date|after:now',
             'special_instructions' => 'nullable|string|max:500',
+            'payment_method_id' => 'nullable|string', // Stripe payment method ID (optional for initial booking)
+            'gratuity_amount' => 'nullable|numeric|min:0', // Optional tip at booking
+            'save_payment_method' => 'boolean', // Save card for future use
         ]);
 
         $pickupDate = Carbon::parse($validated['pickup_date']);
@@ -167,6 +171,11 @@ class BookingController extends Controller
             // Find user by email (should exist from verification)
             $user = User::where('email', $validated['customer_email'])->first();
             
+            // Calculate total with optional tip
+            $tipAmount = $validated['gratuity_amount'] ?? 0;
+            $totalCharge = $estimatedFare + $tipAmount;
+            $saveCard = $validated['save_payment_method'] ?? false;
+            
             // Create booking
             $booking = Booking::create([
                 'user_id' => $user ? $user->id : null,
@@ -186,22 +195,143 @@ class BookingController extends Controller
                 'estimated_duration' => $route['duration'],
                 'route_polyline' => $route['polyline'],
                 'estimated_fare' => $estimatedFare,
+                'final_fare' => $estimatedFare,
+                'gratuity_amount' => $tipAmount,
+                'gratuity_added_at' => $tipAmount > 0 ? now() : null,
+                'save_payment_method' => $saveCard,
                 'special_instructions' => $validated['special_instructions'] ?? null,
                 'status' => 'pending',
                 'payment_status' => 'pending',
             ]);
+            
+            // If payment method provided, process payment immediately
+            if (!empty($validated['payment_method_id'])) {
+                $paymentResult = $this->stripeService->chargeBooking(
+                    $booking,
+                    $validated['payment_method_id'],
+                    $totalCharge,
+                    $saveCard
+                );
+                
+                if (!$paymentResult['success']) {
+                    throw new \Exception($paymentResult['error']);
+                }
+                
+                // Update booking with payment details
+                $booking->update([
+                    'payment_status' => 'captured',
+                    'status' => 'confirmed',
+                    'stripe_payment_intent_id' => $paymentResult['payment_intent_id'],
+                    'stripe_payment_method_id' => $saveCard ? $paymentResult['payment_method_id'] : null,
+                    'stripe_customer_id' => $saveCard ? $paymentResult['customer_id'] : null,
+                ]);
+                
+                // Create transaction record
+                Transaction::create([
+                    'booking_id' => $booking->id,
+                    'type' => 'payment',
+                    'amount' => $totalCharge,
+                    'status' => 'succeeded',
+                    'stripe_transaction_id' => $paymentResult['payment_intent_id'],
+                    'notes' => $tipAmount > 0 ? "Includes $" . number_format($tipAmount, 2) . " tip" : null,
+                ]);
+                
+                // Trigger booking confirmed event
+                event(new BookingConfirmed($booking->fresh()));
+            }
 
             DB::commit();
-
+            
             return response()->json([
                 'booking' => $booking->load('vehicleType'),
                 'message' => 'Booking created successfully',
+                'payment_required' => empty($validated['payment_method_id']),
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
             
             return response()->json([
                 'error' => 'Failed to create booking. Please try again.',
+            ], 500);
+        }
+    }
+
+    public function processPayment(Request $request, $bookingNumber)
+    {
+        $validated = $request->validate([
+            'payment_method_id' => 'required|string',
+            'gratuity_amount' => 'nullable|numeric|min:0',
+            'save_payment_method' => 'boolean',
+        ]);
+
+        $booking = Booking::where('booking_number', $bookingNumber)->firstOrFail();
+
+        // Check if booking is already paid
+        if ($booking->payment_status === 'captured') {
+            return response()->json([
+                'error' => 'This booking has already been paid.',
+            ], 422);
+        }
+
+        DB::beginTransaction();
+
+        try {
+            // Update gratuity if provided
+            if (isset($validated['gratuity_amount'])) {
+                $booking->gratuity_amount = $validated['gratuity_amount'];
+                $booking->gratuity_added_at = $validated['gratuity_amount'] > 0 ? now() : null;
+            }
+
+            // Calculate total charge
+            $totalCharge = $booking->estimated_fare + $booking->gratuity_amount;
+            $saveCard = $validated['save_payment_method'] ?? false;
+
+            // Process payment
+            $paymentResult = $this->stripeService->chargeBooking(
+                $booking,
+                $validated['payment_method_id'],
+                $totalCharge,
+                $saveCard
+            );
+
+            if (!$paymentResult['success']) {
+                throw new \Exception($paymentResult['error']);
+            }
+
+            // Update booking with payment details
+            $booking->update([
+                'payment_status' => 'captured',
+                'status' => 'confirmed',
+                'stripe_payment_intent_id' => $paymentResult['payment_intent_id'],
+                'stripe_payment_method_id' => $saveCard ? $paymentResult['payment_method_id'] : null,
+                'stripe_customer_id' => $saveCard ? $paymentResult['customer_id'] : null,
+                'save_payment_method' => $saveCard,
+            ]);
+
+            // Create transaction record
+            Transaction::create([
+                'booking_id' => $booking->id,
+                'type' => 'payment',
+                'amount' => $totalCharge,
+                'status' => 'succeeded',
+                'stripe_transaction_id' => $paymentResult['payment_intent_id'],
+                'notes' => $booking->gratuity_amount > 0 ? "Includes $" . number_format($booking->gratuity_amount, 2) . " tip" : null,
+            ]);
+
+            DB::commit();
+
+            // Trigger booking confirmed event
+            event(new BookingConfirmed($booking->fresh()));
+
+            return response()->json([
+                'booking' => $booking->load('vehicleType'),
+                'message' => 'Payment processed successfully',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'error' => $e->getMessage() ?: 'Failed to process payment. Please try again.',
             ], 500);
         }
     }
