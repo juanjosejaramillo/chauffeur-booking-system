@@ -48,13 +48,41 @@ const useBookingStore = create((set, get) => ({
     currentStep: Math.min(state.currentStep + 1, state.maxStep)
   })),
   
-  prevStep: () => set((state) => ({
-    currentStep: Math.max(state.currentStep - 1, 1)
-  })),
+  prevStep: () => set((state) => {
+    // Clear vehicle prices when going back from vehicle selection step
+    if (state.currentStep === 2) {
+      return {
+        currentStep: Math.max(state.currentStep - 1, 1),
+        availableVehicles: [],
+        selectedVehicle: null
+      };
+    }
+    return {
+      currentStep: Math.max(state.currentStep - 1, 1)
+    };
+  }),
   
-  setTripDetails: (details) => set((state) => ({
-    tripDetails: { ...state.tripDetails, ...details }
-  })),
+  setTripDetails: (details) => set((state) => {
+    // Check if location details have changed
+    const locationChanged = 
+      (details.pickupLat !== undefined && details.pickupLat !== state.tripDetails.pickupLat) ||
+      (details.pickupLng !== undefined && details.pickupLng !== state.tripDetails.pickupLng) ||
+      (details.dropoffLat !== undefined && details.dropoffLat !== state.tripDetails.dropoffLat) ||
+      (details.dropoffLng !== undefined && details.dropoffLng !== state.tripDetails.dropoffLng);
+    
+    // Clear vehicle data if locations changed
+    if (locationChanged) {
+      return {
+        tripDetails: { ...state.tripDetails, ...details },
+        availableVehicles: [],
+        selectedVehicle: null
+      };
+    }
+    
+    return {
+      tripDetails: { ...state.tripDetails, ...details }
+    };
+  }),
   
   setSelectedVehicle: (vehicle) => set({ selectedVehicle: vehicle }),
   

@@ -67,58 +67,95 @@ class PricingService
         
         // Base fare
         $breakdown['base_fare'] = [
-            'label' => "Base fare (includes {$vehicleType->base_miles_included} miles)",
+            'label' => sprintf('Base fare (includes first %g miles)', $vehicleType->base_miles_included),
             'amount' => $vehicleType->base_fare,
         ];
 
-        // Distance charges
-        $remainingDistance = max(0, $distance - $vehicleType->base_miles_included);
-        if ($remainingDistance > 0) {
-            $distanceCharge = 0;
+        // Distance charges - show each tier separately
+        if ($distance > $vehicleType->base_miles_included) {
+            $billableDistance = $distance - $vehicleType->base_miles_included;
+            $currentMile = $vehicleType->base_miles_included;
+            
             $tiers = $vehicleType->pricingTiers()->orderBy('from_mile')->get();
+            $tierIndex = 1;
             
             foreach ($tiers as $tier) {
-                if ($remainingDistance <= 0) break;
+                if ($billableDistance <= 0) break;
                 
-                $tierDistance = $tier->to_mile 
-                    ? min($remainingDistance, $tier->to_mile - $tier->from_mile)
-                    : $remainingDistance;
+                // Determine the start and end of this tier
+                $tierStart = max($tier->from_mile, $currentMile);
+                $tierEnd = $tier->to_mile ?? PHP_FLOAT_MAX;
+                
+                // Skip this tier if we haven't reached it yet
+                if ($currentMile >= $tierEnd) continue;
+                
+                // Calculate miles in this tier
+                $milesInTier = min($tierEnd - $tierStart, $billableDistance);
+                
+                if ($milesInTier > 0) {
+                    $tierCharge = $milesInTier * $tier->per_mile_rate;
                     
-                $distanceCharge += $tierDistance * $tier->per_mile_rate;
-                $remainingDistance -= $tierDistance;
+                    // Format tier label
+                    $tierLabel = $tier->to_mile 
+                        ? sprintf('Miles %g-%g', $tier->from_mile, $tier->to_mile)
+                        : sprintf('Miles %g+', $tier->from_mile);
+                    
+                    $breakdown["tier_{$tierIndex}"] = [
+                        'label' => sprintf('%s: %g × $%.2f', $tierLabel, round($milesInTier, 2), $tier->per_mile_rate),
+                        'amount' => round($tierCharge, 2),
+                    ];
+                    
+                    $billableDistance -= $milesInTier;
+                    $currentMile += $milesInTier;
+                    $tierIndex++;
+                }
             }
             
-            $breakdown['distance_charge'] = [
-                'label' => sprintf('Distance charge (%.2f miles)', $distance - $vehicleType->base_miles_included),
-                'amount' => round($distanceCharge, 2),
-            ];
+            // If there's still distance left and no unlimited tier
+            if ($billableDistance > 0 && $tiers->isNotEmpty()) {
+                $lastTier = $tiers->last();
+                if ($lastTier->to_mile !== null) {
+                    $tierCharge = $billableDistance * $lastTier->per_mile_rate;
+                    $breakdown["tier_overflow"] = [
+                        'label' => sprintf('Miles %g+: %g × $%.2f', $lastTier->to_mile + 1, round($billableDistance, 2), $lastTier->per_mile_rate),
+                        'amount' => round($tierCharge, 2),
+                    ];
+                }
+            }
         }
 
         // Time charges
         $timeCharge = ($duration / 60) * $vehicleType->per_minute_rate;
         if ($timeCharge > 0) {
             $breakdown['time_charge'] = [
-                'label' => sprintf('Time charge (%d minutes)', round($duration / 60)),
+                'label' => sprintf('Time: %d × $%.2f', round($duration / 60), $vehicleType->per_minute_rate),
                 'amount' => round($timeCharge, 2),
             ];
         }
 
-        // Service fee multiplier
+        // Calculate subtotal (before service fee and tax)
+        $subtotal = array_sum(array_column($breakdown, 'amount'));
+
+        // Service fee multiplier (if different from 1)
         if ($vehicleType->service_fee_multiplier != 1) {
-            $subtotal = array_sum(array_column($breakdown, 'amount'));
             $serviceFee = $subtotal * ($vehicleType->service_fee_multiplier - 1);
-            
             $breakdown['service_fee'] = [
-                'label' => 'Service fee',
+                'label' => sprintf('Service fee (%.0f%%)', ($vehicleType->service_fee_multiplier - 1) * 100),
                 'amount' => round($serviceFee, 2),
             ];
+            $subtotal += $serviceFee;
         }
 
-        // Tax
-        if ($vehicleType->tax_enabled) {
-            $subtotal = array_sum(array_column($breakdown, 'amount'));
+        // Add subtotal line before tax
+        $breakdown['subtotal'] = [
+            'label' => 'Subtotal',
+            'amount' => round($subtotal, 2),
+            'is_subtotal' => true,
+        ];
+
+        // Tax (optional)
+        if ($vehicleType->tax_enabled && $vehicleType->tax_rate > 0) {
             $tax = $subtotal * ($vehicleType->tax_rate / 100);
-            
             $breakdown['tax'] = [
                 'label' => sprintf('Tax (%.2f%%)', $vehicleType->tax_rate),
                 'amount' => round($tax, 2),

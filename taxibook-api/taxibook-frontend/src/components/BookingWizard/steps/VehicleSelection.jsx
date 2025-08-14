@@ -137,11 +137,12 @@ const VehicleSelection = () => {
                     
                     <div className="mt-3">
                       <span className="text-2xl font-bold text-gray-900">
-                        {formatPrice(vehicle.estimated_fare)}
+                        {formatPrice(vehicle.estimated_fare)} USD
                       </span>
                     </div>
                     
-                    {vehicle.fare_breakdown && (
+                    {/* Fare breakdown hidden for now */}
+                    {false && vehicle.fare_breakdown && (
                       <button
                         type="button"
                         onClick={(e) => {

@@ -18,10 +18,10 @@ const VehicleSelectionLuxury = () => {
   const [showFareBreakdown, setShowFareBreakdown] = useState(null);
 
   useEffect(() => {
-    if (availableVehicles.length === 0 && !loading) {
-      calculatePrices();
-    }
-  }, [availableVehicles, calculatePrices, loading]);
+    // Always recalculate prices when component mounts
+    // This ensures fresh prices when users go back and change locations
+    calculatePrices();
+  }, []); // Empty dependency array - only run on mount
 
   const handleSelectVehicle = (vehicle) => {
     setSelectedVehicle(vehicle);
@@ -190,24 +190,27 @@ const VehicleSelectionLuxury = () => {
               <div className="flex items-end justify-between border-t border-luxury-gray/10 pt-6">
                 <div>
                   <p className="text-xs text-luxury-gray/50 uppercase tracking-wide mb-1">Total Fare</p>
-                  <p className="font-display text-3xl text-luxury-black">
-                    {formatPrice(vehicle.estimated_fare || vehicle.total_price)}
+                  <p className="text-xl font-light text-luxury-black">
+                    {formatPrice(vehicle.estimated_fare || vehicle.total_price)} <span className="text-sm text-luxury-gray/60">USD</span>
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowFareBreakdown(showFareBreakdown === vehicle.vehicle_type_id ? null : vehicle.vehicle_type_id);
-                  }}
-                  className="text-xs text-luxury-gold hover:text-luxury-gold-dark transition-colors uppercase tracking-wide"
-                >
-                  Fare Details
-                </button>
+                {/* Fare details button hidden for now */}
+                {false && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowFareBreakdown(showFareBreakdown === vehicle.vehicle_type_id ? null : vehicle.vehicle_type_id);
+                    }}
+                    className="text-xs text-luxury-gold hover:text-luxury-gold-dark transition-colors uppercase tracking-wide"
+                  >
+                    Fare Details
+                  </button>
+                )}
               </div>
 
-              {/* Fare Breakdown */}
-              {showFareBreakdown === vehicle.vehicle_type_id && vehicle.fare_breakdown && (
+              {/* Fare Breakdown - hidden for now */}
+              {false && showFareBreakdown === vehicle.vehicle_type_id && vehicle.fare_breakdown && (
                 <div className="mt-4 pt-4 border-t border-luxury-gray/10 space-y-2 text-sm">
                   {Object.entries(vehicle.fare_breakdown).map(([key, item]) => (
                     item && item.amount !== undefined && (
