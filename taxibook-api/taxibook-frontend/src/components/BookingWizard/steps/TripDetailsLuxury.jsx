@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import useBookingStore from '../../../store/bookingStore';
 import 'mapbox-gl/dist/mapbox-gl.css';
+import DatePicker from 'react-datepicker';
+import 'react-datepicker/dist/react-datepicker.css';
 
 mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
@@ -323,14 +325,41 @@ const TripDetailsLuxury = () => {
   const getMinDateTime = () => {
     const now = new Date();
     now.setHours(now.getHours() + 2);
-    
-    const date = now.toISOString().split('T')[0];
-    const time = now.toTimeString().slice(0, 5);
-    
-    return { date, time };
+    return now;
   };
   
-  const { date: minDate, time: minTime } = getMinDateTime();
+  const getDefaultDateTime = () => {
+    const defaultDate = new Date();
+    const currentHour = defaultDate.getHours();
+    
+    // Set to tomorrow at popular pickup times
+    defaultDate.setDate(defaultDate.getDate() + 1);
+    
+    // Set to typical busy hours for chauffeur services
+    if (currentHour < 12) {
+      defaultDate.setHours(7, 0, 0, 0); // 7:00 AM - popular airport departure time
+    } else {
+      defaultDate.setHours(18, 0, 0, 0); // 6:00 PM - popular business/dinner pickup time
+    }
+    
+    return defaultDate;
+  };
+  
+  const minDateTime = getMinDateTime();
+  const [selectedDateTime, setSelectedDateTime] = useState(
+    tripDetails.pickupDate && tripDetails.pickupTime 
+      ? new Date(`${tripDetails.pickupDate}T${tripDetails.pickupTime}`)
+      : getDefaultDateTime()
+  );
+  
+  // Update store when date/time changes
+  useEffect(() => {
+    if (selectedDateTime) {
+      const date = selectedDateTime.toISOString().split('T')[0];
+      const time = selectedDateTime.toTimeString().slice(0, 5);
+      setTripDetails({ pickupDate: date, pickupTime: time });
+    }
+  }, [selectedDateTime]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-luxury-cream to-luxury-light-gray">
@@ -452,34 +481,45 @@ const TripDetailsLuxury = () => {
               </div>
 
               {/* Date & Time Row */}
-              <div className="grid grid-cols-2 gap-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                <div>
-                  <label className="block text-xs font-medium text-luxury-gold uppercase tracking-luxury mb-3">
-                    Date
-                  </label>
-                  <input
-                    type="date"
-                    min={minDate}
-                    value={tripDetails.pickupDate}
-                    onChange={(e) => setTripDetails({ pickupDate: e.target.value })}
-                    className="input-luxury text-sm"
-                    required
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-xs font-medium text-luxury-gold uppercase tracking-luxury mb-3">
-                    Time
-                  </label>
-                  <input
-                    type="time"
-                    min={tripDetails.pickupDate === minDate ? minTime : undefined}
-                    value={tripDetails.pickupTime}
-                    onChange={(e) => setTripDetails({ pickupTime: e.target.value })}
-                    className="input-luxury text-sm"
-                    required
-                  />
-                </div>
+              <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                <label className="block text-xs font-medium text-luxury-gold uppercase tracking-luxury mb-3">
+                  Pickup Date & Time
+                </label>
+                <DatePicker
+                  selected={selectedDateTime}
+                  onChange={(date) => setSelectedDateTime(date)}
+                  showTimeSelect
+                  timeFormat="h:mm aa"
+                  timeIntervals={15}
+                  timeCaption="Time"
+                  dateFormat="MMMM d, yyyy h:mm aa"
+                  minDate={minDateTime}
+                  minTime={
+                    selectedDateTime && selectedDateTime.toDateString() === minDateTime.toDateString()
+                      ? minDateTime
+                      : new Date(new Date().setHours(0, 0, 0, 0))
+                  }
+                  maxTime={new Date(new Date().setHours(23, 59, 59, 999))}
+                  placeholderText="Select pickup date and time"
+                  className="w-full px-4 py-3 bg-white border border-luxury-gray/20 text-luxury-black placeholder-luxury-gray/50 focus:outline-none focus:ring-2 focus:ring-luxury-gold focus:border-transparent transition-all duration-200 text-sm"
+                  calendarClassName="luxury-calendar"
+                  wrapperClassName="w-full"
+                  required
+                  filterTime={(time) => {
+                    const currentDate = new Date();
+                    const selectedDate = new Date(selectedDateTime || currentDate);
+                    const timeHours = time.getHours();
+                    const timeMinutes = time.getMinutes();
+                    
+                    // If it's today, filter times that are at least 2 hours from now
+                    if (selectedDate.toDateString() === currentDate.toDateString()) {
+                      const minTime = new Date();
+                      minTime.setHours(minTime.getHours() + 2);
+                      return time >= minTime;
+                    }
+                    return true;
+                  }}
+                />
               </div>
 
               {/* Error Message */}
