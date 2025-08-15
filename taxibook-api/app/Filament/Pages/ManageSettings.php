@@ -362,46 +362,6 @@ class ManageSettings extends Page
                                     ])
                                     ->columns(2),
                             ]),
-                        
-                        Tab::make('System Settings')
-                            ->icon('heroicon-o-server-stack')
-                            ->schema([
-                                Section::make('Application Settings')
-                                    ->description('General application configuration')
-                                    ->schema([
-                                        TextInput::make('app_timezone')
-                                            ->label('Timezone')
-                                            ->default('America/New_York')
-                                            ->helperText('System timezone for date/time operations'),
-                                        
-                                        Select::make('app_locale')
-                                            ->label('Locale')
-                                            ->options([
-                                                'en' => 'English',
-                                                'es' => 'Spanish',
-                                                'fr' => 'French',
-                                            ])
-                                            ->default('en')
-                                            ->helperText('Default language for the application'),
-                                        
-                                        Select::make('currency')
-                                            ->label('Currency')
-                                            ->options([
-                                                'USD' => 'USD - US Dollar',
-                                                'EUR' => 'EUR - Euro',
-                                                'GBP' => 'GBP - British Pound',
-                                                'CAD' => 'CAD - Canadian Dollar',
-                                            ])
-                                            ->default('USD')
-                                            ->helperText('Default currency for pricing'),
-                                        
-                                        Toggle::make('maintenance_mode')
-                                            ->label('Maintenance Mode')
-                                            ->default(false)
-                                            ->helperText('Enable maintenance mode to prevent customer bookings'),
-                                    ])
-                                    ->columns(2),
-                            ]),
                     ])
                     ->persistTabInQueryString(),
             ])
@@ -677,36 +637,6 @@ class ManageSettings extends Page
                 'type' => 'boolean',
                 'description' => 'BCC admin on all emails',
                 'order' => 5,
-            ],
-            
-            // System Settings
-            'app_timezone' => [
-                'group' => 'system',
-                'display_name' => 'Timezone',
-                'type' => 'text',
-                'description' => 'Application timezone',
-                'order' => 1,
-            ],
-            'app_locale' => [
-                'group' => 'system',
-                'display_name' => 'Locale',
-                'type' => 'text',
-                'description' => 'Application locale',
-                'order' => 2,
-            ],
-            'currency' => [
-                'group' => 'system',
-                'display_name' => 'Currency',
-                'type' => 'text',
-                'description' => 'Default currency',
-                'order' => 3,
-            ],
-            'maintenance_mode' => [
-                'group' => 'system',
-                'display_name' => 'Maintenance Mode',
-                'type' => 'boolean',
-                'description' => 'Enable maintenance mode',
-                'order' => 4,
             ],
         ];
 
