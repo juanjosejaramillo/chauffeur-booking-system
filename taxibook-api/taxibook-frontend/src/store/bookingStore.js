@@ -116,16 +116,13 @@ const useBookingStore = create((set, get) => ({
         pickup_date: `${tripDetails.pickupDate} ${tripDetails.pickupTime}`,
       };
       
-      console.log('Sending validateRoute request:', payload);
       
       const response = await api.post('/bookings/validate-route', payload);
       
-      console.log('ValidateRoute response:', response.data);
       
       set({ routeInfo: response.data.route });
       return response.data;
     } catch (error) {
-      console.error('ValidateRoute error:', error.response?.data || error);
       
       // Extract error message from various possible formats
       let errorMessage = 'Failed to validate route';
@@ -144,7 +141,6 @@ const useBookingStore = create((set, get) => ({
         errorMessage = error.message;
       }
       
-      console.log('Setting error message:', errorMessage);
       set({ error: errorMessage });
       throw error;
     } finally {
@@ -281,7 +277,6 @@ const useBookingStore = create((set, get) => ({
         pickup_date: `${tripDetails.pickupDate} ${tripDetails.pickupTime}`,
       };
       
-      console.log('Sending verification payload:', payload);
       
       const response = await api.post('/bookings/send-verification', payload);
       

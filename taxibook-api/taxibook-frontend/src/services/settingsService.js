@@ -25,7 +25,6 @@ export const settingsService = {
         return settingsCache;
       })
       .catch(error => {
-        console.error('Failed to fetch settings:', error);
         settingsPromise = null;
         // Return default values if the API call fails
         return {

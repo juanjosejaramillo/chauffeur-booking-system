@@ -19,7 +19,6 @@ const TipSuccess = () => {
       const response = await api.get(`/tip/${token}`);
       setBooking(response.data);
     } catch (err) {
-      console.error('Failed to load booking:', err);
     } finally {
       setLoading(false);
     }

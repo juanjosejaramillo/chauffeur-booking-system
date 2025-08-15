@@ -62,7 +62,6 @@ const TripDetailsLuxury = () => {
         // Add navigation controls with custom positioning
         map.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
       } catch (error) {
-        console.error('Error initializing map:', error);
       }
     }
 
@@ -184,7 +183,6 @@ const TripDetailsLuxury = () => {
         }
       }
     } catch (error) {
-      console.error('Search error:', error);
     } finally {
       if (type === 'pickup') {
         setIsLoadingPickup(false);
@@ -231,14 +229,12 @@ const TripDetailsLuxury = () => {
           }
         }
       } catch (error) {
-        console.error('Error retrieving full location details:', error);
       }
     } else if (suggestion.center) {
       [lng, lat] = suggestion.center;
     }
     
     if (!lng || !lat) {
-      console.error('Could not get coordinates for suggestion');
       return;
     }
     
@@ -321,7 +317,6 @@ const TripDetailsLuxury = () => {
       await validateRoute();
       nextStep();
     } catch (error) {
-      console.error('Route validation failed:', error);
     }
   };
 
