@@ -47,7 +47,7 @@ class BookingForm
                                 'authorized' => 'Authorized',
                                 'captured' => 'Captured',
                                 'failed' => 'Failed',
-                                'refunded' => 'Refunded',
+                                'refunded' => 'Fully Refunded',
                                 'cancelled' => 'Cancelled',
                             ])
                             ->native(false)
@@ -55,7 +55,27 @@ class BookingForm
                             ->disabled()
                             ->dehydrated()
                             ->helperText('Payment status is managed through Stripe. Use action buttons to capture, cancel, or refund.')
-                            ->columnSpanFull(),
+                            ->columnSpan(1),
+                        Placeholder::make('refund_status_indicator')
+                            ->label('Refund Status')
+                            ->content(function ($record) {
+                                if (!$record) return '';
+                                if ($record->payment_status === 'captured' && $record->total_refunded > 0) {
+                                    $originalAmount = $record->final_fare ?? $record->estimated_fare;
+                                    $percentage = round(($record->total_refunded / $originalAmount) * 100);
+                                    return new HtmlString('
+                                        <div class="flex items-center gap-3">
+                                            <span class="text-orange-600 font-semibold">Partially Refunded</span>
+                                            <span class="text-sm text-gray-600">($' . number_format($record->total_refunded, 2) . ' of $' . number_format($originalAmount, 2) . ' - ' . $percentage . '%)</span>
+                                        </div>
+                                    ');
+                                } elseif ($record->payment_status === 'refunded') {
+                                    return new HtmlString('<span class="text-gray-600 font-semibold">Fully Refunded</span>');
+                                }
+                                return new HtmlString('<span class="text-gray-500">No refunds</span>');
+                            })
+                            ->visible(fn ($record) => $record && in_array($record->payment_status, ['captured', 'refunded']))
+                            ->columnSpan(1),
                         Placeholder::make('saved_card_indicator')
                             ->label('Saved Payment Method')
                             ->content(function ($record) {
@@ -153,6 +173,19 @@ class BookingForm
                         Placeholder::make('total_amount')
                             ->label('Total (Fare + Tip)')
                             ->content(fn ($record) => $record ? '$' . number_format(($record->final_fare ?? $record->estimated_fare) + $record->gratuity_amount, 2) : '$0.00')
+                            ->columnSpan(1),
+                        TextInput::make('total_refunded')
+                            ->label('Total Refunded')
+                            ->prefix('$')
+                            ->numeric()
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->visible(fn ($record) => $record && $record->total_refunded > 0)
+                            ->columnSpan(1),
+                        Placeholder::make('net_amount')
+                            ->label('Net Amount (After Refunds)')
+                            ->content(fn ($record) => $record ? '$' . number_format($record->net_amount, 2) : '$0.00')
+                            ->visible(fn ($record) => $record && $record->total_refunded > 0)
                             ->columnSpan(1),
                         TextInput::make('estimated_distance')
                             ->label('Distance (miles)')

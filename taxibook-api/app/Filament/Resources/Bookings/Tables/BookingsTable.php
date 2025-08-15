@@ -68,7 +68,17 @@ class BookingsTable
                     ->label('Fare')
                     ->money('USD')
                     ->sortable()
-                    ->description(fn ($record) => $record->final_fare ? 'Final: $' . number_format($record->final_fare, 2) : null),
+                    ->description(function ($record) {
+                        $descriptions = [];
+                        if ($record->final_fare) {
+                            $descriptions[] = 'Final: $' . number_format($record->final_fare, 2);
+                        }
+                        if ($record->total_refunded > 0) {
+                            $descriptions[] = 'Refunded: $' . number_format($record->total_refunded, 2);
+                            $descriptions[] = 'Net: $' . number_format($record->net_amount, 2);
+                        }
+                        return implode(' | ', $descriptions);
+                    }),
                 TextColumn::make('gratuity_amount')
                     ->label('Tip')
                     ->money('USD')
@@ -78,13 +88,26 @@ class BookingsTable
                 TextColumn::make('payment_status')
                     ->label('Payment')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'pending' => 'warning',
-                        'authorized' => 'info',
-                        'captured' => 'success',
-                        'failed' => 'danger',
-                        'refunded' => 'gray',
-                        default => 'gray',
+                    ->formatStateUsing(function (string $state, $record): string {
+                        // Check if it's a partial refund
+                        if ($state === 'captured' && $record->total_refunded > 0) {
+                            return 'Partially Refunded';
+                        }
+                        return ucfirst($state);
+                    })
+                    ->color(function (string $state, $record): string {
+                        // Check if it's a partial refund for coloring
+                        if ($state === 'captured' && $record->total_refunded > 0) {
+                            return 'warning';
+                        }
+                        return match ($state) {
+                            'pending' => 'warning',
+                            'authorized' => 'info',
+                            'captured' => 'success',
+                            'failed' => 'danger',
+                            'refunded' => 'gray',
+                            default => 'gray',
+                        };
                     }),
                 TextColumn::make('customer_email')
                     ->label('Email')
@@ -181,14 +204,22 @@ class BookingsTable
                         ->label('Refund Payment')
                         ->icon('heroicon-o-receipt-refund')
                         ->color('danger')
-                        ->visible(fn ($record) => $record->payment_status === 'captured')
+                        ->visible(fn ($record) => $record->payment_status === 'captured' || $record->payment_status === 'refunded')
                         ->form([
                             TextInput::make('amount')
                                 ->label('Refund Amount')
                                 ->numeric()
                                 ->prefix('$')
-                                ->default(fn ($record) => $record->final_fare ?? $record->estimated_fare)
-                                ->helperText(fn ($record) => 'Captured amount: $' . number_format($record->final_fare ?? $record->estimated_fare, 2))
+                                ->default(fn ($record) => $record->net_amount)
+                                ->helperText(function ($record) {
+                                    $captured = $record->final_fare ?? $record->estimated_fare;
+                                    $refunded = $record->total_refunded;
+                                    $remaining = $captured - $refunded;
+                                    return 'Originally captured: $' . number_format($captured, 2) . 
+                                           ($refunded > 0 ? ' | Already refunded: $' . number_format($refunded, 2) : '') .
+                                           ' | Remaining: $' . number_format($remaining, 2);
+                                })
+                                ->maxValue(fn ($record) => ($record->final_fare ?? $record->estimated_fare) - $record->total_refunded)
                                 ->required(),
                             Textarea::make('reason')
                                 ->label('Refund Reason')

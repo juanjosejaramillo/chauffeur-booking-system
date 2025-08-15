@@ -321,6 +321,10 @@ class StripeService
             throw new \Exception('No payment intent found for this booking');
         }
 
+        // Calculate the refund amount
+        $chargedAmount = $booking->final_fare ?? $booking->estimated_fare;
+        $refundAmount = $amount ?? $chargedAmount;
+
         $refundData = [
             'payment_intent' => $booking->stripe_payment_intent_id,
         ];
@@ -335,16 +339,28 @@ class StripeService
 
         $refund = $this->stripe->refunds->create($refundData);
 
-        // Update booking
+        // Calculate new total refunded amount
+        $newTotalRefunded = $booking->total_refunded + $refundAmount;
+        
+        // Determine the correct payment status
+        // Since SQLite doesn't support 'partial' in the enum, we'll keep using 'captured' for partial refunds
+        // and only use 'refunded' for full refunds
+        $paymentStatus = 'refunded'; // Default to fully refunded
+        if ($newTotalRefunded < $chargedAmount) {
+            $paymentStatus = 'captured'; // Keep as captured for partial refunds
+        }
+
+        // Update booking with new refund information
         $booking->update([
-            'payment_status' => 'refunded',
+            'payment_status' => $paymentStatus,
+            'total_refunded' => $newTotalRefunded,
         ]);
 
         // Create transaction record
         $transaction = Transaction::create([
             'booking_id' => $booking->id,
-            'type' => $amount && $amount < $booking->final_fare ? 'partial_refund' : 'refund',
-            'amount' => $amount ?? $booking->final_fare,
+            'type' => $refundAmount < $chargedAmount ? 'partial_refund' : 'refund',
+            'amount' => $refundAmount,
             'status' => 'succeeded',
             'stripe_transaction_id' => $refund->id,
             'stripe_response' => $refund->toArray(),

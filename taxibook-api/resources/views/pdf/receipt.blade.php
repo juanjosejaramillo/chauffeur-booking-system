@@ -368,6 +368,20 @@
                 <div class="total-label">Total Amount:</div>
                 <div class="total-value">${{ number_format($booking->final_fare ?? $booking->estimated_fare, 2) }}</div>
             </div>
+            
+            @if($booking->total_refunded > 0)
+            <!-- Refund Information -->
+            <div style="margin-top: 20px; padding-top: 20px; border-top: 1px dashed #e8e8e8;">
+                <div class="total-row" style="color: #dc3545;">
+                    <div class="total-label">Total Refunded:</div>
+                    <div class="total-value">-${{ number_format($booking->total_refunded, 2) }}</div>
+                </div>
+                <div class="total-row" style="margin-top: 10px; font-size: 16px; font-weight: 600;">
+                    <div class="total-label">Net Amount:</div>
+                    <div class="total-value">${{ number_format($booking->net_amount, 2) }}</div>
+                </div>
+            </div>
+            @endif
         </div>
         
         <!-- Payment Information -->
@@ -376,11 +390,33 @@
                 <strong>Payment Method:</strong> Credit Card
             </div>
             <div class="payment-method">
-                <strong>Status:</strong> <span class="payment-status">{{ ucfirst($booking->payment_status) }}</span>
+                <strong>Status:</strong> 
+                <span class="payment-status" @if($booking->payment_status === 'captured' && $booking->total_refunded > 0) style="background: #fd7e14;" @endif>
+                    @if($booking->payment_status === 'captured' && $booking->total_refunded > 0)
+                        Partially Refunded
+                    @else
+                        {{ ucfirst($booking->payment_status) }}
+                    @endif
+                </span>
             </div>
             @if($booking->stripe_payment_intent_id)
             <div class="payment-method" style="margin-top: 10px; font-size: 12px; color: #666;">
                 Transaction ID: {{ $booking->stripe_payment_intent_id }}
+            </div>
+            @endif
+            
+            @if($booking->total_refunded > 0 && $booking->transactions)
+            <div style="margin-top: 20px; padding-top: 15px; border-top: 1px solid #e0e0e0;">
+                <strong style="font-size: 13px; color: #666; display: block; margin-bottom: 10px;">Refund History:</strong>
+                @foreach($booking->transactions->whereIn('type', ['refund', 'partial_refund'])->where('status', 'succeeded') as $refund)
+                <div style="font-size: 12px; margin-bottom: 5px; color: #666;">
+                    {{ $refund->created_at->format('M j, Y g:i A') }} - 
+                    ${{ number_format($refund->amount, 2) }}
+                    @if($refund->notes)
+                        <span style="font-style: italic;">({{ $refund->notes }})</span>
+                    @endif
+                </div>
+                @endforeach
             </div>
             @endif
         </div>

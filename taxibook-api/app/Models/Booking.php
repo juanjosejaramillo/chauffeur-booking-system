@@ -40,6 +40,7 @@ class Booking extends Model
         'gratuity_added_at',
         'tip_link_token',
         'tip_link_sent_at',
+        'total_refunded',
         'status',
         'payment_status',
         'stripe_payment_intent_id',
@@ -67,6 +68,7 @@ class Booking extends Model
             'gratuity_amount' => 'decimal:2',
             'gratuity_added_at' => 'datetime',
             'tip_link_sent_at' => 'datetime',
+            'total_refunded' => 'decimal:2',
             'fare_breakdown' => 'array',
             'save_payment_method' => 'boolean',
             'cancelled_at' => 'datetime',
@@ -180,5 +182,63 @@ class Booking extends Model
         $this->save();
         
         return $this->tip_link_token;
+    }
+
+    /**
+     * Calculate total refunded amount from transactions
+     */
+    public function calculateTotalRefunded(): float
+    {
+        return $this->transactions()
+            ->whereIn('type', ['refund', 'partial_refund'])
+            ->where('status', 'succeeded')
+            ->sum('amount');
+    }
+
+    /**
+     * Get the net amount after refunds (what customer actually paid)
+     */
+    public function getNetAmountAttribute(): float
+    {
+        $chargedAmount = ($this->final_fare ?? $this->estimated_fare) + $this->gratuity_amount;
+        return $chargedAmount - $this->total_refunded;
+    }
+
+    /**
+     * Check if booking has been partially refunded
+     */
+    public function isPartiallyRefunded(): bool
+    {
+        return $this->total_refunded > 0 && 
+               $this->total_refunded < ($this->final_fare ?? $this->estimated_fare);
+    }
+
+    /**
+     * Check if booking has been fully refunded
+     */
+    public function isFullyRefunded(): bool
+    {
+        return $this->total_refunded >= ($this->final_fare ?? $this->estimated_fare);
+    }
+
+    /**
+     * Get the amount that was actually charged to the customer
+     */
+    public function getChargedAmountAttribute(): float
+    {
+        if ($this->payment_status === 'captured' || 
+            $this->payment_status === 'refunded') {
+            return ($this->final_fare ?? $this->estimated_fare) + $this->gratuity_amount;
+        }
+        return 0;
+    }
+
+    /**
+     * Sync total refunded amount from transactions
+     */
+    public function syncTotalRefunded(): void
+    {
+        $this->total_refunded = $this->calculateTotalRefunded();
+        $this->save();
     }
 }
