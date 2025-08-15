@@ -34,6 +34,13 @@ class SendTriggeredEmails
         
         foreach ($templates as $template) {
             try {
+                // Skip templates that have timing configuration (not immediate)
+                // These will be handled by the scheduled command
+                if ($template->send_timing_type !== 'immediate') {
+                    Log::info("Skipping scheduled email: {$template->slug} (will send {$template->getTimingDescription()})");
+                    continue;
+                }
+                
                 // Get booking from event if available
                 $booking = null;
                 if (property_exists($event, 'booking')) {
@@ -50,7 +57,7 @@ class SendTriggeredEmails
                     $additionalVariables
                 );
                 
-                Log::info("Sent email for trigger: {$triggerKey}, template: {$template->slug}");
+                Log::info("Sent immediate email for trigger: {$triggerKey}, template: {$template->slug}");
             } catch (\Exception $e) {
                 Log::error("Failed to send triggered email: {$e->getMessage()}", [
                     'template' => $template->slug,

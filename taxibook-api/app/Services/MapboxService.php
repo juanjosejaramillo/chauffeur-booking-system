@@ -12,7 +12,15 @@ class MapboxService
 
     public function __construct()
     {
-        $this->apiKey = config('services.mapbox.api_key');
+        // Get Mapbox token from settings (already configured by SettingsServiceProvider)
+        $this->apiKey = config('services.mapbox.token') 
+            ?: config('mapbox.public_token') 
+            ?: config('services.mapbox.api_key')
+            ?: env('MAPBOX_TOKEN');
+            
+        if (!$this->apiKey) {
+            throw new \Exception('Mapbox API key not configured. Please configure it in Settings.');
+        }
     }
 
     public function geocode(string $query): ?array

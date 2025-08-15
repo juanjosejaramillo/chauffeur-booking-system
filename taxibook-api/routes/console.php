@@ -10,3 +10,6 @@ Artisan::command('inspire', function () {
 
 // Schedule time-based email triggers
 Schedule::command('emails:send-scheduled')->everyFiveMinutes();
+
+// Process scheduled emails based on timing configuration
+Schedule::command('emails:process-scheduled')->everyFifteenMinutes();

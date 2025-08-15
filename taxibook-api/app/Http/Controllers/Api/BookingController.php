@@ -236,8 +236,7 @@ class BookingController extends Controller
                     'notes' => $tipAmount > 0 ? "Includes $" . number_format($tipAmount, 2) . " tip" : null,
                 ]);
                 
-                // Trigger booking confirmed event
-                event(new BookingConfirmed($booking->fresh()));
+                // Event will be triggered by BookingObserver when status changes
             }
 
             DB::commit();
@@ -320,8 +319,7 @@ class BookingController extends Controller
 
             DB::commit();
 
-            // Trigger booking confirmed event
-            event(new BookingConfirmed($booking->fresh()));
+            // Event will be triggered by BookingObserver when status changes
 
             return response()->json([
                 'booking' => $booking->load('vehicleType'),
@@ -397,8 +395,7 @@ class BookingController extends Controller
                 'payment_status' => 'authorized',
             ]);
 
-            // Trigger booking confirmed event
-            event(new BookingConfirmed($booking->fresh()));
+            // Event will be triggered by BookingObserver when status changes
 
             return response()->json([
                 'booking' => $booking->fresh()->load('vehicleType'),

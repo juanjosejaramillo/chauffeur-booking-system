@@ -6,6 +6,7 @@ use App\Models\Booking;
 use App\Models\EmailLog;
 use App\Models\EmailTemplate;
 use App\Models\Transaction;
+use App\Models\Setting;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -16,12 +17,35 @@ class NotificationService
     
     public function __construct()
     {
-        $this->companyConfig = [
-            'company_name' => config('app.name', 'TaxiBook'),
-            'company_email' => config('mail.from.address', 'noreply@taxibook.com'),
-            'company_phone' => config('app.company_phone', '1-800-TAXIBOOK'),
-            'support_url' => config('app.url') . '/support',
-        ];
+        try {
+            // Try to get settings from database
+            $businessName = Setting::get('business_name', config('app.name', 'LuxRide'));
+            $businessEmail = Setting::get('business_email', config('mail.from.address', 'noreply@luxride.com'));
+            $businessPhone = Setting::get('business_phone', '1-800-LUXRIDE');
+            
+            $this->companyConfig = [
+                'name' => $businessName, // Add 'name' for email templates
+                'company_name' => $businessName,
+                'company_email' => $businessEmail,
+                'company_phone' => $businessPhone,
+                'support_url' => Setting::get('website_url', config('app.url')) . '/support',
+                'support_email' => Setting::get('support_email', $businessEmail),
+                'support_phone' => Setting::get('support_phone', $businessPhone),
+                'business_address' => Setting::get('business_address', ''),
+            ];
+        } catch (\Exception $e) {
+            // Fallback to config values if settings table doesn't exist
+            $this->companyConfig = [
+                'name' => config('app.name', 'LuxRide'), // Add 'name' for email templates
+                'company_name' => config('app.name', 'LuxRide'),
+                'company_email' => config('mail.from.address', 'noreply@luxride.com'),
+                'company_phone' => '1-800-LUXRIDE',
+                'support_url' => config('app.url') . '/support',
+                'support_email' => config('mail.from.address', 'noreply@luxride.com'),
+                'support_phone' => '1-800-LUXRIDE',
+                'business_address' => '',
+            ];
+        }
     }
 
     /**
@@ -46,24 +70,50 @@ class NotificationService
             $variables = $this->prepareVariables($booking, $additionalVariables);
             $rendered = $template->render($variables);
 
+            // Determine recipients based on template settings
+            $recipients = $this->getRecipientsForTemplate($template, $booking, $additionalVariables);
+            
+            if (empty($recipients)) {
+                Log::warning("No recipients configured for template: {$templateSlug}");
+                return false;
+            }
+
+            // Prepare attachments first so we can log them
+            $emailAttachments = $this->prepareAttachments($template, $booking, $attachments);
+            
+            // Log attachment generation for debugging
+            if (!empty($emailAttachments)) {
+                Log::info("Generated attachments for {$templateSlug}", [
+                    'count' => count($emailAttachments),
+                    'attachments' => array_map(function($att) {
+                        return $att['name'] ?? 'unknown';
+                    }, $emailAttachments)
+                ]);
+            }
+            
             // Create email log
             $emailLog = EmailLog::create([
                 'booking_id' => $booking?->id,
                 'user_id' => $booking?->user_id,
                 'template_slug' => $templateSlug,
-                'recipient_email' => $booking?->customer_email ?? $additionalVariables['recipient_email'] ?? '',
-                'recipient_name' => $booking?->customer_full_name ?? $additionalVariables['recipient_name'] ?? '',
-                'cc_emails' => implode(',', $template->getRecipientEmails('cc')),
-                'bcc_emails' => implode(',', $template->getRecipientEmails('bcc')),
+                'recipient_email' => $recipients['to'][0] ?? '',
+                'recipient_name' => $recipients['to_names'][0] ?? '',
+                'cc_emails' => implode(',', array_merge($recipients['cc'], $template->getRecipientEmails('cc'))),
+                'bcc_emails' => implode(',', array_merge($recipients['bcc'], $template->getRecipientEmails('bcc'))),
                 'subject' => $rendered['subject'],
                 'body' => $rendered['body'],
                 'variables_used' => $variables,
-                'attachments' => $attachments,
+                'attachments' => array_map(function($att) {
+                    if (!is_array($att)) {
+                        return ['name' => 'unknown', 'mime' => 'application/octet-stream'];
+                    }
+                    return [
+                        'name' => isset($att['name']) ? $att['name'] : 'unknown', 
+                        'mime' => isset($att['mime']) ? $att['mime'] : 'application/octet-stream'
+                    ];
+                }, $emailAttachments),
                 'status' => 'pending',
             ]);
-
-            // Prepare attachments
-            $emailAttachments = $this->prepareAttachments($template, $booking, $attachments);
 
             // Send email with delay if configured
             $delay = $template->delay_minutes > 0 ? now()->addMinutes($template->delay_minutes) : null;
@@ -73,6 +123,7 @@ class NotificationService
                 $rendered,
                 $template,
                 $emailAttachments,
+                $recipients,
                 $delay
             );
 
@@ -89,6 +140,58 @@ class NotificationService
             
             return false;
         }
+    }
+
+    /**
+     * Get recipients for a template based on its configuration
+     */
+    protected function getRecipientsForTemplate(EmailTemplate $template, Booking $booking = null, array $additionalVariables = []): array
+    {
+        $recipients = [
+            'to' => [],
+            'to_names' => [],
+            'cc' => [],
+            'bcc' => [],
+        ];
+
+        // Send to customer
+        if ($template->send_to_customer && $booking) {
+            $recipients['to'][] = $booking->customer_email;
+            $recipients['to_names'][] = $booking->customer_full_name;
+        }
+
+        // Send to admin
+        if ($template->send_to_admin) {
+            // Get admin email from settings, fall back to business email, then to config
+            $adminEmail = Setting::get('admin_email', Setting::get('business_email', config('mail.from.address', 'admin@luxride.com')));
+            $adminName = Setting::get('admin_name', 'Administrator');
+            
+            if ($adminEmail) {
+                if (empty($recipients['to'])) {
+                    $recipients['to'][] = $adminEmail;
+                    $recipients['to_names'][] = $adminName;
+                } else {
+                    $recipients['cc'][] = $adminEmail;
+                }
+            }
+        }
+
+        // Send to driver (future implementation)
+        if ($template->send_to_driver && $booking) {
+            // TODO: Implement when driver functionality is added
+            // if ($booking->driver) {
+            //     $recipients['to'][] = $booking->driver->email;
+            //     $recipients['to_names'][] = $booking->driver->name;
+            // }
+        }
+
+        // Override with additional variables if provided (for manual sends)
+        if (isset($additionalVariables['recipient_email'])) {
+            $recipients['to'] = [$additionalVariables['recipient_email']];
+            $recipients['to_names'] = [$additionalVariables['recipient_name'] ?? 'Recipient'];
+        }
+
+        return $recipients;
     }
 
     /**
@@ -117,6 +220,7 @@ class NotificationService
                 'admin_notes' => $booking->admin_notes ?? '',
                 'cancellation_reason' => $booking->cancellation_reason ?? '',
                 'booking_url' => config('app.url') . '/booking/' . $booking->booking_number,
+                'receipt_url' => config('app.url') . '/booking/' . $booking->booking_number . '/receipt',
                 'status' => ucfirst($booking->status),
                 'payment_status' => ucfirst($booking->payment_status),
             ]);
@@ -132,12 +236,20 @@ class NotificationService
     {
         $attachments = $additionalAttachments;
 
-        if ($template->attach_receipt && $booking && $booking->payment_status === 'captured') {
-            $attachments[] = $this->generateReceipt($booking);
+        // Attach receipt if configured and payment has been processed
+        if ($template->attach_receipt && $booking && in_array($booking->payment_status, ['authorized', 'captured', 'partial'])) {
+            $receipt = $this->generateReceipt($booking);
+            if (!empty($receipt)) {
+                $attachments[] = $receipt;
+            }
         }
 
+        // Attach booking details if configured
         if ($template->attach_booking_details && $booking) {
-            $attachments[] = $this->generateBookingDetails($booking);
+            $details = $this->generateBookingDetails($booking);
+            if (!empty($details)) {
+                $attachments[] = $details;
+            }
         }
 
         return array_filter($attachments);
@@ -149,20 +261,14 @@ class NotificationService
     protected function generateReceipt(Booking $booking): array
     {
         try {
-            $transaction = $booking->transactions()
-                ->where('type', 'capture')
-                ->where('status', 'succeeded')
-                ->latest()
-                ->first();
-
-            if (!$transaction) {
+            // Check if payment has been made
+            if (!in_array($booking->payment_status, ['authorized', 'captured', 'partial'])) {
+                Log::info("Skipping receipt generation - payment not processed for booking {$booking->booking_number}");
                 return [];
             }
 
-            $pdf = Pdf::loadView('emails.receipt', [
+            $pdf = Pdf::loadView('pdf.receipt', [
                 'booking' => $booking,
-                'transaction' => $transaction,
-                'company' => $this->companyConfig,
             ]);
 
             $fileName = "receipt_{$booking->booking_number}.pdf";
@@ -191,6 +297,11 @@ class NotificationService
     protected function generateBookingDetails(Booking $booking): array
     {
         try {
+            // Ensure vehicleType is loaded
+            if (!$booking->relationLoaded('vehicleType')) {
+                $booking->load('vehicleType');
+            }
+
             $pdf = Pdf::loadView('emails.booking-details', [
                 'booking' => $booking,
                 'company' => $this->companyConfig,
@@ -224,31 +335,47 @@ class NotificationService
         array $rendered,
         EmailTemplate $template,
         array $attachments,
+        array $recipients,
         $delay = null
     ): void {
-        $job = function () use ($emailLog, $rendered, $template, $attachments) {
+        $job = function () use ($emailLog, $rendered, $template, $attachments, $recipients) {
             try {
-                Mail::send([], [], function ($message) use ($emailLog, $rendered, $template, $attachments) {
-                    $message->to($emailLog->recipient_email, $emailLog->recipient_name)
-                        ->subject($rendered['subject'])
+                Mail::send([], [], function ($message) use ($emailLog, $rendered, $template, $attachments, $recipients) {
+                    // Add primary recipients
+                    if (!empty($recipients['to'])) {
+                        foreach ($recipients['to'] as $index => $email) {
+                            $name = $recipients['to_names'][$index] ?? '';
+                            if ($index === 0) {
+                                $message->to($email, $name);
+                            } else {
+                                $message->cc($email, $name);
+                            }
+                        }
+                    }
+                    
+                    $message->subject($rendered['subject'])
                         ->html($rendered['body']);
 
                     // Add CC recipients
-                    foreach ($template->getRecipientEmails('cc') as $ccEmail) {
-                        $message->cc($ccEmail);
+                    foreach (array_merge($recipients['cc'], $template->getRecipientEmails('cc')) as $ccEmail) {
+                        if (!empty($ccEmail)) {
+                            $message->cc($ccEmail);
+                        }
                     }
 
                     // Add BCC recipients
-                    foreach ($template->getRecipientEmails('bcc') as $bccEmail) {
-                        $message->bcc($bccEmail);
+                    foreach (array_merge($recipients['bcc'], $template->getRecipientEmails('bcc')) as $bccEmail) {
+                        if (!empty($bccEmail)) {
+                            $message->bcc($bccEmail);
+                        }
                     }
 
                     // Add attachments
                     foreach ($attachments as $attachment) {
-                        if (isset($attachment['path']) && file_exists($attachment['path'])) {
+                        if (is_array($attachment) && isset($attachment['path']) && file_exists($attachment['path'])) {
                             $message->attach($attachment['path'], [
-                                'as' => $attachment['name'] ?? basename($attachment['path']),
-                                'mime' => $attachment['mime'] ?? 'application/octet-stream',
+                                'as' => isset($attachment['name']) ? $attachment['name'] : basename($attachment['path']),
+                                'mime' => isset($attachment['mime']) ? $attachment['mime'] : 'application/octet-stream',
                             ]);
                         }
                     }
@@ -263,15 +390,23 @@ class NotificationService
                     }
                 }
             } catch (\Exception $e) {
+                Log::error("Email dispatch failed", [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
+                    'template' => $emailLog->template_slug,
+                    'recipient' => $emailLog->recipient_email
+                ]);
                 $emailLog->markAsFailed($e->getMessage());
-                throw $e;
+                // Don't rethrow to prevent breaking the flow
+                // throw $e;
             }
         };
 
         if ($delay) {
             dispatch($job)->delay($delay);
         } else {
-            dispatch($job);
+            // Execute immediately since we're using sync queue
+            $job();
         }
     }
 
@@ -327,12 +462,14 @@ class NotificationService
      */
     public function sendAdminNewBookingNotification(Booking $booking): bool
     {
-        $adminEmails = config('app.admin_emails', []);
+        // Get admin email from settings, fall back to business email, then to config
+        $adminEmail = Setting::get('admin_email', Setting::get('business_email', config('mail.from.address', 'admin@luxride.com')));
+        $adminName = Setting::get('admin_name', 'Administrator');
         
-        foreach ($adminEmails as $adminEmail) {
+        if ($adminEmail) {
             $this->sendEmailNotification('admin-new-booking', $booking, [
                 'recipient_email' => $adminEmail,
-                'recipient_name' => 'Admin',
+                'recipient_name' => $adminName,
             ]);
         }
         

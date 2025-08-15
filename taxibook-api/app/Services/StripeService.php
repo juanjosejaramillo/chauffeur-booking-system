@@ -15,7 +15,14 @@ class StripeService
 
     public function __construct()
     {
-        $this->stripe = new StripeClient(config('services.stripe.secret'));
+        // Get Stripe key from settings (already overridden by SettingsServiceProvider)
+        $stripeKey = config('services.stripe.secret') ?: config('stripe.secret_key') ?: env('STRIPE_SECRET_KEY');
+        
+        if (!$stripeKey) {
+            throw new \Exception('Stripe secret key not configured. Please configure it in Settings.');
+        }
+        
+        $this->stripe = new StripeClient($stripeKey);
     }
 
     public function createOrUpdateCustomer(User $user): string

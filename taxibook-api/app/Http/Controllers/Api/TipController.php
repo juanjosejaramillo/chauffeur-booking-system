@@ -122,7 +122,14 @@ class TipController extends Controller
         }
         
         // Create payment intent for tip
-        $stripe = new \Stripe\StripeClient(config('services.stripe.secret'));
+        // Use Stripe key from settings (already configured by SettingsServiceProvider)
+        $stripeKey = config('services.stripe.secret') ?: config('stripe.secret_key');
+        if (!$stripeKey) {
+            return response()->json([
+                'error' => 'Payment system not configured. Please contact support.',
+            ], 500);
+        }
+        $stripe = new \Stripe\StripeClient($stripeKey);
         
         try {
             $paymentIntent = $stripe->paymentIntents->create([

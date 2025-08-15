@@ -29,19 +29,28 @@ class EmailTemplatesTable
             ->columns([
                 TextColumn::make('name')
                     ->searchable()
-                    ->sortable(),
-                
-                TextColumn::make('slug')
-                    ->searchable()
                     ->sortable()
-                    ->copyable(),
+                    ->description(fn (EmailTemplate $record): string => $record->description ?? ''),
                 
-                BadgeColumn::make('category')
-                    ->colors([
-                        'primary' => 'customer',
-                        'success' => 'admin',
-                        'warning' => 'driver',
-                    ]),
+                TextColumn::make('recipients')
+                    ->label('Recipients')
+                    ->state(function (EmailTemplate $record): string {
+                        $recipients = [];
+                        if ($record->send_to_customer) $recipients[] = 'Customer';
+                        if ($record->send_to_admin) $recipients[] = 'Admin';
+                        if ($record->send_to_driver) $recipients[] = 'Driver';
+                        return implode(', ', $recipients) ?: 'None';
+                    })
+                    ->badge()
+                    ->color(fn (string $state): string => $state === 'None' ? 'danger' : 'success'),
+                
+                TextColumn::make('timing')
+                    ->label('When')
+                    ->state(fn (EmailTemplate $record): string => $record->getTimingDescription())
+                    ->badge()
+                    ->color(fn (EmailTemplate $record): string => 
+                        $record->send_timing_type === 'immediate' ? 'warning' : 'info'
+                    ),
                 
                 TagsColumn::make('trigger_events')
                     ->label('Triggers')
@@ -50,10 +59,6 @@ class EmailTemplatesTable
                 IconColumn::make('is_active')
                     ->label('Active')
                     ->boolean(),
-                
-                TextColumn::make('priority')
-                    ->sortable()
-                    ->badge(),
                 
                 TextColumn::make('emailLogs_count')
                     ->label('Emails Sent')
@@ -67,12 +72,18 @@ class EmailTemplatesTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                SelectFilter::make('category')
+                SelectFilter::make('recipients')
+                    ->label('Send To')
                     ->options([
-                        'customer' => 'Customer',
-                        'admin' => 'Admin',
-                        'driver' => 'Driver',
-                    ]),
+                        'send_to_customer' => 'Customer',
+                        'send_to_admin' => 'Admin',
+                        'send_to_driver' => 'Driver',
+                    ])
+                    ->query(function ($query, $data) {
+                        if ($data['value']) {
+                            $query->where($data['value'], true);
+                        }
+                    }),
                 
                 TernaryFilter::make('is_active')
                     ->label('Active'),
@@ -142,14 +153,22 @@ class EmailTemplatesTable
                     ->color('warning')
                     ->requiresConfirmation()
                     ->action(function (EmailTemplate $record) {
+                        // Create a new instance with only fillable attributes
                         $newTemplate = $record->replicate();
-                        $newTemplate->slug = $record->slug . '-copy-' . time();
+                        
+                        // Remove any computed fields that might have been added
+                        unset($newTemplate->email_logs_count);
+                        
+                        // Set unique values
+                        $newTemplate->slug = EmailTemplate::generateUniqueSlug($record->name . ' Copy');
                         $newTemplate->name = $record->name . ' (Copy)';
                         $newTemplate->is_active = false;
+                        
                         $newTemplate->save();
                         
                         Notification::make()
                             ->title('Template duplicated')
+                            ->body("Created: {$newTemplate->name}")
                             ->success()
                             ->send();
                     }),

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class EmailTemplate extends Model
 {
@@ -27,6 +28,12 @@ class EmailTemplate extends Model
         'priority',
         'available_variables',
         'is_active',
+        'send_to_customer',
+        'send_to_admin',
+        'send_to_driver',
+        'send_timing_type',
+        'send_timing_value',
+        'send_timing_unit',
     ];
 
     protected function casts(): array
@@ -39,7 +46,46 @@ class EmailTemplate extends Model
             'attach_receipt' => 'boolean',
             'attach_booking_details' => 'boolean',
             'is_active' => 'boolean',
+            'send_to_customer' => 'boolean',
+            'send_to_admin' => 'boolean',
+            'send_to_driver' => 'boolean',
         ];
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::creating(function ($model) {
+            if (empty($model->slug)) {
+                $model->slug = static::generateUniqueSlug($model->name);
+            }
+        });
+
+        static::updating(function ($model) {
+            if ($model->isDirty('name') && !$model->isDirty('slug')) {
+                $model->slug = static::generateUniqueSlug($model->name, $model->id);
+            }
+        });
+    }
+
+    public static function generateUniqueSlug($name, $excludeId = null)
+    {
+        $slug = Str::slug($name);
+        $originalSlug = $slug;
+        $count = 1;
+
+        while (static::where('slug', $slug)
+            ->when($excludeId, function ($query, $excludeId) {
+                return $query->where('id', '!=', $excludeId);
+            })
+            ->exists()
+        ) {
+            $slug = $originalSlug . '-' . $count;
+            $count++;
+        }
+
+        return $slug;
     }
 
     public function scopeActive($query)
@@ -57,9 +103,21 @@ class EmailTemplate extends Model
         $subject = $this->subject;
         $body = $this->body;
 
+        // Replace variables first
         foreach ($variables as $key => $value) {
             $subject = str_replace("{{{$key}}}", $value, $subject);
             $body = str_replace("{{{$key}}}", $value, $body);
+        }
+
+        // Process Blade template syntax if present
+        if (str_contains($body, '@extends') || str_contains($body, '@section')) {
+            try {
+                // Create a temporary blade view from the string and compile it
+                $body = \Illuminate\Support\Facades\Blade::render($body, $variables);
+            } catch (\Exception $e) {
+                // If Blade rendering fails, log and use original body
+                \Illuminate\Support\Facades\Log::warning("Failed to render Blade template for {$this->slug}: " . $e->getMessage());
+            }
         }
 
         return [
@@ -119,6 +177,7 @@ class EmailTemplate extends Model
             'company_email' => 'Company contact email',
             'support_url' => 'Support URL',
             'booking_url' => 'Direct link to booking',
+            'receipt_url' => 'Direct link to receipt PDF',
         ];
     }
 
@@ -142,14 +201,10 @@ class EmailTemplate extends Model
             'driver.assigned' => 'When driver is assigned to booking',
             'driver.enroute' => 'When driver starts journey to pickup',
             'driver.arrived' => 'When driver arrives at pickup location',
-            'driver.trip_started' => 'When trip starts',
-            'driver.trip_ended' => 'When trip ends',
             
-            // Scheduled Events
-            'booking.reminder.24h' => '24 hours before pickup',
-            'booking.reminder.2h' => '2 hours before pickup',
-            'booking.reminder.30m' => '30 minutes before pickup',
-            'trip.review.24h' => '24 hours after trip completion',
+            // Trip Events
+            'trip.started' => 'When trip starts',
+            'trip.ended' => 'When trip ends',
             
             // Admin Events
             'admin.daily_summary' => 'Daily summary report',
@@ -246,5 +301,99 @@ class EmailTemplate extends Model
         }
 
         return $recipients;
+    }
+
+    /**
+     * Get when this email should be sent as a Carbon datetime
+     */
+    public function getSendTimeFor($booking): ?\Carbon\Carbon
+    {
+        if ($this->send_timing_type === 'immediate') {
+            return now();
+        }
+
+        $baseTime = null;
+        
+        switch ($this->send_timing_type) {
+            case 'before_pickup':
+                $baseTime = $booking->pickup_date;
+                break;
+            case 'after_pickup':
+                $baseTime = $booking->pickup_date;
+                break;
+            case 'after_booking':
+                $baseTime = $booking->created_at;
+                break;
+            case 'after_completion':
+                // Assuming we have a completed_at field or use updated_at when status is completed
+                $baseTime = $booking->completed_at ?? $booking->updated_at;
+                break;
+        }
+
+        if (!$baseTime) {
+            return null;
+        }
+
+        $minutes = $this->getTimingInMinutes();
+        
+        if ($this->send_timing_type === 'before_pickup') {
+            return $baseTime->copy()->subMinutes($minutes);
+        } else {
+            return $baseTime->copy()->addMinutes($minutes);
+        }
+    }
+
+    /**
+     * Convert timing value and unit to minutes
+     */
+    public function getTimingInMinutes(): int
+    {
+        $value = $this->send_timing_value;
+        
+        switch ($this->send_timing_unit) {
+            case 'minutes':
+                return $value;
+            case 'hours':
+                return $value * 60;
+            case 'days':
+                return $value * 60 * 24;
+            default:
+                return 0;
+        }
+    }
+
+    /**
+     * Get human-readable timing description
+     */
+    public function getTimingDescription(): string
+    {
+        if ($this->send_timing_type === 'immediate') {
+            return 'Send immediately';
+        }
+
+        $value = $this->send_timing_value;
+        $unit = $value === 1 ? rtrim($this->send_timing_unit, 's') : $this->send_timing_unit;
+        
+        switch ($this->send_timing_type) {
+            case 'before_pickup':
+                return "Send {$value} {$unit} before pickup";
+            case 'after_pickup':
+                return "Send {$value} {$unit} after pickup";
+            case 'after_booking':
+                return "Send {$value} {$unit} after booking created";
+            case 'after_completion':
+                return "Send {$value} {$unit} after trip completed";
+            default:
+                return 'Send immediately';
+        }
+    }
+
+    /**
+     * Scope to get templates that should be sent now
+     */
+    public function scopeDueForSending($query)
+    {
+        return $query->where('is_active', true)
+            ->where('send_timing_type', '!=', 'immediate');
     }
 }

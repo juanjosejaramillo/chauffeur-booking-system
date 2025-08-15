@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\EmailLogs\Tables;
 
-use App\Filament\Resources\Bookings\BookingResource;
+use App\Filament\Resources\BookingResource;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -120,7 +120,7 @@ class EmailLogsTable
                             $notificationService->sendEmailNotification(
                                 $record->template_slug,
                                 $record->booking,
-                                json_decode($record->variables_used ?? '{}', true)
+                                $record->variables_used ?? []
                             );
                         }
                     })
