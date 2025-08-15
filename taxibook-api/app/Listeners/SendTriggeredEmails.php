@@ -103,9 +103,13 @@ class SendTriggeredEmails
             $variables['transaction_date'] = $transaction->created_at->format('F j, Y g:i A');
         }
         
-        // Add refund info if available
-        if (property_exists($event, 'refundAmount')) {
-            $variables['refund_amount'] = '$' . number_format($event->refundAmount, 2);
+        // Add refund info if available (for PaymentRefunded event)
+        if ($event instanceof \App\Events\PaymentRefunded) {
+            // Extract refund amount from the transaction
+            if (property_exists($event, 'transaction')) {
+                $variables['refund_amount'] = '$' . number_format($event->transaction->amount, 2);
+            }
+            // Add refund reason
             $variables['refund_reason'] = $event->reason ?? 'No reason provided';
         }
         
