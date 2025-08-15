@@ -103,20 +103,45 @@ class EmailTemplate extends Model
         $subject = $this->subject;
         $body = $this->body;
 
-        // Replace variables first
+        // Replace shortcodes in subject - templates use {{var}} format
         foreach ($variables as $key => $value) {
-            $subject = str_replace("{{{$key}}}", $value, $subject);
-            $body = str_replace("{{{$key}}}", $value, $body);
+            // Replace double braces {{variable}}
+            $subject = str_replace("{{" . $key . "}}", $value, $subject);
+            // Also try triple braces for compatibility
+            $subject = str_replace("{{{" . $key . "}}}", $value, $subject);
         }
 
         // Process Blade template syntax if present
         if (str_contains($body, '@extends') || str_contains($body, '@section')) {
             try {
-                // Create a temporary blade view from the string and compile it
-                $body = \Illuminate\Support\Facades\Blade::render($body, $variables);
+                // For Blade templates, replace {{variable}} shortcodes with actual values
+                $processedBody = $body;
+                foreach ($variables as $key => $value) {
+                    // Replace {{variable}} format (double braces)
+                    $processedBody = str_replace("{{" . $key . "}}", $value, $processedBody);
+                    // Also replace {{{variable}}} format (triple braces) for compatibility
+                    $processedBody = str_replace("{{{" . $key . "}}}", $value, $processedBody);
+                }
+                
+                // Now render with Blade
+                $body = \Illuminate\Support\Facades\Blade::render($processedBody, $variables);
             } catch (\Exception $e) {
-                // If Blade rendering fails, log and use original body
+                // If Blade rendering fails, log and use original body with manual replacement
                 \Illuminate\Support\Facades\Log::warning("Failed to render Blade template for {$this->slug}: " . $e->getMessage());
+                
+                // Fallback to manual replacement
+                foreach ($variables as $key => $value) {
+                    $body = str_replace("{{" . $key . "}}", $value, $body);
+                    $body = str_replace("{{{" . $key . "}}}", $value, $body);
+                }
+            }
+        } else {
+            // For non-Blade templates, replace shortcodes manually
+            foreach ($variables as $key => $value) {
+                // Replace double braces {{variable}}
+                $body = str_replace("{{" . $key . "}}", $value, $body);
+                // Also replace triple braces {{{variable}}} for compatibility
+                $body = str_replace("{{{" . $key . "}}}", $value, $body);
             }
         }
 
