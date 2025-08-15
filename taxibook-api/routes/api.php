@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BookingController;
 use App\Http\Controllers\Api\BookingVerificationController;
+use App\Http\Controllers\Api\SettingsController;
 use App\Http\Controllers\Api\StripeWebhookController;
 use App\Http\Controllers\Api\TipController;
 use Illuminate\Support\Facades\Route;
@@ -10,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 // Public routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::get('/settings/public', [SettingsController::class, 'getPublicSettings']);
 
 // Booking routes (partially public)
 Route::prefix('bookings')->group(function () {

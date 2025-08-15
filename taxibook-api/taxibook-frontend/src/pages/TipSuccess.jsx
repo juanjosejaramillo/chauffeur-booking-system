@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../config/api';
+import useSettings from '../hooks/useSettings';
 
 const TipSuccess = () => {
   const { token } = useParams();
   const navigate = useNavigate();
+  const { settings } = useSettings();
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -106,8 +108,8 @@ const TipSuccess = () => {
           <p className="text-xs text-luxury-gray/60">
             Need assistance? Contact us at
           </p>
-          <a href="tel:+1-800-TAXIBOOK" className="text-luxury-gold hover:text-luxury-gold-dark text-sm font-medium">
-            +1-800-TAXIBOOK
+          <a href={`tel:${settings.support_phone}`} className="text-luxury-gold hover:text-luxury-gold-dark text-sm font-medium">
+            {settings.support_phone}
           </a>
         </div>
       </div>

@@ -43,6 +43,10 @@ const TripDetailsLuxury = () => {
   const dropoffMarker = useRef(null);
   const pickupTimeout = useRef(null);
   const dropoffTimeout = useRef(null);
+  const pickupRef = useRef(null);
+  const dropoffRef = useRef(null);
+  const pickupDropdownRef = useRef(null);
+  const dropoffDropdownRef = useRef(null);
 
   useEffect(() => {
     if (!map.current && mapContainer.current && mapboxgl.accessToken) {
@@ -67,6 +71,28 @@ const TripDetailsLuxury = () => {
         map.current.remove();
         map.current = null;
       }
+    };
+  }, []);
+
+  // Handle click outside to close dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Check pickup dropdown
+      if (pickupRef.current && !pickupRef.current.contains(event.target) && 
+          pickupDropdownRef.current && !pickupDropdownRef.current.contains(event.target)) {
+        setShowPickupSuggestions(false);
+      }
+      
+      // Check dropoff dropdown
+      if (dropoffRef.current && !dropoffRef.current.contains(event.target) && 
+          dropoffDropdownRef.current && !dropoffDropdownRef.current.contains(event.target)) {
+        setShowDropoffSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
@@ -329,7 +355,7 @@ const TripDetailsLuxury = () => {
           <div className="lg:col-span-2 space-y-6">
             <form onSubmit={handleSubmit} className="bg-luxury-white p-8 shadow-luxury space-y-8">
               {/* Pickup Location */}
-              <div className="relative animate-slide-up">
+              <div className="relative animate-slide-up" ref={pickupRef}>
                 <label className="block text-xs font-medium text-luxury-gold uppercase tracking-luxury mb-3">
                   Pickup Location
                 </label>
@@ -350,12 +376,17 @@ const TripDetailsLuxury = () => {
                 )}
                 
                 {showPickupSuggestions && pickupSuggestions.length > 0 && (
-                  <div className="absolute z-50 w-full mt-2 bg-luxury-white shadow-luxury-lg max-h-60 overflow-auto">
+                  <div 
+                    ref={pickupDropdownRef}
+                    className="absolute z-[100] w-full mt-2 bg-white border border-luxury-gray/20 shadow-xl max-h-60 overflow-auto isolate"
+                    style={{ backgroundColor: '#FFFFFF' }}
+                  >
                     {pickupSuggestions.map((suggestion) => (
                       <button
                         key={suggestion.id}
                         type="button"
                         onClick={() => selectSuggestion(suggestion, 'pickup')}
+                        onMouseDown={(e) => e.preventDefault()} 
                         className={`w-full text-left px-6 py-4 transition-all duration-200 
                           ${suggestion.isAirport 
                             ? 'bg-luxury-light-gray hover:bg-luxury-gold/10' 
@@ -375,7 +406,7 @@ const TripDetailsLuxury = () => {
               </div>
 
               {/* Dropoff Location */}
-              <div className="relative animate-slide-up" style={{ animationDelay: '0.1s' }}>
+              <div className="relative animate-slide-up" style={{ animationDelay: '0.1s' }} ref={dropoffRef}>
                 <label className="block text-xs font-medium text-luxury-gold uppercase tracking-luxury mb-3">
                   Destination
                 </label>
@@ -396,12 +427,17 @@ const TripDetailsLuxury = () => {
                 )}
                 
                 {showDropoffSuggestions && dropoffSuggestions.length > 0 && (
-                  <div className="absolute z-50 w-full mt-2 bg-luxury-white shadow-luxury-lg max-h-60 overflow-auto">
+                  <div 
+                    ref={dropoffDropdownRef}
+                    className="absolute z-[100] w-full mt-2 bg-white border border-luxury-gray/20 shadow-xl max-h-60 overflow-auto isolate"
+                    style={{ backgroundColor: '#FFFFFF' }}
+                  >
                     {dropoffSuggestions.map((suggestion) => (
                       <button
                         key={suggestion.id}
                         type="button"
                         onClick={() => selectSuggestion(suggestion, 'dropoff')}
+                        onMouseDown={(e) => e.preventDefault()} 
                         className={`w-full text-left px-6 py-4 transition-all duration-200 
                           ${suggestion.isAirport 
                             ? 'bg-luxury-light-gray hover:bg-luxury-gold/10' 

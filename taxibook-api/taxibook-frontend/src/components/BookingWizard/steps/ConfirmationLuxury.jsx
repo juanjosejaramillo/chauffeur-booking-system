@@ -1,9 +1,11 @@
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useBookingStore from '../../../store/bookingStore';
+import useSettings from '../../../hooks/useSettings';
 
 const ConfirmationLuxury = () => {
   const navigate = useNavigate();
+  const { settings } = useSettings();
   const { booking, selectedVehicle, tripDetails, customerInfo, gratuityAmount, resetBooking } = useBookingStore();
 
   const handleNewBooking = () => {
@@ -219,8 +221,8 @@ const ConfirmationLuxury = () => {
         <p className="text-xs text-luxury-gray/60 mb-2">
           Need assistance with your booking?
         </p>
-        <a href="tel:+1-800-TAXIBOOK" className="text-luxury-gold hover:text-luxury-gold-dark text-sm font-medium">
-          +1-800-TAXIBOOK
+        <a href={`tel:${settings.support_phone}`} className="text-luxury-gold hover:text-luxury-gold-dark text-sm font-medium">
+          {settings.support_phone}
         </a>
       </div>
     </div>

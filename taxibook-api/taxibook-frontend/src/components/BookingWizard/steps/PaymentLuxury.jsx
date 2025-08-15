@@ -7,12 +7,14 @@ import {
   useElements,
 } from '@stripe/react-stripe-js';
 import useBookingStore from '../../../store/bookingStore';
+import useSettings from '../../../hooks/useSettings';
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 const PaymentForm = () => {
   const stripe = useStripe();
   const elements = useElements();
+  const { settings } = useSettings();
   const {
     booking,
     selectedVehicle,
@@ -394,8 +396,8 @@ const PaymentForm = () => {
             <p className="text-xs text-luxury-gray/60 mb-2">
               Need assistance?
             </p>
-            <a href="tel:+1-800-TAXIBOOK" className="text-luxury-gold hover:text-luxury-gold-dark text-sm font-medium">
-              +1-800-TAXIBOOK
+            <a href={`tel:${settings.support_phone}`} className="text-luxury-gold hover:text-luxury-gold-dark text-sm font-medium">
+              {settings.support_phone}
             </a>
           </div>
         </div>
