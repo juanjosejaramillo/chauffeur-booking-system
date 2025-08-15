@@ -16,6 +16,8 @@ const useBookingStore = create((set, get) => ({
     dropoffLng: null,
     pickupDate: '',
     pickupTime: '',
+    isAirportPickup: false,
+    isAirportDropoff: false,
   },
   
   selectedVehicle: null,
@@ -27,6 +29,8 @@ const useBookingStore = create((set, get) => ({
     email: '',
     phone: '',
     specialInstructions: '',
+    flightNumber: '',
+    additionalFields: {}, // For dynamic form fields
   },
   
   // Payment options
@@ -92,7 +96,14 @@ const useBookingStore = create((set, get) => ({
   setSelectedVehicle: (vehicle) => set({ selectedVehicle: vehicle }),
   
   setCustomerInfo: (info) => set((state) => ({
-    customerInfo: { ...state.customerInfo, ...info }
+    customerInfo: { 
+      ...state.customerInfo, 
+      ...info,
+      // Ensure additionalFields is always an object
+      additionalFields: info.additionalFields !== undefined 
+        ? info.additionalFields 
+        : (state.customerInfo.additionalFields || {})
+    }
   })),
   
   // Payment setters

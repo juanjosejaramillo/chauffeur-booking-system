@@ -254,6 +254,7 @@ const TripDetailsLuxury = () => {
         pickupAddress: suggestion.place_name,
         pickupLat: lat,
         pickupLng: lng,
+        isAirportPickup: suggestion.isAirport || false,
       });
       setShowPickupSuggestions(false);
       
@@ -272,6 +273,7 @@ const TripDetailsLuxury = () => {
         dropoffAddress: suggestion.place_name,
         dropoffLat: lat,
         dropoffLng: lng,
+        isAirportDropoff: suggestion.isAirport || false,
       });
       setShowDropoffSuggestions(false);
       

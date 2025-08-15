@@ -1,11 +1,13 @@
 import { useState, useEffect, useRef } from 'react';
 import useBookingStore from '../../../store/bookingStore';
 import VerificationModalLuxury from '../VerificationModalLuxury';
+import { useSettings } from '../../../hooks/useSettings';
 
 const CustomerInfoLuxury = () => {
   const {
     customerInfo,
     setCustomerInfo,
+    tripDetails,
     nextStep,
     prevStep,
     emailVerified,
@@ -16,9 +18,15 @@ const CustomerInfoLuxury = () => {
     resendVerificationCode,
   } = useBookingStore();
   
+  const { settings } = useSettings();
+  const formFields = settings?.form_fields || [];
+  
   const [localError, setLocalError] = useState('');
   const [showVerificationModal, setShowVerificationModal] = useState(false);
   const formRef = useRef(null);
+  
+  // Check if either pickup or dropoff is an airport
+  const isAirport = tripDetails.isAirportPickup || tripDetails.isAirportDropoff;
 
   // Handle autofill - check form values before submit
   const syncFormWithState = () => {
@@ -103,6 +111,171 @@ const CustomerInfoLuxury = () => {
     // Reset email verification if email changes
     if (name === 'email' && emailVerified) {
       useBookingStore.setState({ emailVerified: false });
+    }
+  };
+  
+  const handleAdditionalFieldChange = (key, value) => {
+    setCustomerInfo({
+      additionalFields: {
+        ...customerInfo.additionalFields,
+        [key]: value
+      }
+    });
+  };
+  
+  // Check if a field should be shown based on conditions
+  const shouldShowField = (field) => {
+    if (!field.conditions || field.conditions.length === 0) {
+      return true;
+    }
+    
+    const context = {
+      is_airport: isAirport,
+      is_airport_pickup: tripDetails.isAirportPickup,
+      is_airport_dropoff: tripDetails.isAirportDropoff,
+    };
+    
+    return field.conditions.every(condition => {
+      const contextValue = context[condition.field];
+      // Handle boolean values that might come as boolean or string
+      let conditionValue = condition.value;
+      if (condition.value === 'true' || condition.value === true) {
+        conditionValue = true;
+      } else if (condition.value === 'false' || condition.value === false) {
+        conditionValue = false;
+      }
+      
+      switch (condition.operator) {
+        case '==':
+          return contextValue == conditionValue;
+        case '!=':
+          return contextValue != conditionValue;
+        default:
+          return true;
+      }
+    });
+  };
+  
+  // Render a dynamic field
+  const renderDynamicField = (field) => {
+    if (!field) {
+      return null;
+    }
+    
+    if (!shouldShowField(field)) {
+      return null;
+    }
+    
+    const value = field.key === 'flight_number' 
+      ? customerInfo.flightNumber || ''
+      : (customerInfo.additionalFields && customerInfo.additionalFields[field.key]) || '';
+    
+    switch (field.type) {
+      case 'text':
+      case 'number':
+      case 'email':
+      case 'tel':
+        return (
+          <div key={field.key} className="relative">
+            <label className="block text-xs font-medium text-luxury-gold uppercase tracking-luxury mb-3">
+              {field.label} {!field.required && <span className="text-luxury-gray/40 normal-case tracking-normal">(Optional)</span>}
+            </label>
+            <input
+              type={field.type}
+              name={field.key}
+              value={value}
+              onChange={(e) => {
+                if (field.key === 'flight_number') {
+                  setCustomerInfo({ flightNumber: e.target.value });
+                } else {
+                  handleAdditionalFieldChange(field.key, e.target.value);
+                }
+              }}
+              className="input-luxury text-lg"
+              placeholder={field.placeholder}
+              required={field.required}
+              min={field.validation_rules?.min}
+              max={field.validation_rules?.max}
+            />
+            {field.helper_text && (
+              <p className="text-xs text-luxury-gray/50 mt-2">{field.helper_text}</p>
+            )}
+          </div>
+        );
+      
+      case 'select':
+        return (
+          <div key={field.key} className="relative">
+            <label className="block text-xs font-medium text-luxury-gold uppercase tracking-luxury mb-3">
+              {field.label} {!field.required && <span className="text-luxury-gray/40 normal-case tracking-normal">(Optional)</span>}
+            </label>
+            <select
+              name={field.key}
+              value={value}
+              onChange={(e) => handleAdditionalFieldChange(field.key, e.target.value)}
+              className="input-luxury text-lg"
+              required={field.required}
+            >
+              <option value="">Select...</option>
+              {field.options?.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            {field.helper_text && (
+              <p className="text-xs text-luxury-gray/50 mt-2">{field.helper_text}</p>
+            )}
+          </div>
+        );
+      
+      case 'checkbox':
+        return (
+          <div key={field.key} className="relative">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                name={field.key}
+                checked={value === true || value === 'true'}
+                onChange={(e) => handleAdditionalFieldChange(field.key, e.target.checked)}
+                className="w-5 h-5 text-luxury-gold border-luxury-gray/20 rounded focus:ring-luxury-gold"
+              />
+              <span className="text-sm text-luxury-black">
+                {field.label}
+              </span>
+            </label>
+            {field.helper_text && (
+              <p className="text-xs text-luxury-gray/50 mt-2 ml-8">{field.helper_text}</p>
+            )}
+          </div>
+        );
+      
+      case 'textarea':
+        return (
+          <div key={field.key} className="relative">
+            <label className="block text-xs font-medium text-luxury-gold uppercase tracking-luxury mb-3">
+              {field.label} {!field.required && <span className="text-luxury-gray/40 normal-case tracking-normal">(Optional)</span>}
+            </label>
+            <textarea
+              name={field.key}
+              value={value}
+              onChange={(e) => handleAdditionalFieldChange(field.key, e.target.value)}
+              rows={3}
+              className="w-full px-0 py-3 bg-transparent border-b-2 border-luxury-gray/20
+                       text-luxury-charcoal placeholder-luxury-gray/50
+                       transition-all duration-300
+                       focus:border-luxury-gold focus:outline-none resize-none"
+              placeholder={field.placeholder}
+              required={field.required}
+            />
+            {field.helper_text && (
+              <p className="text-xs text-luxury-gray/50 mt-2">{field.helper_text}</p>
+            )}
+          </div>
+        );
+      
+      default:
+        return null;
     }
   };
 
@@ -199,6 +372,9 @@ const CustomerInfoLuxury = () => {
               Your chauffeur may contact you on this number
             </p>
           </div>
+          
+          {/* Dynamic Form Fields */}
+          {formFields.map(field => renderDynamicField(field))}
           
           {/* Special Instructions */}
           <div className="relative">

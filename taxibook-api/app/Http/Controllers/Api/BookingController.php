@@ -134,6 +134,10 @@ class BookingController extends Controller
             'dropoff_lng' => 'required|numeric|between:-180,180',
             'pickup_date' => 'required|date|after:now',
             'special_instructions' => 'nullable|string|max:500',
+            'flight_number' => 'nullable|string|max:50',
+            'is_airport_pickup' => 'boolean',
+            'is_airport_dropoff' => 'boolean',
+            'additional_fields' => 'nullable|array',
             'payment_method_id' => 'nullable|string', // Stripe payment method ID (optional for initial booking)
             'gratuity_amount' => 'nullable|numeric|min:0', // Optional tip at booking
             'save_payment_method' => 'boolean', // Save card for future use
@@ -200,6 +204,10 @@ class BookingController extends Controller
                 'gratuity_added_at' => $tipAmount > 0 ? now() : null,
                 'save_payment_method' => $saveCard,
                 'special_instructions' => $validated['special_instructions'] ?? null,
+                'flight_number' => $validated['flight_number'] ?? null,
+                'is_airport_pickup' => $validated['is_airport_pickup'] ?? false,
+                'is_airport_dropoff' => $validated['is_airport_dropoff'] ?? false,
+                'additional_data' => $validated['additional_fields'] ?? [],
                 'status' => 'pending',
                 'payment_status' => 'pending',
             ]);

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Setting;
+use App\Models\BookingFormField;
 
 class SettingsController extends Controller
 {
@@ -19,6 +20,25 @@ class SettingsController extends Controller
         $allowSameDayBooking = filter_var(Setting::get('allow_same_day_booking', true), FILTER_VALIDATE_BOOLEAN);
         $bookingTimeIncrement = (int) Setting::get('booking_time_increment', 5);
         
+        // Get enabled form fields
+        $formFields = BookingFormField::enabled()
+            ->ordered()
+            ->get()
+            ->map(function ($field) {
+                return [
+                    'key' => $field->key,
+                    'label' => $field->label,
+                    'placeholder' => $field->placeholder,
+                    'type' => $field->type,
+                    'required' => $field->required,
+                    'options' => $field->options,
+                    'validation_rules' => $field->validation_rules,
+                    'conditions' => $field->conditions,
+                    'helper_text' => $field->helper_text,
+                    'group' => $field->group,
+                ];
+            });
+        
         return response()->json([
             'support_phone' => $supportPhone,
             'business_email' => $businessEmail,
@@ -29,6 +49,7 @@ class SettingsController extends Controller
                 'allow_same_day' => $allowSameDayBooking,
                 'time_increment' => $bookingTimeIncrement,
             ],
+            'form_fields' => $formFields,
         ]);
     }
 }
