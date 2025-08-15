@@ -326,6 +326,49 @@ class ManageSettings extends Page
                                     ->columns(2),
                             ]),
                         
+                        Tab::make('Booking Settings')
+                            ->icon('heroicon-o-calendar-days')
+                            ->schema([
+                                Section::make('Booking Configuration')
+                                    ->description('Configure booking rules and restrictions')
+                                    ->schema([
+                                        TextInput::make('minimum_booking_hours')
+                                            ->label('Minimum Advance Booking Hours')
+                                            ->numeric()
+                                            ->minValue(0)
+                                            ->maxValue(168) // Max 1 week
+                                            ->default(2)
+                                            ->suffix('hours')
+                                            ->required()
+                                            ->helperText('How many hours in advance customers must book (e.g., 2 = bookings must be at least 2 hours in the future)'),
+                                        
+                                        TextInput::make('maximum_booking_days')
+                                            ->label('Maximum Advance Booking Days')
+                                            ->numeric()
+                                            ->minValue(1)
+                                            ->maxValue(365)
+                                            ->default(90)
+                                            ->suffix('days')
+                                            ->helperText('How far in advance customers can book (e.g., 90 = bookings up to 90 days in advance)'),
+                                        
+                                        Toggle::make('allow_same_day_booking')
+                                            ->label('Allow Same Day Bookings')
+                                            ->default(true)
+                                            ->helperText('Allow customers to book trips for the same day (still respects minimum booking hours)'),
+                                        
+                                        TextInput::make('booking_time_increment')
+                                            ->label('Time Selection Increment')
+                                            ->numeric()
+                                            ->minValue(5)
+                                            ->maxValue(60)
+                                            ->step(5)
+                                            ->default(5)
+                                            ->suffix('minutes')
+                                            ->helperText('Time increment for pickup time selection (e.g., 5 = times shown in 5-minute intervals)'),
+                                    ])
+                                    ->columns(2),
+                            ]),
+                        
                         Tab::make('Email Settings')
                             ->icon('heroicon-o-envelope')
                             ->schema([
@@ -637,6 +680,36 @@ class ManageSettings extends Page
                 'type' => 'boolean',
                 'description' => 'BCC admin on all emails',
                 'order' => 5,
+            ],
+            
+            // Booking Settings
+            'minimum_booking_hours' => [
+                'group' => 'booking',
+                'display_name' => 'Minimum Booking Hours',
+                'type' => 'number',
+                'description' => 'Minimum hours in advance for bookings',
+                'order' => 1,
+            ],
+            'maximum_booking_days' => [
+                'group' => 'booking',
+                'display_name' => 'Maximum Booking Days',
+                'type' => 'number',
+                'description' => 'Maximum days in advance for bookings',
+                'order' => 2,
+            ],
+            'allow_same_day_booking' => [
+                'group' => 'booking',
+                'display_name' => 'Allow Same Day Booking',
+                'type' => 'boolean',
+                'description' => 'Allow same day bookings',
+                'order' => 3,
+            ],
+            'booking_time_increment' => [
+                'group' => 'booking',
+                'display_name' => 'Booking Time Increment',
+                'type' => 'number',
+                'description' => 'Time increment in minutes for booking times',
+                'order' => 4,
             ],
         ];
 

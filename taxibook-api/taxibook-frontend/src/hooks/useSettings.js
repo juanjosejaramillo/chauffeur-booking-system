@@ -6,7 +6,13 @@ export function useSettings() {
   const [settings, setSettings] = useState({
     support_phone: '',
     business_email: '',
-    business_name: ''
+    business_name: '',
+    booking: {
+      minimum_hours: 2,
+      maximum_days: 90,
+      allow_same_day: true,
+      time_increment: 5
+    }
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import useBookingStore from '../../../store/bookingStore';
+import { useSettings } from '../../../hooks/useSettings';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -30,6 +31,14 @@ const TripDetailsLuxury = () => {
     loading,
     error,
   } = useBookingStore();
+  
+  const { settings } = useSettings();
+  const bookingSettings = settings?.booking || {
+    minimum_hours: 2,
+    maximum_days: 90,
+    allow_same_day: true,
+    time_increment: 5
+  };
   
   const [localError, setLocalError] = useState('');
   const [pickupSuggestions, setPickupSuggestions] = useState([]);
@@ -324,22 +333,38 @@ const TripDetailsLuxury = () => {
 
   const getMinDateTime = () => {
     const now = new Date();
-    now.setHours(now.getHours() + 2);
+    now.setHours(now.getHours() + bookingSettings.minimum_hours);
     return now;
+  };
+  
+  const getMaxDateTime = () => {
+    const max = new Date();
+    max.setDate(max.getDate() + bookingSettings.maximum_days);
+    return max;
   };
   
   const getDefaultDateTime = () => {
     const defaultDate = new Date();
     const currentHour = defaultDate.getHours();
     
-    // Set to tomorrow at popular pickup times
-    defaultDate.setDate(defaultDate.getDate() + 1);
+    // Add minimum booking hours
+    defaultDate.setHours(defaultDate.getHours() + bookingSettings.minimum_hours);
     
-    // Set to typical busy hours for chauffeur services
-    if (currentHour < 12) {
-      defaultDate.setHours(7, 0, 0, 0); // 7:00 AM - popular airport departure time
+    // If it's still today and same day booking is not allowed, move to tomorrow
+    const today = new Date();
+    if (!bookingSettings.allow_same_day && 
+        defaultDate.toDateString() === today.toDateString()) {
+      defaultDate.setDate(defaultDate.getDate() + 1);
+      defaultDate.setHours(7, 0, 0, 0); // Set to 7 AM next day
     } else {
-      defaultDate.setHours(18, 0, 0, 0); // 6:00 PM - popular business/dinner pickup time
+      // Round to next available time increment
+      const minutes = defaultDate.getMinutes();
+      const roundedMinutes = Math.ceil(minutes / bookingSettings.time_increment) * bookingSettings.time_increment;
+      if (roundedMinutes >= 60) {
+        defaultDate.setHours(defaultDate.getHours() + 1, 0, 0, 0);
+      } else {
+        defaultDate.setMinutes(roundedMinutes, 0, 0);
+      }
     }
     
     return defaultDate;
@@ -490,10 +515,11 @@ const TripDetailsLuxury = () => {
                   onChange={(date) => setSelectedDateTime(date)}
                   showTimeSelect
                   timeFormat="h:mm aa"
-                  timeIntervals={15}
+                  timeIntervals={bookingSettings.time_increment}
                   timeCaption="Time"
                   dateFormat="MMMM d, yyyy h:mm aa"
                   minDate={minDateTime}
+                  maxDate={getMaxDateTime()}
                   minTime={
                     selectedDateTime && selectedDateTime.toDateString() === minDateTime.toDateString()
                       ? minDateTime
@@ -505,16 +531,23 @@ const TripDetailsLuxury = () => {
                   calendarClassName="luxury-calendar"
                   wrapperClassName="w-full"
                   required
+                  filterDate={(date) => {
+                    // If same day booking is not allowed, exclude today
+                    if (!bookingSettings.allow_same_day) {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      return date > today;
+                    }
+                    return true;
+                  }}
                   filterTime={(time) => {
                     const currentDate = new Date();
                     const selectedDate = new Date(selectedDateTime || currentDate);
-                    const timeHours = time.getHours();
-                    const timeMinutes = time.getMinutes();
                     
-                    // If it's today, filter times that are at least 2 hours from now
+                    // If it's today, filter times that are at least minimum_hours from now
                     if (selectedDate.toDateString() === currentDate.toDateString()) {
                       const minTime = new Date();
-                      minTime.setHours(minTime.getHours() + 2);
+                      minTime.setHours(minTime.getHours() + bookingSettings.minimum_hours);
                       return time >= minTime;
                     }
                     return true;
