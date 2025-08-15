@@ -28,7 +28,7 @@ export const settingsService = {
         settingsPromise = null;
         // Return default values if the API call fails
         return {
-          support_phone: '1-800-TAXIBOOK',
+          support_phone: '1-800-LUXRIDE',
           business_email: 'info@luxride.com',
           business_name: 'LuxRide'
         };
