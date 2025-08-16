@@ -5,7 +5,7 @@ namespace App\Filament\Resources\EmailTemplates;
 use App\Filament\Resources\EmailTemplates\Pages\CreateEmailTemplate;
 use App\Filament\Resources\EmailTemplates\Pages\EditEmailTemplate;
 use App\Filament\Resources\EmailTemplates\Pages\ListEmailTemplates;
-use App\Filament\Resources\EmailTemplates\Schemas\EmailTemplateForm;
+use App\Filament\Resources\EmailTemplates\Schemas\SimpleEmailTemplateForm;
 use App\Filament\Resources\EmailTemplates\Tables\EmailTemplatesTable;
 use App\Models\EmailTemplate;
 use BackedEnum;
@@ -28,7 +28,7 @@ class EmailTemplateResource extends Resource
 
     public static function form(Schema $schema): Schema
     {
-        return EmailTemplateForm::configure($schema);
+        return SimpleEmailTemplateForm::configure($schema);
     }
 
     public static function table(Table $table): Table
@@ -46,9 +46,9 @@ class EmailTemplateResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ListEmailTemplates::route('/'),
-            'create' => CreateEmailTemplate::route('/create'),
-            'edit' => EditEmailTemplate::route('/{record}/edit'),
+            'index' => Pages\ListEmailTemplates::route('/'),
+            'create' => Pages\CreateEmailTemplate::route('/create'),
+            'edit' => Pages\SimpleEmailEditor::route('/{record}/edit'),
         ];
     }
 }

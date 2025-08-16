@@ -16,6 +16,14 @@ class EmailTemplate extends Model
         'category',
         'subject',
         'body',
+        'html_body',
+        'css_styles',
+        'template_type',
+        'version_history',
+        'template_components',
+        'test_recipients',
+        'parent_template',
+        'meta_data',
         'description',
         'cc_emails',
         'bcc_emails',
@@ -43,6 +51,10 @@ class EmailTemplate extends Model
             'trigger_events' => 'array',
             'available_triggers' => 'array',
             'recipient_config' => 'array',
+            'version_history' => 'array',
+            'template_components' => 'array',
+            'test_recipients' => 'array',
+            'meta_data' => 'array',
             'attach_receipt' => 'boolean',
             'attach_booking_details' => 'boolean',
             'is_active' => 'boolean',
@@ -101,7 +113,7 @@ class EmailTemplate extends Model
     public function render(array $variables = []): array
     {
         $subject = $this->subject;
-        $body = $this->body;
+        $body = $this->getBodyContent();
 
         // Replace shortcodes in subject - templates use {{var}} format
         foreach ($variables as $key => $value) {
@@ -111,6 +123,65 @@ class EmailTemplate extends Model
             $subject = str_replace("{{{" . $key . "}}}", $value, $subject);
         }
 
+        // Render based on template type
+        switch ($this->template_type) {
+            case 'html':
+                $body = $this->renderHtmlTemplate($body, $variables);
+                break;
+            case 'wysiwyg':
+                $body = $this->renderWysiwygTemplate($body, $variables);
+                break;
+            case 'blade':
+            default:
+                $body = $this->renderBladeTemplate($body, $variables);
+                break;
+        }
+
+        return [
+            'subject' => $subject,
+            'body' => $body,
+        ];
+    }
+
+    protected function getBodyContent(): string
+    {
+        // Use HTML body if available and template type is HTML
+        if ($this->template_type === 'html' && $this->html_body) {
+            return $this->html_body;
+        }
+        
+        return $this->body;
+    }
+
+    protected function renderHtmlTemplate(string $body, array $variables): string
+    {
+        // Apply CSS styles if available
+        if ($this->css_styles) {
+            $body = $this->inlineCss($body, $this->css_styles);
+        }
+        
+        // Replace variables
+        foreach ($variables as $key => $value) {
+            $body = str_replace("{{" . $key . "}}", $value, $body);
+            $body = str_replace("{{{" . $key . "}}}", $value, $body);
+        }
+        
+        return $body;
+    }
+
+    protected function renderWysiwygTemplate(string $body, array $variables): string
+    {
+        // Replace variables in WYSIWYG content
+        foreach ($variables as $key => $value) {
+            $body = str_replace("{{" . $key . "}}", $value, $body);
+            $body = str_replace("{{{" . $key . "}}}", $value, $body);
+        }
+        
+        return $body;
+    }
+
+    protected function renderBladeTemplate(string $body, array $variables): string
+    {
         // Process Blade template syntax if present
         if (str_contains($body, '@extends') || str_contains($body, '@section')) {
             try {
@@ -144,11 +215,25 @@ class EmailTemplate extends Model
                 $body = str_replace("{{{" . $key . "}}}", $value, $body);
             }
         }
+        
+        return $body;
+    }
 
-        return [
-            'subject' => $subject,
-            'body' => $body,
-        ];
+    protected function inlineCss(string $html, string $css): string
+    {
+        // Simple CSS inlining for email compatibility
+        // In production, you might want to use a library like Emogrifier
+        $style = "<style>{$css}</style>";
+        
+        // If the HTML already has a <head> section, insert styles there
+        if (stripos($html, '</head>') !== false) {
+            $html = str_ireplace('</head>', $style . '</head>', $html);
+        } else {
+            // Otherwise, prepend the styles
+            $html = $style . $html;
+        }
+        
+        return $html;
     }
 
     public function scopeCategory($query, $category)
@@ -411,6 +496,124 @@ class EmailTemplate extends Model
             default:
                 return 'Send immediately';
         }
+    }
+
+    /**
+     * Save current version to history
+     */
+    public function saveVersion(string $changeNote = null): void
+    {
+        $history = $this->version_history ?? [];
+        
+        $version = [
+            'version' => count($history) + 1,
+            'subject' => $this->subject,
+            'body' => $this->body,
+            'html_body' => $this->html_body,
+            'css_styles' => $this->css_styles,
+            'template_type' => $this->template_type,
+            'saved_at' => now()->toIso8601String(),
+            'saved_by' => auth()->user()->name ?? 'System',
+            'change_note' => $changeNote,
+        ];
+        
+        // Keep only last 10 versions
+        array_unshift($history, $version);
+        $this->version_history = array_slice($history, 0, 10);
+        $this->save();
+    }
+
+    /**
+     * Restore from a specific version
+     */
+    public function restoreVersion(int $versionNumber): bool
+    {
+        $history = $this->version_history ?? [];
+        
+        foreach ($history as $version) {
+            if ($version['version'] == $versionNumber) {
+                // Save current as a version first
+                $this->saveVersion('Before restoring to version ' . $versionNumber);
+                
+                // Restore the version
+                $this->subject = $version['subject'];
+                $this->body = $version['body'];
+                $this->html_body = $version['html_body'] ?? null;
+                $this->css_styles = $version['css_styles'] ?? null;
+                $this->template_type = $version['template_type'] ?? 'blade';
+                $this->save();
+                
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
+     * Duplicate this template
+     */
+    public function duplicate(string $newName = null): self
+    {
+        $duplicate = $this->replicate();
+        $duplicate->name = $newName ?? $this->name . ' (Copy)';
+        $duplicate->slug = self::generateUniqueSlug($duplicate->name);
+        $duplicate->is_active = false; // Start inactive
+        $duplicate->version_history = []; // Start fresh history
+        $duplicate->save();
+        
+        return $duplicate;
+    }
+
+    /**
+     * Export template to JSON
+     */
+    public function export(): array
+    {
+        return [
+            'name' => $this->name,
+            'category' => $this->category,
+            'subject' => $this->subject,
+            'body' => $this->body,
+            'html_body' => $this->html_body,
+            'css_styles' => $this->css_styles,
+            'template_type' => $this->template_type,
+            'description' => $this->description,
+            'available_variables' => $this->available_variables,
+            'trigger_events' => $this->trigger_events,
+            'template_components' => $this->template_components,
+            'meta_data' => $this->meta_data,
+            'exported_at' => now()->toIso8601String(),
+            'exported_from' => config('app.url'),
+        ];
+    }
+
+    /**
+     * Import template from JSON
+     */
+    public static function import(array $data, string $namePrefix = null): self
+    {
+        $template = new self();
+        $template->name = ($namePrefix ?? '') . $data['name'];
+        $template->slug = self::generateUniqueSlug($template->name);
+        $template->category = $data['category'] ?? 'imported';
+        $template->subject = $data['subject'];
+        $template->body = $data['body'];
+        $template->html_body = $data['html_body'] ?? null;
+        $template->css_styles = $data['css_styles'] ?? null;
+        $template->template_type = $data['template_type'] ?? 'blade';
+        $template->description = $data['description'] ?? null;
+        $template->available_variables = $data['available_variables'] ?? [];
+        $template->trigger_events = $data['trigger_events'] ?? [];
+        $template->template_components = $data['template_components'] ?? [];
+        $template->is_active = false; // Start inactive
+        $template->meta_data = array_merge($data['meta_data'] ?? [], [
+            'imported_at' => now()->toIso8601String(),
+            'imported_from' => $data['exported_from'] ?? 'unknown',
+        ]);
+        $template->save();
+        
+        return $template;
     }
 
     /**

@@ -98,6 +98,10 @@ class EmailTemplatesTable
                     }),
             ])
             ->actions([
+                EditAction::make()
+                    ->label('Edit')
+                    ->icon('heroicon-o-pencil'),
+                    
                 Action::make('test')
                     ->label('Test')
                     ->icon('heroicon-o-paper-airplane')
@@ -173,7 +177,6 @@ class EmailTemplatesTable
                             ->send();
                     }),
                 
-                EditAction::make(),
                 DeleteAction::make(),
             ])
             ->bulkActions([
