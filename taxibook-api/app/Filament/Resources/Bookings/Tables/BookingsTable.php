@@ -55,7 +55,7 @@ class BookingsTable
                     ->searchable()
                     ->limit(40)
                     ->tooltip(fn ($record) => $record->dropoff_address),
-                TextColumn::make('vehicleType.name')
+                TextColumn::make('vehicleType.display_name')
                     ->label('Vehicle')
                     ->searchable()
                     ->sortable(),
