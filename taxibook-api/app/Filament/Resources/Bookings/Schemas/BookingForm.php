@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Bookings\Schemas;
 
 use App\Models\VehicleType;
+use App\Models\BookingFormField;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -255,6 +256,72 @@ class BookingForm
                             ->columnSpanFull(),
                     ])
                     ->collapsed()
+                    ->collapsible(),
+
+                Section::make('Customer Responses')
+                    ->description('Dynamic form fields filled by the customer')
+                    ->schema(function ($record) {
+                        if (!$record || empty($record->additional_data)) {
+                            return [
+                                Placeholder::make('no_responses')
+                                    ->label('')
+                                    ->content(new HtmlString('<span class="text-gray-500">No additional responses provided</span>'))
+                                    ->columnSpanFull()
+                            ];
+                        }
+
+                        $fields = [];
+                        $formFields = BookingFormField::enabled()->ordered()->get();
+                        
+                        // Add flight number if exists
+                        if ($record->flight_number) {
+                            $fields[] = Placeholder::make('flight_number_display')
+                                ->label('Flight Number')
+                                ->content(new HtmlString('<span class="font-semibold text-gray-700">' . e($record->flight_number) . '</span>'));
+                        }
+                        
+                        foreach ($record->additional_data as $key => $value) {
+                            if (empty($value)) continue;
+                            
+                            $formField = $formFields->firstWhere('key', $key);
+                            $label = $formField ? $formField->label : ucfirst(str_replace('_', ' ', $key));
+                            
+                            // Format the value based on field type
+                            $displayValue = $value;
+                            if ($formField) {
+                                if ($formField->type === 'select' && $formField->options) {
+                                    foreach ($formField->options as $option) {
+                                        if ($option['value'] === $value) {
+                                            $displayValue = $option['label'];
+                                            break;
+                                        }
+                                    }
+                                } elseif ($formField->type === 'checkbox') {
+                                    $displayValue = $value ? 'Yes' : 'No';
+                                    $displayValue = $value 
+                                        ? '<span class="text-green-600 font-semibold">Yes</span>' 
+                                        : '<span class="text-gray-500">No</span>';
+                                } elseif ($key === 'number_of_bags') {
+                                    $displayValue = $value . ' bag' . ($value != 1 ? 's' : '');
+                                }
+                            }
+                            
+                            $fields[] = Placeholder::make('dynamic_field_' . $key)
+                                ->label($label)
+                                ->content(new HtmlString('<span class="font-semibold text-gray-700">' . e($displayValue) . '</span>'))
+                                ->columnSpan(1);
+                        }
+                        
+                        return $fields ?: [
+                            Placeholder::make('no_responses')
+                                ->label('')
+                                ->content(new HtmlString('<span class="text-gray-500">No additional responses provided</span>'))
+                                ->columnSpanFull()
+                        ];
+                    })
+                    ->columns(2)
+                    ->visible(fn ($record) => $record && ($record->flight_number || !empty($record->additional_data)))
+                    ->collapsed(false)
                     ->collapsible(),
 
                 Section::make('Cancellation Details')

@@ -199,7 +199,16 @@ class NotificationService
      */
     protected function prepareVariables(Booking $booking = null, array $additionalVariables = []): array
     {
-        $variables = array_merge($this->companyConfig, $additionalVariables);
+        // Add common variables that are always available
+        $commonVariables = [
+            'current_year' => date('Y'),
+            'current_date' => date('F j, Y'),
+            'current_time' => date('g:i A'),
+            'website_url' => Setting::get('website_url', config('app.url')),
+            'company_address' => Setting::get('business_address', '123 Business Ave, Suite 100, City, State 12345'),
+        ];
+        
+        $variables = array_merge($this->companyConfig, $commonVariables, $additionalVariables);
 
         if ($booking) {
             $variables = array_merge($variables, [
@@ -229,9 +238,79 @@ class NotificationService
                 'status' => ucfirst($booking->status),
                 'payment_status' => ucfirst($booking->payment_status),
             ]);
+
+            // Add dynamic form fields from additional_data
+            if ($booking->additional_data && is_array($booking->additional_data)) {
+                foreach ($booking->additional_data as $fieldKey => $fieldValue) {
+                    // Add field with 'field_' prefix to avoid conflicts
+                    $variables['field_' . $fieldKey] = $this->formatFieldValue($fieldKey, $fieldValue);
+                    
+                    // Also add human-readable versions for common fields
+                    $variables['field_' . $fieldKey . '_display'] = $this->getFieldDisplayValue($fieldKey, $fieldValue);
+                }
+            }
+
+            // Add flight number separately if it exists (for backward compatibility)
+            if ($booking->flight_number) {
+                $variables['flight_number'] = $booking->flight_number;
+                $variables['field_flight_number'] = $booking->flight_number;
+            }
+
+            // Add conditional flags for template logic
+            $variables['has_flight_number'] = !empty($booking->flight_number) || !empty($booking->additional_data['flight_number']);
+            $variables['has_special_instructions'] = !empty($booking->special_instructions);
+            $variables['has_additional_fields'] = !empty($booking->additional_data);
+            $variables['is_airport_transfer'] = $booking->is_airport_pickup || $booking->is_airport_dropoff;
         }
 
         return $variables;
+    }
+
+    /**
+     * Format field value for display
+     */
+    protected function formatFieldValue($key, $value)
+    {
+        if (is_null($value) || $value === '') {
+            return '';
+        }
+
+        // Special formatting for known field types
+        switch ($key) {
+            case 'number_of_bags':
+                return $value . ' bag' . ($value != 1 ? 's' : '');
+            case 'meet_and_greet':
+                return $value ? 'Yes' : 'No';
+            default:
+                return is_string($value) ? $value : json_encode($value);
+        }
+    }
+
+    /**
+     * Get human-readable display value for field
+     */
+    protected function getFieldDisplayValue($key, $value)
+    {
+        if (is_null($value) || $value === '') {
+            return '';
+        }
+
+        // Load field configuration to get proper labels
+        $field = \App\Models\BookingFormField::where('key', $key)->first();
+        
+        if ($field && $field->type === 'select' && $field->options) {
+            foreach ($field->options as $option) {
+                if ($option['value'] === $value) {
+                    return $option['label'];
+                }
+            }
+        }
+
+        if ($field && $field->type === 'checkbox') {
+            return $value ? 'Yes' : 'No';
+        }
+
+        return $this->formatFieldValue($key, $value);
     }
 
     /**

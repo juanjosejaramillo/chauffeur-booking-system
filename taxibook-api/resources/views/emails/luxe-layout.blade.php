@@ -338,7 +338,7 @@
         <div class="email-container">
             <!-- Header -->
             <div class="email-header">
-                <h1 class="logo">{{ config('business.name', 'LuxRide') }}</h1>
+                <h1 class="logo">{{ $company_name ?? config('business.name', 'LuxRide') }}</h1>
                 <p class="tagline">Premium Transportation Service</p>
             </div>
             
@@ -357,7 +357,7 @@
                 </div>
                 
                 <p class="footer-text">
-                    © {{ date('Y') }} {{ config('business.name', 'LuxRide') }}. All rights reserved.<br>
+                    © {{ date('Y') }} {{ $company_name ?? config('business.name', 'LuxRide') }}. All rights reserved.<br>
                     This email was sent to you regarding your booking with our service.
                 </p>
                 

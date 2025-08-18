@@ -25,8 +25,11 @@ class DatabaseSeeder extends Seeder
         // Create vehicle types
         $this->createVehicleTypes();
         
-        // Create email templates using the comprehensive seeder
-        $this->call(EmailTemplateSeeder::class);
+        // Create booking form fields first (needed for dynamic shortcodes)
+        $this->call(BookingFormFieldSeeder::class);
+        
+        // Create all email templates with dynamic shortcode support
+        $this->call(ComprehensiveEmailTemplateSeeder::class);
     }
     
     private function createVehicleTypes(): void

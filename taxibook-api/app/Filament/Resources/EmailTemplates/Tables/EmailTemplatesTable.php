@@ -32,6 +32,57 @@ class EmailTemplatesTable
                     ->sortable()
                     ->description(fn (EmailTemplate $record): string => $record->description ?? ''),
                 
+                TextColumn::make('dynamic_fields')
+                    ->label('Dynamic Fields')
+                    ->state(function (EmailTemplate $record): string {
+                        // Count dynamic field shortcodes in subject and body
+                        $content = $record->subject . ' ' . $record->body . ' ' . ($record->html_body ?? '');
+                        preg_match_all('/\{\{field_[a-z_]+\}\}/i', $content, $matches);
+                        $uniqueFields = array_unique($matches[0]);
+                        $count = count($uniqueFields);
+                        
+                        if ($count === 0) return 'None';
+                        
+                        // Get field names
+                        $fieldNames = [];
+                        foreach ($uniqueFields as $shortcode) {
+                            $fieldKey = str_replace(['{{field_', '}}', '_display'], '', $shortcode);
+                            $field = \App\Models\BookingFormField::where('key', $fieldKey)->first();
+                            if ($field) {
+                                $fieldNames[] = $field->label;
+                            }
+                        }
+                        
+                        return $count . ' field' . ($count !== 1 ? 's' : '');
+                    })
+                    ->description(function (EmailTemplate $record): string {
+                        // Show field names in description
+                        $content = $record->subject . ' ' . $record->body . ' ' . ($record->html_body ?? '');
+                        preg_match_all('/\{\{field_[a-z_]+\}\}/i', $content, $matches);
+                        $uniqueFields = array_unique($matches[0]);
+                        
+                        if (count($uniqueFields) === 0) return '';
+                        
+                        $fieldNames = [];
+                        foreach ($uniqueFields as $shortcode) {
+                            $fieldKey = str_replace(['{{field_', '}}', '_display'], '', $shortcode);
+                            $field = \App\Models\BookingFormField::where('key', $fieldKey)->first();
+                            if ($field) {
+                                $fieldNames[] = $field->label;
+                            }
+                        }
+                        
+                        return implode(', ', array_slice($fieldNames, 0, 3)) . (count($fieldNames) > 3 ? '...' : '');
+                    })
+                    ->badge()
+                    ->color(function (string $state): string {
+                        if (str_starts_with($state, 'None')) return 'gray';
+                        $count = (int) filter_var($state, FILTER_SANITIZE_NUMBER_INT);
+                        if ($count >= 3) return 'success';
+                        if ($count >= 1) return 'info';
+                        return 'gray';
+                    }),
+                
                 TextColumn::make('recipients')
                     ->label('Recipients')
                     ->state(function (EmailTemplate $record): string {

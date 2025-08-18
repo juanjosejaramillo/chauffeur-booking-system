@@ -201,6 +201,10 @@ const useBookingStore = create((set, get) => ({
         dropoff_lng: tripDetails.dropoffLng,
         pickup_date: `${tripDetails.pickupDate} ${tripDetails.pickupTime}`,
         special_instructions: customerInfo.specialInstructions,
+        flight_number: customerInfo.flightNumber || null,
+        is_airport_pickup: tripDetails.isAirportPickup || false,
+        is_airport_dropoff: tripDetails.isAirportDropoff || false,
+        additional_fields: customerInfo.additionalFields || {},
         // No payment_method_id - will be processed separately
       });
       

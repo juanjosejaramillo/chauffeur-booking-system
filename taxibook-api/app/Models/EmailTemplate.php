@@ -160,11 +160,62 @@ class EmailTemplate extends Model
             $body = $this->inlineCss($body, $this->css_styles);
         }
         
+        // Process conditional blocks first (simple implementation)
+        $body = $this->processConditionals($body, $variables);
+        
         // Replace variables
         foreach ($variables as $key => $value) {
-            $body = str_replace("{{" . $key . "}}", $value, $body);
-            $body = str_replace("{{{" . $key . "}}}", $value, $body);
+            // Skip boolean values used for conditionals
+            if (is_bool($value)) {
+                continue;
+            }
+            $body = str_replace("{{" . $key . "}}", $value ?? '', $body);
+            $body = str_replace("{{{" . $key . "}}}", $value ?? '', $body);
         }
+        
+        return $body;
+    }
+    
+    /**
+     * Process conditional blocks in templates
+     */
+    protected function processConditionals(string $body, array $variables): string
+    {
+        // Process {{#if variable}} ... {{/if}} blocks including those checking field values
+        // First handle field checks like {{#if field_flight_number}}
+        $pattern = '/\{\{#if\s+([a-zA-Z_]+)\}\}(.*?)\{\{\/if\}\}/s';
+        
+        // Keep processing until no more conditionals are found (handles nested conditionals)
+        $maxIterations = 10;
+        $iteration = 0;
+        
+        while (preg_match($pattern, $body) && $iteration < $maxIterations) {
+            $body = preg_replace_callback($pattern, function($matches) use ($variables) {
+                $varName = $matches[1];
+                $content = $matches[2];
+                
+                // Check if variable exists and is truthy
+                // Special handling for field_ variables - check if they have non-empty values
+                if (str_starts_with($varName, 'field_')) {
+                    if (isset($variables[$varName]) && !empty($variables[$varName])) {
+                        return $content;
+                    }
+                } else {
+                    // For boolean flags and other variables
+                    if (isset($variables[$varName]) && $variables[$varName]) {
+                        return $content;
+                    }
+                }
+                
+                // Variable is falsy or empty, remove the entire block
+                return '';
+            }, $body);
+            
+            $iteration++;
+        }
+        
+        // Also handle inline conditionals like {{/if}} that might be left over
+        $body = preg_replace('/\{\{\/if\}\}/', '', $body);
         
         return $body;
     }
@@ -182,16 +233,20 @@ class EmailTemplate extends Model
 
     protected function renderBladeTemplate(string $body, array $variables): string
     {
+        // Process conditional blocks first
+        $body = $this->processConditionals($body, $variables);
+        
         // Process Blade template syntax if present
         if (str_contains($body, '@extends') || str_contains($body, '@section')) {
             try {
                 // For Blade templates, replace {{variable}} shortcodes with actual values
                 $processedBody = $body;
                 foreach ($variables as $key => $value) {
+                    if (is_bool($value)) continue;
                     // Replace {{variable}} format (double braces)
-                    $processedBody = str_replace("{{" . $key . "}}", $value, $processedBody);
+                    $processedBody = str_replace("{{" . $key . "}}", $value ?? '', $processedBody);
                     // Also replace {{{variable}}} format (triple braces) for compatibility
-                    $processedBody = str_replace("{{{" . $key . "}}}", $value, $processedBody);
+                    $processedBody = str_replace("{{{" . $key . "}}}", $value ?? '', $processedBody);
                 }
                 
                 // Now render with Blade
@@ -202,17 +257,19 @@ class EmailTemplate extends Model
                 
                 // Fallback to manual replacement
                 foreach ($variables as $key => $value) {
-                    $body = str_replace("{{" . $key . "}}", $value, $body);
-                    $body = str_replace("{{{" . $key . "}}}", $value, $body);
+                    if (is_bool($value)) continue;
+                    $body = str_replace("{{" . $key . "}}", $value ?? '', $body);
+                    $body = str_replace("{{{" . $key . "}}}", $value ?? '', $body);
                 }
             }
         } else {
             // For non-Blade templates, replace shortcodes manually
             foreach ($variables as $key => $value) {
+                if (is_bool($value)) continue;
                 // Replace double braces {{variable}}
-                $body = str_replace("{{" . $key . "}}", $value, $body);
+                $body = str_replace("{{" . $key . "}}", $value ?? '', $body);
                 // Also replace triple braces {{{variable}}} for compatibility
-                $body = str_replace("{{{" . $key . "}}}", $value, $body);
+                $body = str_replace("{{{" . $key . "}}}", $value ?? '', $body);
             }
         }
         
@@ -264,7 +321,7 @@ class EmailTemplate extends Model
 
     public static function getAvailableVariables(): array
     {
-        return [
+        $coreVariables = [
             'booking_number' => 'Unique booking reference number',
             'customer_name' => 'Customer full name',
             'customer_first_name' => 'Customer first name',
@@ -288,6 +345,91 @@ class EmailTemplate extends Model
             'support_url' => 'Support URL',
             'booking_url' => 'Direct link to booking',
             'receipt_url' => 'Direct link to receipt PDF',
+            'flight_number' => 'Flight number (if provided)',
+            'is_airport_transfer' => 'Boolean flag for airport transfers',
+            'has_special_instructions' => 'Boolean flag if special instructions exist',
+            'has_flight_number' => 'Boolean flag if flight number exists',
+            'has_additional_fields' => 'Boolean flag if dynamic fields exist',
+        ];
+
+        // Add dynamic field variables
+        $dynamicVariables = self::getDynamicFieldVariables();
+        
+        return array_merge($coreVariables, $dynamicVariables);
+    }
+
+    /**
+     * Get available dynamic field variables from BookingFormField
+     */
+    public static function getDynamicFieldVariables(): array
+    {
+        $variables = [];
+        
+        try {
+            $fields = \App\Models\BookingFormField::enabled()->get();
+            
+            foreach ($fields as $field) {
+                // Add the field variable
+                $variables['field_' . $field->key] = $field->label . ' (Dynamic Field)';
+                
+                // Add display version for select/checkbox fields
+                if (in_array($field->type, ['select', 'checkbox'])) {
+                    $variables['field_' . $field->key . '_display'] = $field->label . ' (Display Value)';
+                }
+            }
+        } catch (\Exception $e) {
+            // If table doesn't exist or error occurs, return empty array
+            \Illuminate\Support\Facades\Log::warning('Could not load dynamic field variables: ' . $e->getMessage());
+        }
+        
+        return $variables;
+    }
+
+    /**
+     * Get grouped available variables for UI display
+     */
+    public static function getGroupedAvailableVariables(): array
+    {
+        return [
+            'Customer Information' => [
+                'customer_name' => 'Customer full name',
+                'customer_first_name' => 'Customer first name',
+                'customer_last_name' => 'Customer last name',
+                'customer_email' => 'Customer email address',
+                'customer_phone' => 'Customer phone number',
+            ],
+            'Booking Details' => [
+                'booking_number' => 'Unique booking reference number',
+                'pickup_address' => 'Pickup location address',
+                'dropoff_address' => 'Dropoff location address',
+                'pickup_date' => 'Pickup date (formatted)',
+                'pickup_time' => 'Pickup time (formatted)',
+                'vehicle_type' => 'Selected vehicle type',
+                'special_instructions' => 'Special instructions from customer',
+                'flight_number' => 'Flight number (if provided)',
+            ],
+            'Pricing' => [
+                'estimated_fare' => 'Estimated fare amount',
+                'final_fare' => 'Final fare amount',
+                'refund_amount' => 'Refund amount',
+            ],
+            'Company Information' => [
+                'company_name' => 'Company name',
+                'company_phone' => 'Company contact phone',
+                'company_email' => 'Company contact email',
+                'support_url' => 'Support URL',
+            ],
+            'Links' => [
+                'booking_url' => 'Direct link to booking',
+                'receipt_url' => 'Direct link to receipt PDF',
+            ],
+            'Conditional Flags' => [
+                'is_airport_transfer' => 'True if airport pickup or dropoff',
+                'has_special_instructions' => 'True if special instructions exist',
+                'has_flight_number' => 'True if flight number provided',
+                'has_additional_fields' => 'True if any dynamic fields filled',
+            ],
+            'Dynamic Fields' => self::getDynamicFieldVariables(),
         ];
     }
 

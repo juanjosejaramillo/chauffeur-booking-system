@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\EmailTemplates\Schemas;
 
 use App\Models\EmailTemplate;
+use App\Models\BookingFormField;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\RichEditor;
@@ -171,6 +172,82 @@ class EmailTemplateForm
                     ])
                     ->columns(2),
 
+                Section::make('Dynamic Fields Status')
+                    ->description('Currently available dynamic form fields that customers can fill')
+                    ->schema([
+                        Placeholder::make('dynamic_fields_status')
+                            ->label('')
+                            ->content(function () {
+                                $fields = BookingFormField::ordered()->get();
+                                
+                                if ($fields->isEmpty()) {
+                                    return new \Illuminate\Support\HtmlString(
+                                        '<div class="text-gray-500">No dynamic form fields configured. Add fields in Booking Form Fields section.</div>'
+                                    );
+                                }
+                                
+                                $html = '<div class="space-y-3">';
+                                $html .= '<div class="bg-blue-50 border-l-4 border-blue-400 p-3 mb-4">';
+                                $html .= '<p class="text-sm text-blue-700"><strong>Tip:</strong> These fields are filled by customers during booking. Use their shortcodes in your templates to personalize emails.</p>';
+                                $html .= '</div>';
+                                
+                                $html .= '<div class="grid grid-cols-1 md:grid-cols-2 gap-3">';
+                                
+                                foreach ($fields as $field) {
+                                    $statusColor = $field->enabled ? 'green' : 'gray';
+                                    $statusText = $field->enabled ? 'Active' : 'Disabled';
+                                    $statusIcon = $field->enabled ? '✓' : '✗';
+                                    $requiredBadge = $field->required ? '<span class="ml-2 text-xs bg-red-100 text-red-800 px-2 py-1 rounded">Required</span>' : '<span class="ml-2 text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded">Optional</span>';
+                                    
+                                    $shortcode = '{{field_' . $field->key . '}}';
+                                    $displayShortcode = '';
+                                    if (in_array($field->type, ['select', 'checkbox'])) {
+                                        $displayShortcode = '<br><code class="text-xs bg-gray-100 px-1">{{field_' . $field->key . '_display}}</code>';
+                                    }
+                                    
+                                    $html .= "
+                                    <div class='p-3 border rounded-lg " . ($field->enabled ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50') . "'>
+                                        <div class='flex items-start justify-between'>
+                                            <div class='flex-1'>
+                                                <div class='flex items-center'>
+                                                    <span class='text-{$statusColor}-500 mr-2'>{$statusIcon}</span>
+                                                    <strong class='text-sm'>{$field->label}</strong>
+                                                    {$requiredBadge}
+                                                </div>
+                                                <div class='mt-2'>
+                                                    <code class='text-xs bg-gray-100 px-1 py-0.5 rounded cursor-pointer' onclick='copyShortcode(\"{$shortcode}\")' title='Click to copy'>{$shortcode}</code>
+                                                    {$displayShortcode}
+                                                </div>
+                                                <div class='text-xs text-gray-600 mt-1'>Type: {$field->type}</div>";
+                                    
+                                    if ($field->helper_text) {
+                                        $html .= "<div class='text-xs text-gray-500 mt-1 italic'>{$field->helper_text}</div>";
+                                    }
+                                    
+                                    if (!$field->enabled) {
+                                        $html .= "<div class='text-xs text-red-600 mt-1'>⚠️ This field is disabled and won't appear in forms</div>";
+                                    }
+                                    
+                                    $html .= "
+                                            </div>
+                                            <span class='text-xs px-2 py-1 rounded bg-{$statusColor}-100 text-{$statusColor}-800'>{$statusText}</span>
+                                        </div>
+                                    </div>";
+                                }
+                                
+                                $html .= '</div>';
+                                $html .= '<div class="mt-4 p-3 bg-gray-100 rounded">';
+                                $html .= '<p class="text-xs text-gray-600"><strong>Note:</strong> Only enabled fields will be shown to customers. Disabled field shortcodes will return empty values in emails.</p>';
+                                $html .= '</div>';
+                                $html .= '</div>';
+                                
+                                return new \Illuminate\Support\HtmlString($html);
+                            })
+                            ->columnSpan(2),
+                    ])
+                    ->collapsed()
+                    ->collapsible(),
+
                 Section::make('Email Content')
                     ->description('Compose your email subject and body')
                     ->schema([
@@ -199,26 +276,116 @@ class EmailTemplateForm
                             ->columnSpan(2),
                         
                         Placeholder::make('available_variables_display')
-                            ->label('Available Variables')
+                            ->label('Available Shortcodes')
                             ->content(function () {
-                                $variables = EmailTemplate::getAvailableVariables();
-                                $html = '<div class="space-y-2">';
-                                $html .= '<p class="text-sm text-gray-600 mb-2">Click to copy any variable below:</p>';
-                                $html .= '<div class="grid grid-cols-2 gap-2">';
-                                foreach ($variables as $key => $description) {
-                                    $html .= "
-                                        <div class='text-sm'>
-                                            <code 
-                                                class='bg-gray-100 px-2 py-1 rounded cursor-pointer hover:bg-gray-200' 
-                                                onclick='navigator.clipboard.writeText(\"{{{$key}}}\")' 
-                                                title='Click to copy'
-                                            >{{{$key}}}</code>
-                                            <span class='text-gray-600 ml-2'>- {$description}</span>
-                                        </div>
-                                    ";
+                                $groupedVariables = EmailTemplate::getGroupedAvailableVariables();
+                                $html = '<div class="space-y-4">';
+                                $html .= '<p class="text-sm text-gray-600 mb-3">Click any shortcode to copy it to your clipboard. Use these in the subject and body fields.</p>';
+                                
+                                // Add tab navigation for groups
+                                $html .= '<div class="border-b border-gray-200">';
+                                $html .= '<nav class="-mb-px flex space-x-4" aria-label="Tabs">';
+                                $first = true;
+                                foreach ($groupedVariables as $group => $vars) {
+                                    if (empty($vars)) continue;
+                                    $activeClass = $first ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300';
+                                    $html .= "<button 
+                                        type='button'
+                                        onclick='showShortcodeGroup(\"" . str_replace(' ', '_', $group) . "\", this)' 
+                                        class='shortcode-tab whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm {$activeClass}'
+                                    >{$group}</button>";
+                                    $first = false;
                                 }
+                                $html .= '</nav>';
                                 $html .= '</div>';
+                                
+                                // Add content for each group
+                                $first = true;
+                                foreach ($groupedVariables as $group => $vars) {
+                                    if (empty($vars)) continue;
+                                    $groupId = str_replace(' ', '_', $group);
+                                    $displayStyle = $first ? 'block' : 'none';
+                                    
+                                    $html .= "<div id='group_{$groupId}' class='shortcode-group mt-4' style='display: {$displayStyle};'>";
+                                    
+                                    // Special notice for dynamic fields
+                                    if ($group === 'Dynamic Fields') {
+                                        $html .= '<div class="bg-blue-50 border-l-4 border-blue-400 p-3 mb-3">';
+                                        $html .= '<p class="text-sm text-blue-700">These fields are filled by customers during booking. They will only appear in emails when the customer provides values.</p>';
+                                        $html .= '</div>';
+                                    }
+                                    
+                                    $html .= '<div class="grid grid-cols-1 md:grid-cols-2 gap-2">';
+                                    foreach ($vars as $key => $description) {
+                                        $isConditional = str_starts_with($key, 'has_') || str_starts_with($key, 'is_');
+                                        $isDynamic = str_starts_with($key, 'field_');
+                                        
+                                        $badgeClass = '';
+                                        $badge = '';
+                                        if ($isConditional) {
+                                            $badgeClass = 'bg-yellow-100 text-yellow-800';
+                                            $badge = '<span class="ml-1 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ' . $badgeClass . '">Boolean</span>';
+                                        } elseif ($isDynamic) {
+                                            $badgeClass = 'bg-green-100 text-green-800';
+                                            $badge = '<span class="ml-1 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ' . $badgeClass . '">Dynamic</span>';
+                                        }
+                                        
+                                        $html .= "
+                                            <div class='flex items-start space-x-2 p-2 rounded hover:bg-gray-50'>
+                                                <code 
+                                                    class='bg-gray-100 px-2 py-1 rounded cursor-pointer hover:bg-gray-200 text-xs' 
+                                                    onclick='copyShortcode(\"{{{$key}}}\")' 
+                                                    title='Click to copy'
+                                                >{{{$key}}}</code>
+                                                <div class='flex-1'>
+                                                    <span class='text-xs text-gray-600'>{$description}</span>
+                                                    {$badge}
+                                                </div>
+                                            </div>
+                                        ";
+                                    }
+                                    $html .= '</div>';
+                                    $html .= '</div>';
+                                    $first = false;
+                                }
+                                
                                 $html .= '</div>';
+                                
+                                // Add JavaScript for tab switching and copy functionality
+                                $html .= "
+                                <script>
+                                    function showShortcodeGroup(groupId, tabElement) {
+                                        // Hide all groups
+                                        document.querySelectorAll('.shortcode-group').forEach(el => {
+                                            el.style.display = 'none';
+                                        });
+                                        
+                                        // Show selected group
+                                        const groupEl = document.getElementById('group_' + groupId);
+                                        if (groupEl) {
+                                            groupEl.style.display = 'block';
+                                        }
+                                        
+                                        // Update tab styles
+                                        document.querySelectorAll('.shortcode-tab').forEach(tab => {
+                                            tab.className = tab.className.replace('border-indigo-500 text-indigo-600', 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300');
+                                        });
+                                        tabElement.className = tabElement.className.replace('border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300', 'border-indigo-500 text-indigo-600');
+                                    }
+                                    
+                                    function copyShortcode(shortcode) {
+                                        navigator.clipboard.writeText(shortcode).then(function() {
+                                            // Show success message (optional)
+                                            const notification = document.createElement('div');
+                                            notification.className = 'fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50';
+                                            notification.textContent = 'Copied: ' + shortcode;
+                                            document.body.appendChild(notification);
+                                            setTimeout(() => notification.remove(), 2000);
+                                        });
+                                    }
+                                </script>
+                                ";
+                                
                                 return new \Illuminate\Support\HtmlString($html);
                             })
                             ->columnSpan(2),
