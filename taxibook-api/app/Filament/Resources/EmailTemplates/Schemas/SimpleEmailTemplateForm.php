@@ -278,43 +278,202 @@ class SimpleEmailTemplateForm
     
     protected static function getVariablesList(): string
     {
-        $variables = [
-            '{{booking_number}}' => 'Booking reference number',
-            '{{customer_name}}' => 'Customer full name',
-            '{{customer_first_name}}' => 'Customer first name',
-            '{{customer_last_name}}' => 'Customer last name',
-            '{{customer_email}}' => 'Customer email',
-            '{{customer_phone}}' => 'Customer phone',
-            '{{pickup_address}}' => 'Pickup location',
-            '{{dropoff_address}}' => 'Dropoff location',
-            '{{pickup_date}}' => 'Pickup date',
-            '{{pickup_time}}' => 'Pickup time',
-            '{{vehicle_type}}' => 'Vehicle type',
-            '{{estimated_fare}}' => 'Estimated fare',
-            '{{final_fare}}' => 'Final fare amount',
-            '{{special_instructions}}' => 'Special instructions',
-            '{{company_name}}' => 'Company name',
-            '{{company_phone}}' => 'Company phone',
-            '{{company_email}}' => 'Company email',
-            '{{booking_url}}' => 'Booking details link',
-        ];
+        // Get grouped variables from the EmailTemplate model
+        $groupedVariables = EmailTemplate::getGroupedAvailableVariables();
         
-        $html = '<div class="space-y-2">';
-        $html .= '<p class="text-sm text-gray-600 mb-3">Copy and paste these variables into your template:</p>';
-        $html .= '<div class="grid grid-cols-1 md:grid-cols-2 gap-3">';
+        $html = '<div style="max-height: 500px; overflow-y: auto;">';
+        $html .= '<p style="color: #6b7280; font-size: 14px; margin-bottom: 16px;">Click any variable to copy it to your clipboard:</p>';
         
-        foreach ($variables as $var => $desc) {
-            $html .= '
-                <div class="flex items-start space-x-2">
-                    <code class="inline-block bg-gray-100 px-2 py-1 rounded text-xs font-mono text-blue-600 whitespace-nowrap">' 
-                    . htmlspecialchars($var) . 
-                    '</code>
-                    <span class="text-xs text-gray-600">' . $desc . '</span>
-                </div>';
+        // Create a styled tabs container
+        $html .= '<div style="border-bottom: 1px solid #e5e7eb; margin-bottom: 20px;">';
+        $html .= '<div style="display: flex; flex-wrap: wrap; gap: 8px;">';
+        
+        $first = true;
+        $tabIndex = 0;
+        foreach ($groupedVariables as $group => $vars) {
+            if (empty($vars)) continue;
+            $groupId = 'tab_' . $tabIndex++;
+            $activeStyle = $first ? 'background: #4f46e5; color: white;' : 'background: #f3f4f6; color: #4b5563;';
+            
+            $html .= "<button 
+                type='button'
+                onclick='showVarGroup(\"$groupId\", this)' 
+                style='padding: 8px 16px; border: none; border-radius: 6px 6px 0 0; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.2s; $activeStyle'
+                onmouseover='if(this.style.backgroundColor !== \"rgb(79, 70, 229)\") this.style.backgroundColor=\"#e5e7eb\"'
+                onmouseout='if(this.style.backgroundColor !== \"rgb(79, 70, 229)\") this.style.backgroundColor=\"#f3f4f6\"'
+            >$group</button>";
+            $first = false;
         }
         
         $html .= '</div>';
         $html .= '</div>';
+        
+        // Create content containers for each group
+        $first = true;
+        $tabIndex = 0;
+        foreach ($groupedVariables as $group => $vars) {
+            if (empty($vars)) continue;
+            $groupId = 'tab_' . $tabIndex++;
+            $display = $first ? 'block' : 'none';
+            
+            $html .= "<div id='content_$groupId' class='var-content' style='display: $display; margin-top: 20px;'>";
+            
+            // Special notice for dynamic fields
+            if ($group === 'Dynamic Fields') {
+                $html .= '<div style="background: #dbeafe; border-left: 4px solid #3b82f6; padding: 12px; margin-bottom: 16px; border-radius: 4px;">';
+                $html .= '<p style="color: #1e40af; font-size: 13px; margin: 0;"><strong>Note:</strong> These fields are filled by customers during booking. They will only appear in emails when values are provided.</p>';
+                $html .= '</div>';
+            }
+            
+            // System & Date notice
+            if ($group === 'System & Date') {
+                $html .= '<div style="background: #f3e8ff; border-left: 4px solid #9333ea; padding: 12px; margin-bottom: 16px; border-radius: 4px;">';
+                $html .= '<p style="color: #6b21a8; font-size: 13px; margin: 0;"><strong>Tip:</strong> These variables are automatically filled with current values when the email is sent.</p>';
+                $html .= '</div>';
+            }
+            
+            $html .= '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 8px;">';
+            
+            foreach ($vars as $key => $desc) {
+                $varName = '{{' . $key . '}}';
+                $isConditional = str_starts_with($key, 'has_') || str_starts_with($key, 'is_');
+                $isDynamic = str_starts_with($key, 'field_');
+                
+                // Style badges
+                $badge = '';
+                if ($isConditional) {
+                    $badge = '<span style="display: inline-block; margin-left: 4px; padding: 2px 6px; background: #fef3c7; color: #92400e; font-size: 10px; border-radius: 3px; font-weight: 600;">IF</span>';
+                } elseif ($isDynamic) {
+                    $badge = '<span style="display: inline-block; margin-left: 4px; padding: 2px 6px; background: #dcfce7; color: #14532d; font-size: 10px; border-radius: 3px; font-weight: 600;">FIELD</span>';
+                }
+                
+                // Create a nicely styled variable card
+                $html .= '
+                    <div style="
+                        display: flex; 
+                        align-items: flex-start; 
+                        gap: 8px; 
+                        padding: 10px; 
+                        background: #f9fafb; 
+                        border: 1px solid #e5e7eb; 
+                        border-radius: 6px; 
+                        transition: all 0.2s;
+                        cursor: pointer;
+                    "
+                    onmouseover="this.style.backgroundColor=\'#f3f4f6\'; this.style.borderColor=\'#9ca3af\';"
+                    onmouseout="this.style.backgroundColor=\'#f9fafb\'; this.style.borderColor=\'#e5e7eb\';"
+                    onclick="copyVar(\'' . htmlspecialchars($varName, ENT_QUOTES) . '\')"
+                    >
+                        <div style="flex-shrink: 0;">
+                            <code style="
+                                display: inline-block; 
+                                padding: 4px 8px; 
+                                background: #4f46e5; 
+                                color: white; 
+                                font-size: 11px; 
+                                font-family: monospace; 
+                                border-radius: 4px;
+                                font-weight: 500;
+                            ">' . htmlspecialchars($varName) . '</code>
+                        </div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div style="color: #4b5563; font-size: 12px; line-height: 1.4;">
+                                ' . htmlspecialchars($desc) . '
+                                ' . $badge . '
+                            </div>
+                        </div>
+                    </div>';
+            }
+            
+            $html .= '</div>';
+            $html .= '</div>';
+            $first = false;
+        }
+        
+        $html .= '</div>';
+        
+        // Add improved JavaScript
+        $html .= "
+        <script>
+            function showVarGroup(groupId, button) {
+                // Hide all content
+                document.querySelectorAll('.var-content').forEach(el => {
+                    el.style.display = 'none';
+                });
+                
+                // Show selected content
+                const content = document.getElementById('content_' + groupId);
+                if (content) {
+                    content.style.display = 'block';
+                }
+                
+                // Update button styles
+                button.parentElement.querySelectorAll('button').forEach(btn => {
+                    btn.style.backgroundColor = '#f3f4f6';
+                    btn.style.color = '#4b5563';
+                });
+                button.style.backgroundColor = '#4f46e5';
+                button.style.color = 'white';
+            }
+            
+            function copyVar(variable) {
+                // Copy to clipboard
+                const textArea = document.createElement('textarea');
+                textArea.value = variable;
+                textArea.style.position = 'fixed';
+                textArea.style.left = '-999999px';
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                
+                // Show toast notification
+                const existing = document.getElementById('copy-toast');
+                if (existing) existing.remove();
+                
+                const toast = document.createElement('div');
+                toast.id = 'copy-toast';
+                toast.style.cssText = `
+                    position: fixed;
+                    bottom: 20px;
+                    right: 20px;
+                    background: #10b981;
+                    color: white;
+                    padding: 12px 20px;
+                    border-radius: 6px;
+                    font-size: 14px;
+                    font-weight: 500;
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+                    z-index: 99999;
+                    animation: slideIn 0.3s ease;
+                `;
+                toast.innerHTML = '✓ Copied: <code style=\"background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 3px;\">' + variable + '</code>';
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    toast.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => toast.remove(), 300);
+                }, 2000);
+            }
+            
+            // Add animation styles if not already present
+            if (!document.getElementById('var-animations')) {
+                const style = document.createElement('style');
+                style.id = 'var-animations';
+                style.innerHTML = `
+                    @keyframes slideIn {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                    @keyframes slideOut {
+                        from { transform: translateX(0); opacity: 1; }
+                        to { transform: translateX(100%); opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        </script>
+        ";
         
         return $html;
     }

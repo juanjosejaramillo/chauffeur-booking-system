@@ -342,9 +342,14 @@ class EmailTemplate extends Model
             'company_name' => 'Company name',
             'company_phone' => 'Company contact phone',
             'company_email' => 'Company contact email',
+            'company_address' => 'Company business address',
             'support_url' => 'Support URL',
+            'website_url' => 'Main website URL',
             'booking_url' => 'Direct link to booking',
             'receipt_url' => 'Direct link to receipt PDF',
+            'current_year' => 'Current year (e.g., 2025)',
+            'current_date' => 'Current date (e.g., January 18, 2025)',
+            'current_time' => 'Current time (e.g., 3:45 PM)',
             'flight_number' => 'Flight number (if provided)',
             'is_airport_transfer' => 'Boolean flag for airport transfers',
             'has_special_instructions' => 'Boolean flag if special instructions exist',
@@ -391,6 +396,11 @@ class EmailTemplate extends Model
     public static function getGroupedAvailableVariables(): array
     {
         return [
+            'System & Date' => [
+                'current_year' => 'Current year (e.g., 2025)',
+                'current_date' => 'Current date (e.g., January 18, 2025)',
+                'current_time' => 'Current time (e.g., 3:45 PM)',
+            ],
             'Customer Information' => [
                 'customer_name' => 'Customer full name',
                 'customer_first_name' => 'Customer first name',
@@ -417,9 +427,11 @@ class EmailTemplate extends Model
                 'company_name' => 'Company name',
                 'company_phone' => 'Company contact phone',
                 'company_email' => 'Company contact email',
+                'company_address' => 'Company business address',
                 'support_url' => 'Support URL',
             ],
             'Links' => [
+                'website_url' => 'Main website URL',
                 'booking_url' => 'Direct link to booking',
                 'receipt_url' => 'Direct link to receipt PDF',
             ],
