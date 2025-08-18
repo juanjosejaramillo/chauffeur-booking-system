@@ -25,8 +25,8 @@ class DatabaseSeeder extends Seeder
         // Create vehicle types
         $this->createVehicleTypes();
         
-        // Create email templates
-        $this->createEmailTemplates();
+        // Create email templates using the comprehensive seeder
+        $this->call(EmailTemplateSeeder::class);
     }
     
     private function createVehicleTypes(): void
@@ -192,52 +192,4 @@ class DatabaseSeeder extends Seeder
         ]);
     }
     
-    private function createEmailTemplates(): void
-    {
-        EmailTemplate::create([
-            'slug' => 'booking-confirmation',
-            'name' => 'Booking Confirmation',
-            'subject' => 'Your TaxiBook Booking Confirmation - {{booking_number}}',
-            'body' => '<h2>Booking Confirmed!</h2>
-            <p>Dear {{customer_name}},</p>
-            <p>Your booking has been confirmed. Here are your trip details:</p>
-            <ul>
-                <li><strong>Booking Number:</strong> {{booking_number}}</li>
-                <li><strong>Pickup:</strong> {{pickup_address}}</li>
-                <li><strong>Dropoff:</strong> {{dropoff_address}}</li>
-                <li><strong>Date:</strong> {{pickup_date}}</li>
-                <li><strong>Time:</strong> {{pickup_time}}</li>
-                <li><strong>Vehicle:</strong> {{vehicle_type}}</li>
-                <li><strong>Estimated Fare:</strong> ${{estimated_fare}}</li>
-                <li><strong>Special Instructions:</strong> {{special_instructions}}</li>
-            </ul>
-            <p>Your driver will arrive at the pickup location at the scheduled time. Please be ready 5 minutes before.</p>
-            <p>Thank you for choosing TaxiBook!</p>',
-            'available_variables' => [
-                'booking_number', 'customer_name', 'pickup_address', 'dropoff_address',
-                'pickup_date', 'pickup_time', 'vehicle_type', 'estimated_fare', 'special_instructions'
-            ],
-            'is_active' => true,
-        ]);
-        
-        EmailTemplate::create([
-            'slug' => 'trip-reminder',
-            'name' => 'Trip Reminder',
-            'subject' => 'Reminder: Your TaxiBook Trip Tomorrow - {{booking_number}}',
-            'body' => '<h2>Trip Reminder</h2>
-            <p>Dear {{customer_name}},</p>
-            <p>This is a reminder about your upcoming trip tomorrow:</p>
-            <ul>
-                <li><strong>Pickup:</strong> {{pickup_address}}</li>
-                <li><strong>Time:</strong> {{pickup_time}}</li>
-                <li><strong>Vehicle:</strong> {{vehicle_type}}</li>
-            </ul>
-            <p>Please be ready at the pickup location 5 minutes before the scheduled time.</p>
-            <p>Safe travels!</p>',
-            'available_variables' => [
-                'booking_number', 'customer_name', 'pickup_address', 'pickup_time', 'vehicle_type'
-            ],
-            'is_active' => true,
-        ]);
-    }
 }
