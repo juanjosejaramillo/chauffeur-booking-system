@@ -2,7 +2,9 @@ import { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import {
   Elements,
-  CardElement,
+  CardNumberElement,
+  CardExpiryElement,
+  CardCvcElement,
   useStripe,
   useElements,
 } from '@stripe/react-stripe-js';
@@ -33,6 +35,7 @@ const PaymentForm = () => {
   const [localError, setLocalError] = useState('');
   const [processing, setProcessing] = useState(false);
   const [customTip, setCustomTip] = useState('');
+  const [postalCode, setPostalCode] = useState('');
 
   const baseFare = selectedVehicle?.estimated_fare || selectedVehicle?.total_price || 0;
   const totalAmount = baseFare + gratuityAmount;
@@ -73,11 +76,16 @@ const PaymentForm = () => {
     setLocalError('');
 
     try {
-      // Create payment method with Stripe
-      const card = elements.getElement(CardElement);
+      // Create payment method with Stripe using separate elements
+      const cardNumber = elements.getElement(CardNumberElement);
       const { error: stripeError, paymentMethod } = await stripe.createPaymentMethod({
         type: 'card',
-        card: card,
+        card: cardNumber,
+        billing_details: {
+          address: {
+            postal_code: postalCode,
+          },
+        },
       });
 
       if (stripeError) {
@@ -112,7 +120,7 @@ const PaymentForm = () => {
     style: {
       base: {
         fontFamily: 'Inter, system-ui, sans-serif',
-        fontSize: '16px',
+        fontSize: '14px',
         fontWeight: '300',
         color: '#1A1A1A',
         letterSpacing: '0.025em',
@@ -120,20 +128,21 @@ const PaymentForm = () => {
           color: '#9CA3AF',
         },
         iconColor: '#C9A961',
+        lineHeight: '40px',
+        padding: '12px',
       },
       invalid: {
         color: '#DC2626',
         iconColor: '#DC2626',
       },
     },
-    hidePostalCode: false,
   };
 
   return (
     <div className="max-w-4xl mx-auto">
       {/* Header */}
-      <div className="text-center mb-12">
-        <h2 className="font-display text-3xl text-luxury-black mb-4">
+      <div className="text-center mb-8 sm:mb-12">
+        <h2 className="font-display text-2xl sm:text-3xl text-luxury-black mb-4">
           Complete Your Payment
         </h2>
         {booking?.booking_number && (
@@ -146,11 +155,11 @@ const PaymentForm = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         {/* Left Column - Payment Details */}
         <div className="lg:col-span-2">
           {/* Fare Summary with Gratuity */}
-          <div className="bg-luxury-white shadow-luxury p-8 mb-8">
+          <div className="bg-luxury-white shadow-luxury p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8">
             <h3 className="text-xs font-semibold text-luxury-gold uppercase tracking-luxury mb-6">
               Fare Summary
             </h3>
@@ -172,28 +181,28 @@ const PaymentForm = () => {
                   You can also add a tip after your trip
                 </p>
                 
-                <div className="grid grid-cols-4 gap-2 mb-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
                   {gratuityOptions.map(option => (
                     <button
                       key={option.percentage}
                       type="button"
                       onClick={() => selectGratuity(option.percentage)}
-                      className={`py-3 px-2 rounded border-2 transition-all text-center ${
+                      className={`py-2 sm:py-3 px-1 sm:px-2 rounded border-2 transition-all text-center ${
                         gratuityPercentage === option.percentage && gratuityPercentage !== 'custom'
                           ? 'border-luxury-gold bg-luxury-light-gray'
                           : 'border-luxury-gray/20 hover:border-luxury-gray/40'
                       }`}
                     >
-                      <div className="text-sm font-medium">{option.label}</div>
-                      <div className="text-xs text-luxury-gray/60">
+                      <div className="text-xs sm:text-sm font-medium">{option.label}</div>
+                      <div className="text-[10px] sm:text-xs text-luxury-gray/60 truncate">
                         {formatPrice(calculateTip(option.percentage))}
                       </div>
                     </button>
                   ))}
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <label className="text-sm text-luxury-gray/60">Custom amount:</label>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <label className="text-xs sm:text-sm text-luxury-gray/60 whitespace-nowrap">Custom amount:</label>
                   <div className="relative flex-1">
                     <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-luxury-gray/60">$</span>
                     <input
@@ -203,7 +212,7 @@ const PaymentForm = () => {
                       placeholder="0.00"
                       min="0"
                       step="0.01"
-                      className={`w-full pl-8 pr-3 py-2 border-2 rounded transition-colors ${
+                      className={`w-full pl-8 pr-3 py-2 border-2 rounded transition-colors text-sm ${
                         gratuityPercentage === 'custom'
                           ? 'border-luxury-gold bg-luxury-light-gray'
                           : 'border-luxury-gray/20 focus:border-luxury-gold'
@@ -222,8 +231,8 @@ const PaymentForm = () => {
 
               {/* Total */}
               <div className="flex justify-between items-center pt-4 border-t border-luxury-gray/10">
-                <span className="text-luxury-black font-semibold">Total Amount</span>
-                <span className="font-display text-2xl text-luxury-black">
+                <span className="text-luxury-black font-semibold text-sm sm:text-base">Total Amount</span>
+                <span className="font-display text-xl sm:text-2xl text-luxury-black">
                   {formatPrice(totalAmount)}
                 </span>
               </div>
@@ -231,14 +240,49 @@ const PaymentForm = () => {
           </div>
 
           {/* Card Form */}
-          <div className="bg-luxury-white shadow-luxury p-8">
+          <div className="bg-luxury-white shadow-luxury p-4 sm:p-6 lg:p-8">
             <h3 className="text-xs font-semibold text-luxury-gold uppercase tracking-luxury mb-6">
               Card Details
             </h3>
             
             <form onSubmit={handleSubmit}>
-              <div className="p-4 border-2 border-luxury-gray/20 focus-within:border-luxury-gold transition-colors duration-300">
-                <CardElement options={cardElementOptions} />
+              <div className="space-y-4">
+                {/* Card Number */}
+                <div>
+                  <label className="block text-xs text-luxury-gray/60 mb-2">Card Number</label>
+                  <div className="p-3 sm:p-4 border-2 border-luxury-gray/20 focus-within:border-luxury-gold transition-colors duration-300 rounded">
+                    <CardNumberElement options={cardElementOptions} />
+                  </div>
+                </div>
+
+                {/* Expiry and CVC in a row on desktop, stacked on mobile */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs text-luxury-gray/60 mb-2">Expiry Date</label>
+                    <div className="p-3 sm:p-4 border-2 border-luxury-gray/20 focus-within:border-luxury-gold transition-colors duration-300 rounded">
+                      <CardExpiryElement options={cardElementOptions} />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-luxury-gray/60 mb-2">Security Code</label>
+                    <div className="p-3 sm:p-4 border-2 border-luxury-gray/20 focus-within:border-luxury-gold transition-colors duration-300 rounded">
+                      <CardCvcElement options={cardElementOptions} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Postal Code */}
+                <div>
+                  <label className="block text-xs text-luxury-gray/60 mb-2">Postal Code</label>
+                  <input
+                    type="text"
+                    value={postalCode}
+                    onChange={(e) => setPostalCode(e.target.value)}
+                    placeholder="12345"
+                    required
+                    className="w-full p-3 sm:p-4 border-2 border-luxury-gray/20 focus:border-luxury-gold transition-colors duration-300 rounded text-sm text-luxury-black placeholder-luxury-gray/50 focus:outline-none"
+                  />
+                </div>
               </div>
 
               {/* Save Card Option */}
@@ -281,35 +325,36 @@ const PaymentForm = () => {
               )}
 
               {/* Action Buttons */}
-              <div className="flex gap-4 mt-8">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mt-6 sm:mt-8">
                 <button
                   type="button"
                   onClick={prevStep}
                   disabled={processing || loading}
-                  className="flex-1 btn-luxury-outline uppercase tracking-luxury text-sm"
+                  className="w-full sm:flex-1 px-3 sm:px-6 py-3 sm:py-4 border-2 border-luxury-black text-luxury-black font-medium tracking-wide transition-all duration-300 ease-out hover:bg-luxury-black hover:text-luxury-white hover:shadow-luxury active:scale-[0.98] uppercase text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Back
                 </button>
                 <button
                   type="submit"
                   disabled={!stripe || processing || loading}
-                  className="flex-1 btn-luxury-gold uppercase tracking-luxury text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full sm:flex-1 px-3 sm:px-6 py-3 sm:py-4 bg-luxury-gold text-luxury-white font-medium tracking-wide transition-all duration-300 ease-out hover:bg-luxury-gold-dark hover:shadow-luxury active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed uppercase text-xs sm:text-sm"
                 >
                   {processing || loading ? (
-                    <span className="flex items-center gap-2">
-                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24" fill="none">
+                    <span className="flex items-center justify-center gap-1">
+                      <svg className="animate-spin h-4 w-4 flex-shrink-0" viewBox="0 0 24 24" fill="none">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
-                      Processing...
+                      <span className="hidden sm:inline">Processing...</span>
+                      <span className="sm:hidden">Processing</span>
                     </span>
                   ) : (
-                    <>
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <span className="flex items-center justify-center gap-1">
+                      <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                       </svg>
-                      Pay {formatPrice(totalAmount)}
-                    </>
+                      <span>Pay {formatPrice(totalAmount)}</span>
+                    </span>
                   )}
                 </button>
               </div>
@@ -318,9 +363,9 @@ const PaymentForm = () => {
         </div>
 
         {/* Right Column - Security & Summary */}
-        <div className="space-y-8">
+        <div className="space-y-6 sm:space-y-8 mt-6 lg:mt-0">
           {/* Booking Summary */}
-          <div className="bg-luxury-white shadow-luxury p-8">
+          <div className="bg-luxury-white shadow-luxury p-4 sm:p-6 lg:p-8">
             <h3 className="text-xs font-semibold text-luxury-gold uppercase tracking-luxury mb-4">
               Booking Summary
             </h3>
@@ -347,7 +392,7 @@ const PaymentForm = () => {
           </div>
 
           {/* Security Notice */}
-          <div className="bg-luxury-white shadow-luxury p-8">
+          <div className="bg-luxury-white shadow-luxury p-4 sm:p-6 lg:p-8">
             <div className="flex items-center gap-3 mb-4">
               <svg className="w-6 h-6 text-luxury-gold" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />

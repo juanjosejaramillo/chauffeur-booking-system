@@ -115,18 +115,22 @@ LuxRide is a premium chauffeur booking system for luxury transportation services
 ## Key Features
 
 ### 1. Dynamic Booking System
-- Multi-step booking form
+- Multi-step booking form with mobile-optimized UI
 - Real-time route calculation
 - Dynamic pricing based on distance/vehicle type
 - Airport transfer detection
 - Custom form fields (flight numbers, child seats, etc.)
-- Email verification before payment
+- Email verification before payment with change email option
+- Smart date/time selection with minimum booking hours
+- Browser back button navigation support
+- Session persistence using Zustand with sessionStorage
 
 ### 2. Payment Processing
 - Stripe integration with test/live mode switching
+- Separate card input fields (number, expiry, CVV, postal) for better mobile UX
 - Payment intents for secure processing
 - Saved cards functionality
-- Gratuity/tips system with QR codes
+- Gratuity/tips system with QR codes and responsive tip buttons
 - Refund management
 - Webhook support for payment confirmations
 
@@ -228,6 +232,9 @@ npm run dev
 - ✅ Admin panel operational
 - ✅ Dynamic form fields
 - ✅ Gratuity system
+- ✅ Mobile responsive design optimized
+- ✅ Browser navigation handling
+- ✅ Session persistence for bookings
 - 🚧 Driver mobile app (planned)
 - 🚧 SMS notifications (planned)
 - 🚧 Analytics dashboard (in progress)
@@ -254,6 +261,27 @@ npm run dev
 - `POST /api/bookings/validate-route` - Validate route
 - `GET /api/settings/public` - Public settings
 - `POST /api/tip/{token}/process` - Process tip
+
+## Recent Updates (2025-08-19)
+
+### Mobile Responsiveness Improvements
+- **Step Indicator**: Dynamic display showing only visible steps on mobile with "Step X of 6" counter
+- **Tip Selection**: 2-column grid on mobile (4 on desktop) with proper text truncation
+- **Credit Card Input**: Separated into individual fields for better mobile input handling
+- **Pay Button**: Full-width stacked buttons on mobile with reduced text/icons
+- **Auto-scroll**: Smooth scroll to top when navigating between steps
+- **Container Padding**: Reduced padding/margins throughout for mobile screens
+
+### Browser Navigation
+- **Back Button Support**: Proper handling of browser back button to navigate steps
+- **Session Persistence**: Using Zustand with sessionStorage to maintain form data
+- **Mobile Detection**: Disabled beforeunload warnings on mobile devices
+- **History Management**: Smart history state management to prevent accidental site exit
+
+### UX Improvements
+- **Default Date/Time**: Automatically sets pickup time respecting minimum booking hours
+- **Email Change Option**: Added "Wrong email?" link in verification modal
+- **Form Validation**: Smart validation with auto-focus on error fields
 
 ## Contact & Support
 - **Company**: LuxRide SUV

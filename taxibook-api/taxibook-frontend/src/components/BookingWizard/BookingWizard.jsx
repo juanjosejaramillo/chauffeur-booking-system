@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import useBookingStore from '../../store/bookingStore';
 import TripDetailsLuxury from './steps/TripDetailsLuxury';
 import VehicleSelectionLuxury from './steps/VehicleSelectionLuxury';
@@ -9,14 +9,87 @@ import ConfirmationLuxury from './steps/ConfirmationLuxury';
 import WizardProgressLuxury from './WizardProgressLuxury';
 
 const BookingWizard = () => {
-  const { currentStep, resetBooking } = useBookingStore();
+  const { currentStep, resetBooking, prevStep, setCurrentStep } = useBookingStore();
 
+  // Handle browser back button navigation
+  useEffect(() => {
+    // Initialize history state on mount
+    if (!window.history.state || window.history.state.step === undefined) {
+      window.history.replaceState({ step: currentStep }, '', window.location.href);
+    }
+
+    const handlePopState = (event) => {
+      if (event.state && typeof event.state.step === 'number') {
+        // Navigate to the step stored in history
+        const targetStep = event.state.step;
+        if (targetStep >= 1 && targetStep <= 6) {
+          setCurrentStep(targetStep);
+        }
+      } else if (currentStep > 1) {
+        // No state, go back one step
+        const newStep = currentStep - 1;
+        setCurrentStep(newStep);
+        window.history.pushState({ step: newStep }, '', window.location.href);
+      } else {
+        // We're on step 1, prevent going back further
+        window.history.pushState({ step: 1 }, '', window.location.href);
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, [currentStep, setCurrentStep]);
+
+  // Update history when moving forward through steps
+  useEffect(() => {
+    // Only push state when moving forward (not on back navigation)
+    const lastStep = window.history.state?.step;
+    if (lastStep && currentStep > lastStep) {
+      window.history.pushState({ step: currentStep }, '', window.location.href);
+    } else if (!lastStep) {
+      window.history.replaceState({ step: currentStep }, '', window.location.href);
+    }
+  }, [currentStep]);
+
+  // Only show warning when actually leaving the site, not on back navigation
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      // Only warn if we have booking data and haven't completed
+      if (currentStep > 1 && currentStep < 6) {
+        // Check if this is a real page unload (not just history navigation)
+        const isActuallyLeaving = !e.persisted && performance.navigation.type !== 2;
+        if (isActuallyLeaving) {
+          e.preventDefault();
+          e.returnValue = 'You have unsaved booking information. Are you sure you want to leave?';
+          return e.returnValue;
+        }
+      }
+    };
+
+    // Only add beforeunload on desktop, as mobile browsers handle this poorly
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if (!isMobile) {
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+      };
+    }
+  }, [currentStep]);
+
+  // Only reset booking data on unmount if booking is completed
   useEffect(() => {
     return () => {
-      // Reset booking when component unmounts
-      resetBooking();
+      // Only reset if booking is completed to allow users to continue their booking
+      if (currentStep === 6) {
+        // Clear the session storage after successful completion
+        sessionStorage.removeItem('booking-storage');
+        resetBooking();
+      }
     };
-  }, [resetBooking]);
+  }, []);
 
   const renderStep = () => {
     switch (currentStep) {
@@ -44,17 +117,17 @@ const BookingWizard = () => {
         renderStep()
       ) : (
         // Other steps use the contained layout
-        <div className="min-h-screen bg-gradient-to-b from-luxury-cream to-luxury-light-gray py-12">
+        <div className="min-h-screen bg-gradient-to-b from-luxury-cream to-luxury-light-gray py-6 sm:py-12">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-8">
-              <h1 className="font-display text-4xl text-luxury-black mb-2">
+            <div className="text-center mb-6 sm:mb-8">
+              <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl text-luxury-black mb-2">
                 Complete Your Booking
               </h1>
-              <div className="mt-8">
+              <div className="mt-4 sm:mt-8">
                 <WizardProgressLuxury />
               </div>
             </div>
-            <div className="bg-luxury-white shadow-luxury p-8">
+            <div className="bg-luxury-white shadow-luxury p-4 sm:p-6 lg:p-8">
               {renderStep()}
             </div>
           </div>

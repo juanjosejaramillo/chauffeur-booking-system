@@ -1,7 +1,10 @@
 import { create } from 'zustand';
+import { persist, createJSONStorage } from 'zustand/middleware';
 import api from '../config/api';
 
-const useBookingStore = create((set, get) => ({
+const useBookingStore = create(
+  persist(
+    (set, get) => ({
   // Wizard state
   currentStep: 1,
   maxStep: 6,
@@ -53,23 +56,35 @@ const useBookingStore = create((set, get) => ({
   // Actions
   setCurrentStep: (step) => set({ currentStep: step }),
   
-  nextStep: () => set((state) => ({
-    currentStep: Math.min(state.currentStep + 1, state.maxStep)
-  })),
+  nextStep: () => {
+    set((state) => ({
+      currentStep: Math.min(state.currentStep + 1, state.maxStep)
+    }));
+    // Smooth scroll to top after step change
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
+  },
   
-  prevStep: () => set((state) => {
-    // Clear vehicle prices when going back from vehicle selection step
-    if (state.currentStep === 2) {
+  prevStep: () => {
+    set((state) => {
+      // Clear vehicle prices when going back from vehicle selection step
+      if (state.currentStep === 2) {
+        return {
+          currentStep: Math.max(state.currentStep - 1, 1),
+          availableVehicles: [],
+          selectedVehicle: null
+        };
+      }
       return {
-        currentStep: Math.max(state.currentStep - 1, 1),
-        availableVehicles: [],
-        selectedVehicle: null
+        currentStep: Math.max(state.currentStep - 1, 1)
       };
-    }
-    return {
-      currentStep: Math.max(state.currentStep - 1, 1)
-    };
-  }),
+    });
+    // Smooth scroll to top after step change
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
+  },
   
   setTripDetails: (details) => set((state) => {
     // Check if location details have changed
@@ -379,6 +394,25 @@ const useBookingStore = create((set, get) => ({
     paymentIntent: null,
     error: null,
   }),
-}));
+    }),
+    {
+      name: 'booking-storage', // unique name for storage
+      storage: createJSONStorage(() => sessionStorage), // use sessionStorage instead of localStorage
+      partialize: (state) => ({ 
+        // Only persist essential booking data, not UI states
+        currentStep: state.currentStep,
+        tripDetails: state.tripDetails,
+        selectedVehicle: state.selectedVehicle,
+        customerInfo: state.customerInfo,
+        gratuityAmount: state.gratuityAmount,
+        gratuityPercentage: state.gratuityPercentage,
+        savePaymentMethod: state.savePaymentMethod,
+        emailVerified: state.emailVerified,
+        routeInfo: state.routeInfo,
+        booking: state.booking,
+      }),
+    }
+  )
+);
 
 export default useBookingStore;

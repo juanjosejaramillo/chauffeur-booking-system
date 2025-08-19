@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 
-const VerificationModalLuxury = ({ isOpen, email, onVerify, onResend, loading, error }) => {
+const VerificationModalLuxury = ({ isOpen, email, onVerify, onResend, onChangeEmail, loading, error }) => {
   const [code, setCode] = useState(['', '', '', '', '', '']);
   const [resendTimer, setResendTimer] = useState(0);
   const inputRefs = useRef([]);
@@ -97,6 +97,12 @@ const VerificationModalLuxury = ({ isOpen, email, onVerify, onResend, loading, e
             <p className="text-luxury-black font-medium mt-1">
               {email}
             </p>
+            <button
+              onClick={onChangeEmail}
+              className="text-xs text-luxury-gold hover:text-luxury-gold-dark transition-colors mt-2 underline"
+            >
+              Wrong email? Click here to change it
+            </button>
           </div>
 
           {/* Code Input */}

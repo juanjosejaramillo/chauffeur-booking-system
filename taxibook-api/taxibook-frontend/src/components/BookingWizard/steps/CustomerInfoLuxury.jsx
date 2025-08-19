@@ -104,6 +104,21 @@ const CustomerInfoLuxury = () => {
     }
   };
 
+  const handleChangeEmail = () => {
+    // Close the verification modal to allow user to edit email
+    setShowVerificationModal(false);
+    // Clear any verification errors
+    resetVerification();
+    // Focus on email field
+    setTimeout(() => {
+      const emailField = document.querySelector('input[name="email"]');
+      if (emailField) {
+        emailField.focus();
+        emailField.select();
+      }
+    }, 100);
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setCustomerInfo({ [name]: value });
@@ -443,6 +458,7 @@ const CustomerInfoLuxury = () => {
         email={customerInfo.email}
         onVerify={handleVerifyCode}
         onResend={handleResendCode}
+        onChangeEmail={handleChangeEmail}
         loading={loading}
         error={verificationError}
       />

@@ -51,6 +51,16 @@
   ::-moz-selection {
     @apply bg-luxury-gold text-luxury-white;
   }
+
+  /* Hide scrollbar for specific elements */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* Premium Button Styles */

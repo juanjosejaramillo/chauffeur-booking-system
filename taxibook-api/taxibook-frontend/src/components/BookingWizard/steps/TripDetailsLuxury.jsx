@@ -373,12 +373,30 @@ const TripDetailsLuxury = () => {
   };
   
   const minDateTime = getMinDateTime();
-  const [selectedDateTime, setSelectedDateTime] = useState(
-    tripDetails.pickupDate && tripDetails.pickupTime 
-      ? new Date(`${tripDetails.pickupDate}T${tripDetails.pickupTime}`)
-      : getDefaultDateTime()
-  );
+  const defaultDateTime = getDefaultDateTime();
   
+  const [selectedDateTime, setSelectedDateTime] = useState(() => {
+    // If we have saved trip details, validate they're still in the future
+    if (tripDetails.pickupDate && tripDetails.pickupTime) {
+      const savedDateTime = new Date(`${tripDetails.pickupDate}T${tripDetails.pickupTime}`);
+      // Check if saved date is still valid (in the future and respects minimum booking time)
+      if (savedDateTime >= minDateTime) {
+        return savedDateTime;
+      }
+    }
+    // Otherwise use the calculated default
+    return defaultDateTime;
+  });
+  
+  // Initialize store with default date/time on mount if not already set
+  useEffect(() => {
+    if (!tripDetails.pickupDate || !tripDetails.pickupTime) {
+      const date = selectedDateTime.toISOString().split('T')[0];
+      const time = selectedDateTime.toTimeString().slice(0, 5);
+      setTripDetails({ pickupDate: date, pickupTime: time });
+    }
+  }, []);
+
   // Update store when date/time changes
   useEffect(() => {
     if (selectedDateTime) {
