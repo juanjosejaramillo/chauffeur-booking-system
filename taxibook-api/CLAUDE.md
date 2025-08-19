@@ -126,7 +126,8 @@ LuxRide is a premium chauffeur booking system for luxury transportation services
 - Session persistence using Zustand with sessionStorage
 
 ### 2. Payment Processing
-- Stripe integration with test/live mode switching
+- Dynamic Stripe key management - frontend fetches correct key from backend
+- Stripe integration with test/live mode switching controlled from admin panel
 - Separate card input fields (number, expiry, CVV, postal) for better mobile UX
 - Payment intents for secure processing
 - Saved cards functionality
@@ -164,13 +165,20 @@ LuxRide is a premium chauffeur booking system for luxury transportation services
 ### Environment Variables
 - Production settings in `.env.production`
 - Sensitive keys managed via Filament settings
-- Stripe keys switchable between test/live modes
+- Stripe keys dynamically loaded from backend settings (no longer hardcoded in frontend)
 - Database settings override via admin panel
 
 ### Settings Priority
-1. Filament admin panel settings (highest)
-2. Environment variables (.env)
-3. Config files (lowest)
+1. Filament admin panel settings (highest priority)
+2. Backend API response (for frontend configuration)
+3. Environment variables (.env)
+4. Config files (lowest priority)
+
+### Stripe Key Management Flow
+1. Admin sets Stripe mode (test/live) in Filament settings
+2. Backend `SettingsController` fetches appropriate key based on mode
+3. Frontend requests settings via `/api/settings/public`
+4. React components use dynamic key for Stripe initialization
 
 ## API Authentication
 - Sanctum for API authentication
@@ -263,6 +271,14 @@ npm run dev
 - `POST /api/tip/{token}/process` - Process tip
 
 ## Recent Updates (2025-08-19)
+
+### Dynamic Stripe Key Management
+- **Backend API Update**: `SettingsController::getPublicSettings()` now returns the correct Stripe public key based on admin settings
+- **Frontend Integration**: React components fetch Stripe key dynamically from API instead of using hardcoded env variables
+- **Mode Control**: Stripe test/live mode is now centrally controlled from admin panel
+- **Safety Measures**: Production env file defaults to test key as fallback
+
+## Previous Updates (2025-08-19)
 
 ### Mobile Responsiveness Improvements
 - **Step Indicator**: Dynamic display showing only visible steps on mobile with "Step X of 6" counter

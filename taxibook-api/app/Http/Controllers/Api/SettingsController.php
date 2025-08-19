@@ -20,6 +20,25 @@ class SettingsController extends Controller
         $allowSameDayBooking = filter_var(Setting::get('allow_same_day_booking', true), FILTER_VALIDATE_BOOLEAN);
         $bookingTimeIncrement = (int) Setting::get('booking_time_increment', 5);
         
+        // Stripe settings
+        $stripeEnabled = filter_var(Setting::get('stripe_enabled', true), FILTER_VALIDATE_BOOLEAN);
+        $stripeMode = Setting::get('stripe_mode', 'test');
+        $stripePublicKey = null;
+        
+        if ($stripeEnabled) {
+            // Get the appropriate public key based on mode
+            if ($stripeMode === 'live') {
+                $stripePublicKey = Setting::get('stripe_live_publishable_key');
+            } else {
+                $stripePublicKey = Setting::get('stripe_test_publishable_key');
+            }
+            
+            // Fallback to environment variable if not set in settings
+            if (!$stripePublicKey) {
+                $stripePublicKey = env('STRIPE_PUBLIC_KEY');
+            }
+        }
+        
         // Get enabled form fields
         $formFields = BookingFormField::enabled()
             ->ordered()
@@ -48,6 +67,11 @@ class SettingsController extends Controller
                 'maximum_days' => $maximumBookingDays,
                 'allow_same_day' => $allowSameDayBooking,
                 'time_increment' => $bookingTimeIncrement,
+            ],
+            'stripe' => [
+                'enabled' => $stripeEnabled,
+                'mode' => $stripeMode,
+                'public_key' => $stripePublicKey,
             ],
             'form_fields' => $formFields,
         ]);

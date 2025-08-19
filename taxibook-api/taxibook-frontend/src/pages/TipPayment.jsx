@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import {
@@ -8,8 +8,7 @@ import {
   useElements,
 } from '@stripe/react-stripe-js';
 import api from '../config/api';
-
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
+import useSettings from '../hooks/useSettings';
 
 const TipPaymentForm = ({ booking, token }) => {
   const stripe = useStripe();
@@ -306,6 +305,7 @@ const TipPaymentForm = ({ booking, token }) => {
 const TipPaymentPage = () => {
   const { token } = useParams();
   const navigate = useNavigate();
+  const { settings, loading: settingsLoading } = useSettings();
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -377,8 +377,8 @@ const TipPaymentPage = () => {
         </div>
 
         {/* Payment Form */}
-        {booking && (
-          <Elements stripe={stripePromise}>
+        {booking && !settingsLoading && (
+          <Elements stripe={loadStripe(settings?.stripe?.public_key || import.meta.env.VITE_STRIPE_PUBLIC_KEY)}>
             <TipPaymentForm booking={booking} token={token} />
           </Elements>
         )}

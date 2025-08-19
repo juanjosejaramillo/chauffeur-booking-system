@@ -12,7 +12,13 @@ export function useSettings() {
       maximum_days: 90,
       allow_same_day: true,
       time_increment: 5
-    }
+    },
+    stripe: {
+      enabled: true,
+      mode: 'test',
+      public_key: null
+    },
+    form_fields: []
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
