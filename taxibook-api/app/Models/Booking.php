@@ -32,7 +32,6 @@ class Booking extends Model
         'pickup_date',
         'estimated_distance',
         'estimated_duration',
-        'route_polyline',
         'estimated_fare',
         'final_fare',
         'fare_breakdown',

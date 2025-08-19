@@ -1,0 +1,320 @@
+# Claude AI Assistant Rules for LuxRide Chauffeur Booking System
+
+## Project Context
+You are working on the LuxRide Chauffeur Booking System, a premium transportation booking platform. Always consider the luxury service nature of this business when making decisions about user experience and communication tone.
+
+## Critical Rules
+
+### 1. NEVER Modify These Without Explicit Permission
+- Payment processing logic in `StripeService.php`
+- Database migrations (only add new ones, never modify existing)
+- Production environment variables
+- Email template seeder base structure
+- Core booking calculation logic
+
+### 2. Always Follow These Patterns
+
+#### Laravel Patterns
+- Use service classes for business logic (not in controllers)
+- Use repositories for complex database queries
+- Use form requests for validation
+- Use resources for API responses
+- Follow PSR-12 coding standards
+- Use Eloquent ORM, avoid raw SQL
+
+#### React Patterns
+- Use functional components with hooks
+- Keep components small and focused
+- Use Zustand for global state
+- Use services for API calls
+- Follow component/container pattern
+- Use TypeScript types when adding new code
+
+#### Database Patterns
+- Always add indexes for foreign keys
+- Use soft deletes for important data
+- Store money as decimal(10,2)
+- Use JSON fields for flexible data
+- Add created_at and updated_at to all tables
+
+### 3. Security Requirements
+- ALWAYS validate and sanitize user input
+- Never store credit card details (use Stripe tokens)
+- Use prepared statements (via Eloquent)
+- Implement rate limiting on public endpoints
+- Check user permissions before operations
+- Log security-relevant events
+- Never commit .env files
+- Always use HTTPS in production
+
+### 4. Email System Rules
+- All customer emails must use the luxe layout template
+- Always test email templates before deploying
+- Include unsubscribe links in marketing emails
+- Use queued jobs for bulk email sending
+- Log all sent emails in email_logs table
+- Never send passwords in plain text
+
+### 5. Payment Processing Rules
+- Always use Stripe Payment Intents API
+- Capture payments only after email verification
+- Log all transactions in the database
+- Handle webhook events idempotently
+- Always provide detailed fare breakdowns
+- Test with Stripe test cards before production
+
+## Code Style Guidelines
+
+### PHP/Laravel
+```php
+// Good
+public function calculateFare(Booking $booking): array
+{
+    return $this->pricingService->calculate($booking);
+}
+
+// Bad
+public function calc($b)
+{
+    // Direct calculation without service
+}
+```
+
+### React/JavaScript
+```javascript
+// Good
+const BookingForm = ({ onSubmit }) => {
+    const [formData, setFormData] = useState(initialState);
+    // Component logic
+};
+
+// Bad
+function booking_form(props) {
+    var data = {};
+    // Inconsistent naming
+}
+```
+
+### Database Queries
+```php
+// Good - Eager loading
+$bookings = Booking::with(['user', 'vehicleType'])
+    ->where('status', 'confirmed')
+    ->get();
+
+// Bad - N+1 problem
+$bookings = Booking::all();
+foreach ($bookings as $booking) {
+    echo $booking->user->name; // N+1 query
+}
+```
+
+## Testing Requirements
+
+### Before Committing
+1. Run `php artisan test` for backend
+2. Run `npm test` for frontend
+3. Test email sending in development
+4. Verify payment flow with test cards
+5. Check responsive design on mobile
+
+### Test Coverage Areas
+- Booking creation flow
+- Payment processing
+- Email template rendering
+- API endpoints
+- Form validation
+- Route calculations
+
+## Documentation Requirements
+
+### When Adding Features
+1. Update `FEATURES.md` with new functionality
+2. Add API endpoints to `API_REFERENCE.md`
+3. Update `CHANGELOG.md` with version notes
+4. Document new settings in `DEPLOYMENT.md`
+5. Add troubleshooting steps if applicable
+
+### Code Comments
+```php
+// Document complex business logic
+/**
+ * Calculate dynamic pricing based on distance and time.
+ * Applies surge pricing during peak hours.
+ * 
+ * @param float $distance Distance in miles
+ * @param int $duration Duration in minutes
+ * @param bool $isPeakHour Whether it's peak time
+ * @return array Fare breakdown
+ */
+public function calculateDynamicPrice(
+    float $distance, 
+    int $duration, 
+    bool $isPeakHour
+): array {
+    // Implementation
+}
+```
+
+## Environment-Specific Rules
+
+### Development
+- Use test Stripe keys
+- Enable debug mode
+- Use mailtrap or log driver for emails
+- Seed with test data
+
+### Staging
+- Use test Stripe keys
+- Disable debug mode
+- Use real SMTP with test addresses
+- Mirror production settings
+
+### Production
+- Use live Stripe keys (when ready)
+- Disable debug mode
+- Use production SMTP
+- Enable all caching
+- Monitor error logs
+
+## Common Pitfalls to Avoid
+
+1. **Don't hardcode values** - Use config files or settings table
+2. **Don't skip validation** - Always validate user input
+3. **Don't ignore errors** - Log and handle gracefully
+4. **Don't bypass the service layer** - Keep logic in services
+5. **Don't forget mobile users** - Test responsive design
+6. **Don't skip email testing** - Preview before sending
+7. **Don't modify core seeders** - Create new ones instead
+
+## Performance Guidelines
+
+### Database
+- Index frequently queried columns
+- Use eager loading for relationships
+- Paginate large result sets
+- Cache expensive queries
+- Optimize JSON field queries
+
+### Frontend
+- Lazy load components
+- Optimize images before upload
+- Use CDN for static assets
+- Minimize API calls
+- Implement debouncing for search
+
+### Backend
+- Use queue for heavy operations
+- Cache API responses where appropriate
+- Optimize file uploads
+- Use chunking for large datasets
+- Profile slow queries
+
+## Git Workflow
+
+### Branch Naming
+- `feature/description` - New features
+- `fix/description` - Bug fixes
+- `hotfix/description` - Urgent production fixes
+- `refactor/description` - Code improvements
+
+### Commit Messages
+```
+feat: Add SMS notification system
+fix: Resolve payment calculation error
+docs: Update API documentation
+refactor: Improve booking service structure
+test: Add payment processing tests
+```
+
+### Before Merging
+1. All tests pass
+2. Code reviewed
+3. Documentation updated
+4. Changelog updated
+5. No console.log or dd() statements
+
+## API Design Principles
+
+### RESTful Endpoints
+```
+GET    /api/bookings          - List bookings
+GET    /api/bookings/{id}     - Get single booking
+POST   /api/bookings          - Create booking
+PUT    /api/bookings/{id}     - Update booking
+DELETE /api/bookings/{id}     - Cancel booking
+```
+
+### Response Format
+```json
+{
+    "success": true,
+    "data": {
+        // Resource data
+    },
+    "message": "Operation successful"
+}
+```
+
+### Error Format
+```json
+{
+    "success": false,
+    "error": {
+        "code": "VALIDATION_ERROR",
+        "message": "Validation failed",
+        "details": {
+            // Field-specific errors
+        }
+    }
+}
+```
+
+## Monitoring & Logging
+
+### What to Log
+- Payment transactions
+- Email sending status
+- API errors
+- Security events
+- Performance metrics
+
+### Log Levels
+- `emergency` - System unusable
+- `alert` - Immediate action required
+- `critical` - Critical conditions
+- `error` - Error conditions
+- `warning` - Warning conditions
+- `notice` - Normal but significant
+- `info` - Informational messages
+- `debug` - Debug messages (dev only)
+
+## Support & Resources
+
+### Documentation Priority
+1. Read `CLAUDE.md` first for project overview
+2. Check `ARCHITECTURE.md` for technical details
+3. Refer to `API_REFERENCE.md` for endpoints
+4. Use `TROUBLESHOOTING.md` for common issues
+5. Follow `DEPLOYMENT.md` for deployment
+
+### When Stuck
+1. Check existing code patterns
+2. Review documentation
+3. Look for similar implementations
+4. Test in development first
+5. Ask for clarification if needed
+
+## Final Reminders
+
+- **Quality over speed** - Write maintainable code
+- **Security first** - Never compromise security
+- **User experience** - Keep the luxury service standard
+- **Test thoroughly** - Prevent production issues
+- **Document changes** - Help future developers
+- **Follow patterns** - Maintain consistency
+- **Ask when unsure** - Better safe than sorry
+
+---
+
+Remember: You're building a premium service. Every interaction should reflect quality and professionalism.

@@ -1,7 +1,6 @@
 <?php
 
 return [
-
     /*
     |--------------------------------------------------------------------------
     | Cross-Origin Resource Sharing (CORS) Configuration
@@ -15,11 +14,17 @@ return [
     |
     */
 
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie', 'livewire/*'],
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => [env('FRONTEND_URL', 'http://localhost:3000')],
+    'allowed_origins' => [
+        env('FRONTEND_URL', 'https://book.luxridesuv.com'),
+        'https://admin.luxridesuv.com',
+        'https://book.luxridesuv.com',
+        'http://localhost:3000',
+        'http://localhost:5173',
+    ],
 
     'allowed_origins_patterns' => [],
 

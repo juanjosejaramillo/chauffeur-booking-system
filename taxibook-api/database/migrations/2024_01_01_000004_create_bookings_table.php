@@ -30,7 +30,6 @@ return new class extends Migration
             $table->dateTime('pickup_date');
             $table->decimal('estimated_distance', 8, 2);
             $table->integer('estimated_duration');
-            $table->string('route_polyline', 5000)->nullable();
             
             // Pricing
             $table->decimal('estimated_fare', 10, 2);

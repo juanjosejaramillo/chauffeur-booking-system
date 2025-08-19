@@ -197,7 +197,6 @@ class BookingController extends Controller
                 'pickup_date' => $pickupDate,
                 'estimated_distance' => $route['distance'],
                 'estimated_duration' => $route['duration'],
-                'route_polyline' => $route['polyline'],
                 'estimated_fare' => $estimatedFare,
                 'final_fare' => $estimatedFare,
                 'gratuity_amount' => $tipAmount,
