@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import useBookingStore from '../../store/bookingStore';
 import TripDetailsLuxury from './steps/TripDetailsLuxury';
 import VehicleSelectionLuxury from './steps/VehicleSelectionLuxury';
@@ -10,6 +10,8 @@ import WizardProgressLuxury from './WizardProgressLuxury';
 
 const BookingWizard = () => {
   const { currentStep, resetBooking, prevStep, setCurrentStep } = useBookingStore();
+  const [backPressCount, setBackPressCount] = useState(0);
+  const backPressTimeoutRef = useRef(null);
 
   // Handle browser back button navigation
   useEffect(() => {
@@ -19,10 +21,39 @@ const BookingWizard = () => {
     }
 
     const handlePopState = (event) => {
+      // If on confirmation step (step 6), handle special back behavior
+      if (currentStep === 6) {
+        // Increment back press count
+        const newCount = backPressCount + 1;
+        setBackPressCount(newCount);
+        
+        // Clear existing timeout
+        if (backPressTimeoutRef.current) {
+          clearTimeout(backPressTimeoutRef.current);
+        }
+        
+        // If pressed twice within 1 second, reset booking and go to step 1
+        if (newCount >= 2) {
+          sessionStorage.removeItem('booking-storage'); // Clear persisted data
+          resetBooking(); // Reset all booking data
+          setCurrentStep(1);
+          setBackPressCount(0);
+          window.history.pushState({ step: 1 }, '', window.location.href);
+        } else {
+          // Stay on confirmation step and set timeout to reset count
+          window.history.pushState({ step: 6 }, '', window.location.href);
+          backPressTimeoutRef.current = setTimeout(() => {
+            setBackPressCount(0);
+          }, 1000); // Reset count after 1 second
+        }
+        return;
+      }
+      
+      // Normal navigation for other steps
       if (event.state && typeof event.state.step === 'number') {
         // Navigate to the step stored in history
         const targetStep = event.state.step;
-        if (targetStep >= 1 && targetStep <= 6) {
+        if (targetStep >= 1 && targetStep <= 5) {
           setCurrentStep(targetStep);
         }
       } else if (currentStep > 1) {
@@ -40,8 +71,11 @@ const BookingWizard = () => {
 
     return () => {
       window.removeEventListener('popstate', handlePopState);
+      if (backPressTimeoutRef.current) {
+        clearTimeout(backPressTimeoutRef.current);
+      }
     };
-  }, [currentStep, setCurrentStep]);
+  }, [currentStep, setCurrentStep, resetBooking, backPressCount]);
 
   // Update history when moving forward through steps
   useEffect(() => {

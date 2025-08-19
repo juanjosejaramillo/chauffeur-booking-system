@@ -162,7 +162,7 @@ const VerificationModalLuxury = ({ isOpen, email, onVerify, onResend, onChangeEm
           <button
             onClick={handleSubmit}
             disabled={loading || code.join('').length !== 6}
-            className="w-full btn-luxury-gold uppercase tracking-luxury text-sm py-4 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-3 sm:py-4 bg-luxury-gold text-luxury-white font-medium tracking-wide transition-all duration-300 ease-out hover:bg-luxury-gold-dark hover:shadow-luxury active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed uppercase text-xs sm:text-sm"
           >
             {loading ? 'Verifying...' : 'Verify Email'}
           </button>

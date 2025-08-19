@@ -201,18 +201,18 @@ const ConfirmationLuxury = () => {
       </div>
 
       {/* Actions */}
-      <div className="flex gap-4">
-        <button
-          onClick={handleNewBooking}
-          className="flex-1 btn-luxury-gold uppercase tracking-luxury text-sm"
-        >
-          Make Another Booking
-        </button>
+      <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4">
         <button
           onClick={() => window.print()}
-          className="flex-1 btn-luxury-outline uppercase tracking-luxury text-sm"
+          className="w-full sm:flex-1 px-4 py-3 border-2 border-luxury-black text-luxury-black font-medium tracking-wide transition-all duration-300 ease-out hover:bg-luxury-black hover:text-luxury-white hover:shadow-luxury active:scale-[0.98] uppercase text-xs sm:text-sm order-2 sm:order-1"
         >
           Print Confirmation
+        </button>
+        <button
+          onClick={handleNewBooking}
+          className="w-full sm:flex-1 px-4 py-3 bg-luxury-gold text-luxury-white font-medium tracking-wide transition-all duration-300 ease-out hover:bg-luxury-gold-dark hover:shadow-luxury active:scale-[0.98] uppercase text-xs sm:text-sm order-1 sm:order-2"
+        >
+          Make Another Booking
         </button>
       </div>
 
@@ -224,6 +224,9 @@ const ConfirmationLuxury = () => {
         <a href={`tel:${settings.support_phone}`} className="text-luxury-gold hover:text-luxury-gold-dark text-sm font-medium">
           {settings.support_phone}
         </a>
+        <p className="text-[10px] text-luxury-gray/40 mt-4">
+          Press back twice quickly to start a new booking
+        </p>
       </div>
     </div>
   );

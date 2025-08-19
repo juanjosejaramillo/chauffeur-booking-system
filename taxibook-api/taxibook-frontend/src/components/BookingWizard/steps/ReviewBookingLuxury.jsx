@@ -250,11 +250,11 @@ const ReviewBookingLuxury = () => {
       )}
 
       {/* Action Buttons */}
-      <div className="flex gap-4 mt-12">
+      <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 mt-8 sm:mt-12">
         <button
           type="button"
           onClick={prevStep}
-          className="flex-1 btn-luxury-outline uppercase tracking-luxury text-sm"
+          className="w-full sm:flex-1 px-4 py-3 border-2 border-luxury-black text-luxury-black font-medium tracking-wide transition-all duration-300 ease-out hover:bg-luxury-black hover:text-luxury-white hover:shadow-luxury active:scale-[0.98] uppercase text-xs sm:text-sm order-2 sm:order-1"
         >
           Back
         </button>
@@ -262,16 +262,16 @@ const ReviewBookingLuxury = () => {
           type="button"
           onClick={handleSubmit}
           disabled={loading || !agreed}
-          className="flex-1 btn-luxury-gold uppercase tracking-luxury text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          className="w-full sm:flex-1 px-4 py-3 bg-luxury-gold text-luxury-white font-medium tracking-wide transition-all duration-300 ease-out hover:bg-luxury-gold-dark hover:shadow-luxury active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 uppercase text-xs sm:text-sm order-1 sm:order-2"
         >
           {loading ? (
             'Processing...'
           ) : (
             <>
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              Proceed to Payment
+              <span className="truncate">Proceed to Payment</span>
             </>
           )}
         </button>

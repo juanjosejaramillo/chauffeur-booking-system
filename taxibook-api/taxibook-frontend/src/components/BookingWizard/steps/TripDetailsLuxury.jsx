@@ -588,7 +588,7 @@ const TripDetailsLuxury = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full btn-luxury-gold text-center uppercase tracking-luxury py-5 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed animate-slide-up"
+                className="w-full px-4 py-4 sm:py-5 bg-luxury-gold text-luxury-white font-semibold tracking-wide transition-all duration-300 ease-out hover:bg-luxury-gold-dark hover:shadow-luxury active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed animate-slide-up uppercase text-xs sm:text-sm"
                 style={{ animationDelay: '0.3s' }}
               >
                 {loading ? 'Processing...' : 'Select Vehicle'}
