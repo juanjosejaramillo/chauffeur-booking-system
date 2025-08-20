@@ -6,10 +6,23 @@ use App\Models\Booking;
 use App\Events\BookingCancelled;
 use App\Events\BookingConfirmed;
 use App\Events\BookingCompleted;
+use App\Events\BookingCreated;
 use App\Events\BookingModified;
+use App\Events\TripStarted;
 
 class BookingObserver
 {
+    /**
+     * Handle the Booking "created" event.
+     */
+    public function created(Booking $booking): void
+    {
+        // Fire event when booking is created with pending status
+        if ($booking->status === 'pending') {
+            event(new BookingCreated($booking));
+        }
+    }
+
     /**
      * Handle the Booking "updated" event.
      */
@@ -36,6 +49,16 @@ class BookingObserver
             // Only fire event if it wasn't already confirmed
             if ($originalStatus !== 'confirmed') {
                 event(new BookingConfirmed($booking));
+            }
+        }
+        
+        // Check if status changed to in_progress (trip started)
+        if ($booking->isDirty('status') && $booking->status === 'in_progress') {
+            $originalStatus = $booking->getOriginal('status');
+            
+            // Only fire event if it wasn't already in_progress
+            if ($originalStatus !== 'in_progress') {
+                event(new TripStarted($booking));
             }
         }
         

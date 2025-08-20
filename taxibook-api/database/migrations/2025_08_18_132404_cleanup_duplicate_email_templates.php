@@ -15,8 +15,8 @@ return new class extends Migration
         // Clear all existing email templates
         DB::table('email_templates')->truncate();
         
-        // Run the comprehensive seeder
-        \Artisan::call('db:seed', ['--class' => 'ComprehensiveEmailTemplateSeeder']);
+        // Run the simplified seeder
+        \Artisan::call('db:seed', ['--class' => 'SimplifiedEmailTemplateSeeder']);
     }
 
     /**

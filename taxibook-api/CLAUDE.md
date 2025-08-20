@@ -299,6 +299,53 @@ npm run dev
 - **Email Change Option**: Added "Wrong email?" link in verification modal
 - **Form Validation**: Smart validation with auto-focus on error fields
 
+## Recent Updates (2025-08-20)
+
+### Email System Simplification
+- **Reduced Email Triggers**: Simplified to only 8 essential triggers:
+  - `booking.created` - When new booking is created (pending status) - Admin only notification
+  - `booking.confirmed` - When booking is confirmed - Customer notification
+  - `trip.started` - When trip starts (status changes to in_progress)
+  - `booking.modified` - When booking details are changed
+  - `booking.cancelled` - When booking is cancelled
+  - `booking.completed` - When booking/trip is completed
+  - `payment.captured` - When payment is captured
+  - `payment.refunded` - When payment is refunded
+- **Removed Triggers**: Driver events, admin summaries, custom manual triggers
+- **Hardcoded Emails**: Gratuity (OptionalTipEmail) and verification (VerificationCodeMail) remain hardcoded
+- **Admin Email**: Changed from admin@taxibook.com to admin@luxridesuv.com
+- **New Events**: Added BookingCreated and TripStarted events
+- **Scheduled Emails**: Support for X hours before/after trip timing
+- **Booking Pending Template**: Updated to send only to admin with full customer information
+
+### Settings Configuration
+- **Business Settings**:
+  - Business Name: LuxRide
+  - Business Tagline: Premium Transportation Service
+  - Business Address: Florida, USA
+  - Business Phone: +1-813-333-8680
+  - Admin Email: admin@luxridesuv.com
+- **Booking Settings**:
+  - Minimum Advance Booking: 12 hours
+  - Maximum Advance Booking: 90 days
+  - Allow Same Day Bookings: Yes
+  - Time Selection Increment: 5 minutes
+- **Email Settings**:
+  - From Name: LuxRide
+  - Reply-To Address: contact@luxridesuv.com
+
+### Database Seeders
+- **DatabaseSeeder**: Main orchestrator calling all seeders
+- **SettingsSeeder**: Creates 25 system settings
+- **SimplifiedEmailTemplateSeeder**: Creates only required email templates
+- **BookingFormFieldSeeder**: Dynamic form fields
+- **BookingSeeder**: Creates sample booking (1 record)
+- **Removed**: ComprehensiveEmailTemplateSeeder, duplicate settings seeders
+
+### Migration Fixes
+- Removed route_polyline migration that referenced non-existent field
+- Fixed cleanup_duplicate_email_templates migration to use SimplifiedEmailTemplateSeeder
+
 ## Contact & Support
 - **Company**: LuxRide SUV
 - **Admin Email**: admin@luxridesuv.com

@@ -11,6 +11,50 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Comprehensive documentation files for AI assistance
 - Documentation maintenance guide
 
+## [1.4.0] - 2025-08-20
+
+### Added
+- New email triggers: `booking.created` (for pending bookings) and `trip.started` (for in-progress trips)
+- Email templates for payment captured and payment refunded events
+- BookingCreated and TripStarted event classes
+- Database migration to cleanup unused email triggers
+- SettingsSeeder for system configuration (25 settings)
+- BookingSeeder for sample booking data
+- Settings configuration in admin panel
+
+### Changed
+- Simplified email system to only 8 essential triggers
+- Admin email changed from admin@taxibook.com to admin@luxridesuv.com
+- Updated email template seeder with new templates and removed driver-related templates
+- New Booking Pending template now sends only to admin with full customer information
+- DatabaseSeeder updated to use SimplifiedEmailTemplateSeeder
+- Fixed BookingSeeder to properly handle array casting for additional_data
+- Business settings configured:
+  - Business Name: LuxRide
+  - Phone: +1-813-333-8680
+  - Address: Florida, USA
+  - Minimum booking: 12 hours advance
+  - Time increment: 5 minutes
+
+### Removed
+- Driver event triggers (assigned, enroute, arrived)
+- Admin summary triggers (daily, weekly)
+- Payment failed and payment authorized triggers
+- Custom manual email trigger
+- Unused migration file for route_polyline field
+- ComprehensiveEmailTemplateSeeder
+- Duplicate settings seeders (DefaultSettingsSeeder, old SettingSeeder)
+
+### Fixed
+- Migration error for non-existent route_polyline field
+- BookingSeeder additional_data and fare_breakdown JSON encoding issue
+- cleanup_duplicate_email_templates migration to use correct seeder
+
+### Technical
+- Gratuity (OptionalTipEmail) and verification (VerificationCodeMail) remain as hardcoded emails
+- Email template designs unchanged, only triggers modified
+- Settings now properly seeded with business defaults
+
 ## [1.3.0] - 2025-01-18
 
 ### Added

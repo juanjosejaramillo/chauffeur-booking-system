@@ -17,7 +17,7 @@ class DatabaseSeeder extends Seeder
         User::create([
             'first_name' => 'Admin',
             'last_name' => 'User',
-            'email' => 'admin@taxibook.com',
+            'email' => 'admin@luxridesuv.com',
             'password' => Hash::make('password'),
             'user_type' => 'admin',
         ]);
@@ -25,11 +25,17 @@ class DatabaseSeeder extends Seeder
         // Create vehicle types
         $this->createVehicleTypes();
         
+        // Create system settings
+        $this->call(SettingsSeeder::class);
+        
         // Create booking form fields first (needed for dynamic shortcodes)
         $this->call(BookingFormFieldSeeder::class);
         
-        // Create all email templates with dynamic shortcode support
-        $this->call(ComprehensiveEmailTemplateSeeder::class);
+        // Create simplified email templates with only required triggers
+        $this->call(SimplifiedEmailTemplateSeeder::class);
+        
+        // Create a sample booking
+        $this->call(BookingSeeder::class);
     }
     
     private function createVehicleTypes(): void

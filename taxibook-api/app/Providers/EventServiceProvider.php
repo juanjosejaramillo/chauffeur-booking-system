@@ -7,6 +7,7 @@ use App\Events\BookingCreated;
 use App\Events\BookingCancelled;
 use App\Events\BookingCompleted;
 use App\Events\BookingModified;
+use App\Events\TripStarted;
 use App\Events\PaymentCaptured;
 use App\Events\PaymentRefunded;
 use App\Listeners\SendTriggeredEmails;
@@ -35,6 +36,9 @@ class EventServiceProvider extends ServiceProvider
             SendTriggeredEmails::class,
         ],
         BookingModified::class => [
+            SendTriggeredEmails::class,
+        ],
+        TripStarted::class => [
             SendTriggeredEmails::class,
         ],
         PaymentCaptured::class => [

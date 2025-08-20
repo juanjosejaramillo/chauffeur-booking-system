@@ -120,7 +120,7 @@ The React app will be available at `http://localhost:5173`
 Access the admin panel at `http://localhost:8000/admin`
 
 Default credentials:
-- Email: admin@taxibook.com
+- Email: admin@luxridesuv.com
 - Password: password
 
 ### Booking Flow

@@ -45,7 +45,7 @@ NotificationService     # Email notifications, template rendering
 StripeService          # Payment processing, intents, refunds
 MapboxService          # Geocoding, route calculation
 PricingService         # Fare calculation, pricing tiers
-TipService            # Gratuity processing, QR generation
+TipService            # Gratuity processing (hardcoded email)
 EmailComponentsService # Email template components
 ```
 
@@ -59,6 +59,13 @@ EmailComponentsService # Email template components
 - **Database Migrations** (`database/migrations/`)
   - Schema version control
   - Incremental changes
+
+- **Database Seeders** (`database/seeders/`)
+  - `DatabaseSeeder`: Main orchestrator
+  - `SettingsSeeder`: 25 system settings
+  - `SimplifiedEmailTemplateSeeder`: 13 email templates
+  - `BookingFormFieldSeeder`: Dynamic form fields
+  - `BookingSeeder`: Sample booking data
 
 #### 4. **Infrastructure Layer**
 - **Providers** (`app/Providers/`)

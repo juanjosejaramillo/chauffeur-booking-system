@@ -1,5 +1,12 @@
 # Features Documentation
 
+## Latest Configuration (v1.4.0 - 2025-08-20)
+- **Email System**: Simplified to 8 essential triggers
+- **Admin Email**: admin@luxridesuv.com
+- **Business Phone**: +1-813-333-8680
+- **Minimum Booking**: 12 hours advance
+- **Seeders**: 5 active seeders for complete system setup
+
 ## Core Features
 
 ### 1. Dynamic Booking System
@@ -64,14 +71,20 @@ Trigger-based email sending:
 
 | Email | Trigger | Timing |
 |-------|---------|--------|
-| Booking Confirmation | booking.confirmed | Immediate |
-| 24-Hour Reminder | booking.reminder.24h | 24 hours before |
-| 2-Hour Reminder | booking.reminder.2h | 2 hours before |
-| Driver Assigned | driver.assigned | When assigned |
-| Driver En Route | driver.enroute | When dispatched |
+| Booking Created | booking.created | When booking created (pending) |
+| Booking Confirmation | booking.confirmed | When payment authorized |
+| Trip Started | trip.started | When trip begins |
 | Trip Completed | booking.completed | After completion |
 | Booking Modified | booking.modified | On changes |
 | Booking Cancelled | booking.cancelled | On cancellation |
+| Payment Captured | payment.captured | When payment processed |
+| Payment Refunded | payment.refunded | When refund issued |
+| 24-Hour Reminder | Scheduled | 24 hours before pickup |
+| 2-Hour Reminder | Scheduled | 2 hours before pickup |
+
+**Hardcoded Emails** (not configurable via admin):
+- Gratuity/Tip Request (OptionalTipEmail)
+- Email Verification (VerificationCodeMail)
 
 #### Email Features
 - **Attachments**: Receipt PDFs, booking details
@@ -110,6 +123,7 @@ Trigger-based email sending:
 - **Recent Activity**: Latest bookings
 - **Quick Actions**: Common tasks
 - **System Status**: Health checks
+- **Admin Email**: admin@luxridesuv.com
 
 #### Booking Management
 - **List View**: Sortable, filterable table
@@ -133,11 +147,19 @@ Trigger-based email sending:
 - **Ordering**: Display order control
 
 #### Settings Management
-- **Business Info**: Company details
-- **Payment Settings**: Stripe configuration
-- **Email Settings**: SMTP configuration
+- **Business Info**: 
+  - LuxRide, Florida, USA
+  - Phone: +1-813-333-8680
+  - Admin: admin@luxridesuv.com
+- **Payment Settings**: Stripe test/live mode
+- **Email Settings**: 
+  - From: LuxRide
+  - Reply-To: contact@luxridesuv.com
 - **Map Settings**: Mapbox configuration
-- **Booking Settings**: Rules and limits
+- **Booking Settings**: 
+  - 12 hours minimum advance
+  - 5 minute time increments
+  - Same day bookings allowed
 
 #### Form Builder
 - **Field Creation**: Add custom fields

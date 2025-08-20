@@ -449,34 +449,18 @@ class EmailTemplate extends Model
     {
         return [
             // Booking Events
-            'booking.created' => 'When a new booking is created',
+            'booking.created' => 'When a new booking is created (pending status)',
             'booking.confirmed' => 'When booking is confirmed (payment authorized)',
             'booking.modified' => 'When booking details are changed',
             'booking.cancelled' => 'When booking is cancelled',
             'booking.completed' => 'When booking/trip is completed',
             
-            // Payment Events
-            'payment.authorized' => 'When payment is authorized',
-            'payment.captured' => 'When payment is captured',
-            'payment.refunded' => 'When payment is refunded',
-            'payment.failed' => 'When payment fails',
-            
-            // Driver Events
-            'driver.assigned' => 'When driver is assigned to booking',
-            'driver.enroute' => 'When driver starts journey to pickup',
-            'driver.arrived' => 'When driver arrives at pickup location',
-            
             // Trip Events
             'trip.started' => 'When trip starts',
-            'trip.ended' => 'When trip ends',
             
-            // Admin Events
-            'admin.daily_summary' => 'Daily summary report',
-            'admin.weekly_summary' => 'Weekly summary report',
-            'admin.payment_issue' => 'When payment issue occurs',
-            
-            // Custom Events
-            'custom.manual' => 'Manually triggered email',
+            // Payment Events
+            'payment.captured' => 'When payment is captured',
+            'payment.refunded' => 'When payment is refunded',
         ];
     }
 
