@@ -7,7 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2025-08-20 (Latest Session)
+
 ### Added
+- PDF attachment controls in email template admin panel
+  - "Attach PDF Receipt" toggle per template
+  - "Attach PDF Booking Details" toggle per template
+  - Located in new "PDF Attachments" section at bottom of form
+- Production deployment documentation and fixes
+- Support phone number in contact information
+- `.htaccess` file for React Router support on Apache servers
+  - Enables proper handling of client-side routes like `/tip/:token`
+  - Automatically included in production builds
+
+### Changed
+- Consolidated email template form schemas (removed duplicate SimplifiedEmailTemplateForm)
+- Simplified payment page messaging (removed "Remove anytime" and "We never store" text)
+- Updated all documentation files with latest changes
+- Tip URL generation now fully dynamic based on `FRONTEND_URL` environment variable
+
+### Fixed
+- Git branch mismatch between production (master) and GitHub (main)
+- Email template form now properly shows PDF attachment controls
+- Tip link 404 errors in production by adding proper Apache rewrite rules
+- Configuration caching issues in production (must clear config cache after .env changes)
+
+### Added (Earlier Session)
 - Comprehensive documentation files for AI assistance
 - Documentation maintenance guide
 

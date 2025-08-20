@@ -1,15 +1,19 @@
 # Deployment Guide
 
+**Last Updated**: 2025-08-20
+
 ## Production Environment
 
 ### Hosting Details
 - **Provider**: Hostinger (Shared Hosting)
-- **Domain**: book.luxridesuv.com
+- **Backend URL**: https://admin.luxridesuv.com
+- **Frontend URL**: https://book.luxridesuv.com
 - **SSL**: Enabled (Let's Encrypt)
 - **PHP Version**: 8.2
 - **MySQL Version**: 8.0
 - **Server**: Apache/LiteSpeed
-- **Document Root**: `/home/u388638774/domains/luxridesuv.com/public_html/book`
+- **Backend Root**: `/home/u388638774/domains/luxridesuv.com/public_html/admin`
+- **Frontend Root**: `/home/u388638774/domains/luxridesuv.com/public_html/book`
 
 ## Environment Configuration
 
@@ -90,7 +94,8 @@ scp -r taxibook-api/* user@server:/path/to/public_html/
 
 #### 3. Server Configuration
 
-Create/update `.htaccess` in public directory:
+##### Backend (.htaccess for Laravel)
+Create/update `.htaccess` in backend public directory:
 ```apache
 <IfModule mod_rewrite.c>
     RewriteEngine On
@@ -137,6 +142,26 @@ Create/update `.htaccess` in public directory:
     ExpiresByType application/javascript "access plus 1 month"
 </IfModule>
 ```
+
+##### Frontend (.htaccess for React)
+Create `.htaccess` in frontend root directory (`/public_html/book/`):
+```apache
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+    
+    # If requesting index.html, serve it as-is
+    RewriteRule ^index\.html$ - [L]
+    
+    # If file doesn't exist
+    RewriteCond %{REQUEST_FILENAME} !-f
+    # If directory doesn't exist
+    RewriteCond %{REQUEST_FILENAME} !-d
+    # Serve index.html for React Router
+    RewriteRule . /index.html [L]
+</IfModule>
+```
+This enables React Router to handle client-side routing for URLs like `/tip/:token`.
 
 #### 4. Database Setup
 ```bash
@@ -215,6 +240,8 @@ php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 ```
+
+**Important**: Always run `php artisan config:clear` after changing `.env` values in production!
 
 #### 6. Exit Maintenance Mode
 ```bash

@@ -182,6 +182,24 @@ class SimpleEmailTemplateForm
                             ->content(new \Illuminate\Support\HtmlString(self::getVariablesList())),
                     ])
                     ->collapsed(),
+                    
+                // 6. PDF Attachments
+                Section::make('PDF Attachments')
+                    ->description('Attach PDF documents to this email')
+                    ->schema([
+                        Toggle::make('attach_receipt')
+                            ->label('Attach PDF Receipt')
+                            ->helperText('Include PDF payment receipt (when available)')
+                            ->default(false)
+                            ->inline(),
+                        
+                        Toggle::make('attach_booking_details')
+                            ->label('Attach PDF Booking Details')
+                            ->helperText('Include PDF with full booking information')
+                            ->default(false)
+                            ->inline(),
+                    ])
+                    ->columns(2),
             ]);
     }
     

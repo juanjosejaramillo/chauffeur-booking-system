@@ -1,11 +1,12 @@
 # Features Documentation
 
-## Latest Configuration (v1.4.0 - 2025-08-20)
-- **Email System**: Simplified to 8 essential triggers
-- **Admin Email**: admin@luxridesuv.com
+## Latest Configuration (v1.5.0 - 2025-08-20)
+- **Email System**: Simplified to 8 essential triggers with PDF attachment controls
+- **Admin Email**: admin@luxridesuv.com  
 - **Business Phone**: +1-813-333-8680
 - **Minimum Booking**: 12 hours advance
 - **Seeders**: 5 active seeders for complete system setup
+- **PDF Attachments**: Configurable per email template via admin panel
 
 ## Core Features
 
@@ -133,10 +134,11 @@ Trigger-based email sending:
 - **Notes**: Internal admin notes
 
 #### Email Templates
-- **Template Editor**: WYSIWYG interface
-- **Variable Reference**: Available placeholders
-- **Preview**: See rendered email
-- **Test Send**: Send to test address
+- **Template Editor**: HTML editor with syntax highlighting
+- **Variable Reference**: Categorized placeholders with copy-to-clipboard
+- **PDF Attachments**: Toggle PDF receipt and booking details per template
+- **Recipients Control**: Customer, Admin, Driver toggles
+- **Timing Configuration**: Immediate or scheduled delivery
 - **Active/Inactive**: Enable/disable templates
 
 #### Vehicle Types

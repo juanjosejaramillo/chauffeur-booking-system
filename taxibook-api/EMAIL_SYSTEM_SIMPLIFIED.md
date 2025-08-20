@@ -1,5 +1,7 @@
 # Simplified Email Template System
 
+**Last Updated: 2025-08-20**
+
 ## Overview
 
 The email template system has been simplified to resolve logical inconsistencies between triggers and timing. The new system clearly separates immediate event-driven emails from scheduled time-based emails.
@@ -187,6 +189,22 @@ Check admin panel to ensure all templates are configured correctly with either:
 - `trigger_events` populated + `send_timing_type: immediate`
 - `trigger_events` empty + timing configuration
 
+## Admin Panel Features
+
+### PDF Attachments Control (Added 2025-08-20)
+Each email template now has PDF attachment toggles in the admin panel:
+- **Attach PDF Receipt**: Include payment receipt PDF when available
+- **Attach PDF Booking Details**: Include full booking information PDF
+- Located in "PDF Attachments" section at bottom of email template form
+- Can be enabled/disabled per template without code changes
+
+### Email Template Editor
+- Simple HTML editor with variable support
+- Live preview of variables
+- Categorized variable list with copy-to-clipboard
+- Toggle settings for recipients (customer, admin, driver)
+- CC/BCC support
+
 ## Troubleshooting
 
 ### Email Not Sending?
@@ -195,6 +213,7 @@ Check admin panel to ensure all templates are configured correctly with either:
 1. Check if the event is firing (check logs)
 2. Verify `trigger_events` contains the correct event name
 3. Ensure `send_timing_type` is set to `'immediate'`
+4. Check PDF attachment settings if attachments are expected
 4. Check template is active (`is_active: true`)
 
 #### For Scheduled Emails:

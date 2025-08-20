@@ -31,13 +31,6 @@
     </div>
 </div>
 
-<div class="alert-box warning">
-    <div class="alert-title">Didn't receive the code?</div>
-    <div class="alert-content">
-        Please check your spam folder. If you still can't find it, you can request a new code.
-    </div>
-</div>
-
 <div class="content">
     <p style="color: #888;">If you didn't request this booking, please ignore this email.</p>
 </div>

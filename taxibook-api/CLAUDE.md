@@ -299,7 +299,7 @@ npm run dev
 - **Email Change Option**: Added "Wrong email?" link in verification modal
 - **Form Validation**: Smart validation with auto-focus on error fields
 
-## Recent Updates (2025-08-20)
+## Recent Updates (2025-08-20 - Session 2)
 
 ### Email System Simplification
 - **Reduced Email Triggers**: Simplified to only 8 essential triggers:
@@ -346,8 +346,43 @@ npm run dev
 - Removed route_polyline migration that referenced non-existent field
 - Fixed cleanup_duplicate_email_templates migration to use SimplifiedEmailTemplateSeeder
 
+## Recent Updates (2025-08-20 - Latest Session)
+
+### Frontend UI Improvements
+- **Removed from Payment Step**:
+  - Removed "Remove anytime from your account" text from save card option
+  - Removed "We never store your card details" text from security notice
+  - Simplified payment security messaging
+
+### Email Template Admin Panel Enhancements
+- **PDF Attachments Control**:
+  - Added "PDF Attachments" section to email template editor
+  - Two toggles per template:
+    - "Attach PDF Receipt" - Include payment receipt when available
+    - "Attach PDF Booking Details" - Include full booking information PDF
+  - Allows enabling/disabling PDFs per email template from admin panel
+  - Located at bottom of email template form for easy access
+
+### Code Cleanup
+- **Removed Duplicate Form Schema**:
+  - Deleted unused SimplifiedEmailTemplateForm.php
+  - Consolidated all functionality into SimpleEmailTemplateForm.php
+  - Prevents confusion and maintains single source of truth
+
+### Production Deployment Notes
+- **Git Branch Issue**: Production may be on 'master' branch while GitHub uses 'main'
+  - Solution: `git checkout -b main origin/main` then delete master branch
+- **Tip URL Structure**: Production tip URLs follow pattern: `https://book.luxridesuv.com/tip/{token}`
+  - URL is dynamic based on `FRONTEND_URL` in .env
+  - Must run `php artisan config:clear` after changing .env in production
+- **Admin Email Setting**: Controlled via Settings in admin panel or database
+- **React Router on Apache**: Requires .htaccess file in public folder for client-side routing
+  - File automatically included in builds from `/public/.htaccess`
+  - Enables proper handling of routes like `/tip/:token`
+
 ## Contact & Support
 - **Company**: LuxRide SUV
 - **Admin Email**: admin@luxridesuv.com
 - **Support Email**: contact@luxridesuv.com
+- **Support Phone**: +1-813-333-8680
 - **Documentation Updates**: Update this file when adding major features
