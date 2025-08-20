@@ -41,7 +41,7 @@ class VerificationCodeMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Your TaxiBook Verification Code: ' . $this->code,
+            subject: 'Your LuxRide Verification Code: ' . $this->code,
         );
     }
 
