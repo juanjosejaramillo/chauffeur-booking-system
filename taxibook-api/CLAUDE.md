@@ -180,6 +180,20 @@ LuxRide is a premium chauffeur booking system for luxury transportation services
 3. Frontend requests settings via `/api/settings/public`
 4. React components use dynamic key for Stripe initialization
 
+## Legal Document Management
+- **Settings API Endpoint**: `/api/settings/public` returns:
+  ```json
+  {
+    "legal": {
+      "terms_url": "https://luxridesuv.com/terms",
+      "cancellation_policy_url": "https://luxridesuv.com/cancellation-policy"
+    }
+  }
+  ```
+- **Admin Configuration**: Settings → Legal Settings tab
+- **Frontend Usage**: Automatically fetched via useSettings hook
+- **Supported URL Types**: Website pages, Google Docs, PDF files, any valid URL
+
 ## API Authentication
 - Sanctum for API authentication
 - Token-based authentication for mobile apps (future)
@@ -345,6 +359,34 @@ npm run dev
 ### Migration Fixes
 - Removed route_polyline migration that referenced non-existent field
 - Fixed cleanup_duplicate_email_templates migration to use SimplifiedEmailTemplateSeeder
+
+## Recent Updates (2025-08-20 - Session 4)
+
+### Configurable Legal URLs
+- **Dynamic Legal Document Links**:
+  - Terms and Conditions URL configurable from admin panel
+  - Cancellation Policy URL configurable from admin panel
+  - Privacy Policy URL (optional)
+  - Refund Policy URL (optional)
+  - All managed through new "Legal Settings" tab in admin panel
+
+- **Frontend Integration**:
+  - ReviewBookingLuxury component fetches URLs from settings API
+  - Links open in new tab with `target="_blank"`
+  - Fallback to default URLs if settings not available
+  - Added underline styling for better visibility
+
+- **Backend Implementation**:
+  - Created migration `add_legal_urls_to_settings`
+  - Added legal settings to SettingsSeeder
+  - Updated SettingsController to include legal URLs in API response
+  - Added Legal Settings tab to ManageSettings.php in Filament
+
+- **Admin Panel Features**:
+  - New "Legal Settings" tab with scale icon
+  - Four URL fields for legal documents
+  - Support for any URL type (website, Google Docs, PDFs, etc.)
+  - Real-time updates affect frontend immediately
 
 ## Recent Updates (2025-08-20 - Session 3)
 

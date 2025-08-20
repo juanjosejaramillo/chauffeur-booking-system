@@ -58,6 +58,10 @@ class SettingsController extends Controller
                 ];
             });
         
+        // Legal URLs
+        $termsUrl = Setting::get('terms_url', 'https://luxridesuv.com/terms');
+        $cancellationPolicyUrl = Setting::get('cancellation_policy_url', 'https://luxridesuv.com/cancellation-policy');
+        
         return response()->json([
             'support_phone' => $supportPhone,
             'business_email' => $businessEmail,
@@ -72,6 +76,10 @@ class SettingsController extends Controller
                 'enabled' => $stripeEnabled,
                 'mode' => $stripeMode,
                 'public_key' => $stripePublicKey,
+            ],
+            'legal' => [
+                'terms_url' => $termsUrl,
+                'cancellation_policy_url' => $cancellationPolicyUrl,
             ],
             'form_fields' => $formFields,
         ]);

@@ -193,10 +193,6 @@ const ConfirmationLuxury = () => {
             <span className="text-luxury-gold mt-0.5">•</span>
             <span>Your driver will arrive at the pickup location at the scheduled time</span>
           </li>
-          <li className="flex items-start gap-2">
-            <span className="text-luxury-gold mt-0.5">•</span>
-            <span>The final charge will be processed after your trip is completed</span>
-          </li>
         </ul>
       </div>
 
@@ -224,9 +220,6 @@ const ConfirmationLuxury = () => {
         <a href={`tel:${settings.support_phone}`} className="text-luxury-gold hover:text-luxury-gold-dark text-sm font-medium">
           {settings.support_phone}
         </a>
-        <p className="text-[10px] text-luxury-gray/40 mt-4">
-          Press back twice quickly to start a new booking
-        </p>
       </div>
     </div>
   );

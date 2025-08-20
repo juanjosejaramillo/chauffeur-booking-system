@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import useBookingStore from '../../../store/bookingStore';
+import useSettings from '../../../hooks/useSettings';
 
 const ReviewBookingLuxury = () => {
   const {
@@ -14,8 +15,13 @@ const ReviewBookingLuxury = () => {
     error,
   } = useBookingStore();
 
+  const { settings } = useSettings();
   const [agreed, setAgreed] = useState(false);
   const [localError, setLocalError] = useState('');
+  
+  // Get legal URLs from settings with fallbacks
+  const termsUrl = settings?.legal?.terms_url || 'https://luxridesuv.com/terms';
+  const cancellationPolicyUrl = settings?.legal?.cancellation_policy_url || 'https://luxridesuv.com/cancellation-policy';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -226,11 +232,21 @@ const ReviewBookingLuxury = () => {
               />
               <span className="text-xs text-luxury-gray/70 leading-relaxed">
                 I agree to the{' '}
-                <a href="#" className="text-luxury-gold hover:text-luxury-gold-dark">
+                <a 
+                  href={termsUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-luxury-gold hover:text-luxury-gold-dark underline"
+                >
                   terms and conditions
                 </a>{' '}
                 and{' '}
-                <a href="#" className="text-luxury-gold hover:text-luxury-gold-dark">
+                <a 
+                  href={cancellationPolicyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer" 
+                  className="text-luxury-gold hover:text-luxury-gold-dark underline"
+                >
                   cancellation policy
                 </a>
               </span>

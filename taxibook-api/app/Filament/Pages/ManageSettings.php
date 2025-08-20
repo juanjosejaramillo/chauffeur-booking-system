@@ -405,6 +405,41 @@ class ManageSettings extends Page
                                     ])
                                     ->columns(2),
                             ]),
+                        
+                        Tab::make('Legal Settings')
+                            ->icon('heroicon-o-scale')
+                            ->schema([
+                                Section::make('Legal Documents')
+                                    ->description('Configure links to your legal documents and policies')
+                                    ->schema([
+                                        TextInput::make('terms_url')
+                                            ->label('Terms and Conditions URL')
+                                            ->url()
+                                            ->required()
+                                            ->default('https://luxridesuv.com/terms')
+                                            ->helperText('URL for your Terms and Conditions page (opens when customer clicks the link during booking)'),
+                                        
+                                        TextInput::make('cancellation_policy_url')
+                                            ->label('Cancellation Policy URL')
+                                            ->url()
+                                            ->required()
+                                            ->default('https://luxridesuv.com/cancellation-policy')
+                                            ->helperText('URL for your Cancellation Policy page (opens when customer clicks the link during booking)'),
+                                        
+                                        TextInput::make('privacy_policy_url')
+                                            ->label('Privacy Policy URL')
+                                            ->url()
+                                            ->default('https://luxridesuv.com/privacy')
+                                            ->helperText('URL for your Privacy Policy page (optional)'),
+                                        
+                                        TextInput::make('refund_policy_url')
+                                            ->label('Refund Policy URL')
+                                            ->url()
+                                            ->default('https://luxridesuv.com/refund-policy')
+                                            ->helperText('URL for your Refund Policy page (optional)'),
+                                    ])
+                                    ->columns(1),
+                            ]),
                     ])
                     ->persistTabInQueryString(),
             ])
@@ -709,6 +744,36 @@ class ManageSettings extends Page
                 'display_name' => 'Booking Time Increment',
                 'type' => 'number',
                 'description' => 'Time increment in minutes for booking times',
+                'order' => 4,
+            ],
+            
+            // Legal Settings
+            'terms_url' => [
+                'group' => 'legal',
+                'display_name' => 'Terms and Conditions URL',
+                'type' => 'text',
+                'description' => 'URL for Terms and Conditions page',
+                'order' => 1,
+            ],
+            'cancellation_policy_url' => [
+                'group' => 'legal',
+                'display_name' => 'Cancellation Policy URL',
+                'type' => 'text',
+                'description' => 'URL for Cancellation Policy page',
+                'order' => 2,
+            ],
+            'privacy_policy_url' => [
+                'group' => 'legal',
+                'display_name' => 'Privacy Policy URL',
+                'type' => 'text',
+                'description' => 'URL for Privacy Policy page',
+                'order' => 3,
+            ],
+            'refund_policy_url' => [
+                'group' => 'legal',
+                'display_name' => 'Refund Policy URL',
+                'type' => 'text',
+                'description' => 'URL for Refund Policy page',
                 'order' => 4,
             ],
         ];

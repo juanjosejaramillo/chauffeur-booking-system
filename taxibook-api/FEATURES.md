@@ -1,6 +1,6 @@
 # Features Documentation
 
-## Latest Configuration (v1.6.0 - 2025-08-20)
+## Latest Configuration (v1.7.0 - 2025-08-20)
 - **Email System**: Simplified to 8 essential triggers with PDF attachment controls
 - **Admin Email**: admin@luxridesuv.com  
 - **Business Phone**: +1-813-333-8680
@@ -9,6 +9,7 @@
 - **PDF Attachments**: Configurable per email template via admin panel
 - **PDF Design**: Luxe template styling matching email design
 - **Dynamic Settings**: PDFs use business settings from database
+- **Legal URLs**: Configurable Terms and Cancellation Policy links
 
 ## Core Features
 
@@ -126,7 +127,39 @@ Trigger-based email sending:
 - **Optimized Layout**: Single-page design
 - **Print Ready**: Proper print CSS styles
 
-### 4. Payment System
+### 4. Legal Document Management
+
+#### Configurable Legal URLs
+- **Terms and Conditions URL**: Dynamic link in booking review
+- **Cancellation Policy URL**: Dynamic link in booking review
+- **Privacy Policy URL**: Optional for footer/additional pages
+- **Refund Policy URL**: Optional for customer reference
+
+#### Admin Configuration
+- Managed through "Legal Settings" tab in admin panel
+- Support for any URL type:
+  - Website pages
+  - Google Docs
+  - PDF files
+  - External documentation
+
+#### Frontend Integration
+- Automatic fetching via settings API
+- Links open in new tab
+- Fallback to default URLs
+- Underlined for visibility
+
+### 5. Admin Panel Settings
+
+#### Settings Tabs
+1. **Business Information**: Company details, contact info, admin settings
+2. **Stripe Settings**: Payment gateway configuration
+3. **Mapbox Settings**: Maps and geocoding setup
+4. **Booking Settings**: Rules and restrictions
+5. **Email Settings**: Mail configuration
+6. **Legal Settings**: Document URLs and policies
+
+### 6. Payment System
 
 #### Stripe Integration
 - **Dual Mode**: Test and Live environments

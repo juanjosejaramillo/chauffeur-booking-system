@@ -242,6 +242,27 @@ class SettingsSeeder extends Seeder
                 'description' => 'Master switch for all email notifications',
                 'order' => 4,
             ],
+            
+            // Legal Settings
+            [
+                'group' => 'legal',
+                'key' => 'terms_url',
+                'display_name' => 'Terms and Conditions URL',
+                'value' => 'https://luxridesuv.com/terms',
+                'type' => 'text',
+                'description' => 'URL for Terms and Conditions page (opens when customer clicks the link)',
+                'order' => 1,
+            ],
+            [
+                'group' => 'legal',
+                'key' => 'cancellation_policy_url',
+                'display_name' => 'Cancellation Policy URL',
+                'value' => 'https://luxridesuv.com/cancellation-policy',
+                'type' => 'text',
+                'description' => 'URL for Cancellation Policy page (opens when customer clicks the link)',
+                'order' => 2,
+            ],
+            
             [
                 'group' => 'email',
                 'key' => 'bcc_admin_on_all_emails',

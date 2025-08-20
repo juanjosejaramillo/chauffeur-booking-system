@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2025-08-20 (Session 4)
+
+### Added
+- Configurable legal document URLs in admin panel
+  - Terms and Conditions URL
+  - Cancellation Policy URL  
+  - Privacy Policy URL (optional)
+  - Refund Policy URL (optional)
+- New "Legal Settings" tab in admin panel with scale icon
+- Migration to add legal URL settings to database
+- Dynamic legal URLs in frontend booking review step
+
+### Changed
+- ReviewBookingLuxury component now fetches legal URLs from settings API
+- Legal document links open in new tab for better UX
+- Added underline styling to legal links for visibility
+- SettingsController includes legal URLs in public API response
+
+### Technical
+- Migration: `2025_08_20_141248_add_legal_urls_to_settings.php`
+- Updated ManageSettings.php with Legal Settings tab
+- Frontend uses useSettings hook to fetch dynamic URLs
+- Fallback to default URLs if settings unavailable
+
 ## [1.6.0] - 2025-08-20 (Session 3)
 
 ### Added
