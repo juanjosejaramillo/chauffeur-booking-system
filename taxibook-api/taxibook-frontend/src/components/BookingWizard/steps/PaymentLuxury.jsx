@@ -298,7 +298,7 @@ const PaymentForm = () => {
                     Save your card for faster future bookings and easy post-trip tipping
                   </p>
                   <p className="text-xs text-luxury-gray/50 mt-1">
-                    🔒 Secured by Stripe • Remove anytime from your account
+                    🔒 Secured by Stripe
                   </p>
                 </label>
               </div>
@@ -400,8 +400,7 @@ const PaymentForm = () => {
               </h3>
             </div>
             <p className="text-xs text-luxury-gray/70 leading-relaxed mb-4">
-              Your payment information is encrypted and securely processed through Stripe. 
-              We never store your card details.
+              Your payment information is encrypted and securely processed through Stripe.
             </p>
             <div className="flex items-center gap-2 pt-4 border-t border-luxury-gray/10">
               <svg className="w-4 h-4 text-luxury-gray/50" fill="currentColor" viewBox="0 0 20 20">

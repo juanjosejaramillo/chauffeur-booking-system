@@ -212,9 +212,6 @@ const ReviewBookingLuxury = () => {
                   {formatPrice(selectedVehicle.estimated_fare || selectedVehicle.total_price)}
                 </span>
               </div>
-              <p className="text-xs text-luxury-white/60">
-                * Final fare may vary based on actual route taken
-              </p>
             </div>
           </div>
 

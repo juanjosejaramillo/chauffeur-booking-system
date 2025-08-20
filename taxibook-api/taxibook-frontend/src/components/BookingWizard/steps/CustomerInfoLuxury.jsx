@@ -420,18 +420,6 @@ const CustomerInfoLuxury = () => {
             </div>
           )}
           
-          {/* Privacy Notice */}
-          <div className="bg-luxury-light-gray p-6 border-l-4 border-luxury-gold">
-            <h3 className="text-xs font-semibold text-luxury-black uppercase tracking-luxury mb-3">
-              Privacy & Data Protection
-            </h3>
-            <p className="text-xs text-luxury-gray/70 leading-relaxed">
-              Your personal information is handled with the utmost care and discretion. 
-              We maintain strict confidentiality and only use your data for booking purposes. 
-              Your information is never shared with third parties without explicit consent.
-            </p>
-          </div>
-          
           {/* Action Buttons */}
           <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 pt-4">
             <button
