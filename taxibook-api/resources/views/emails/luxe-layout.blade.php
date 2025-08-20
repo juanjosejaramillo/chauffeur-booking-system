@@ -360,8 +360,8 @@
                 </p>
                 
                 <p class="footer-text">
-                    {{ config('app.company_address', '123 Business Ave, Suite 100, City, State 12345') }}<br>
-                    {{ config('business.phone', '1-800-LUXRIDE') }}
+                    {{ config('app.company_address', 'Florida, USA') }}<br>
+                    {{ config('business.phone', '') }}
                 </p>
             </div>
         </div>
