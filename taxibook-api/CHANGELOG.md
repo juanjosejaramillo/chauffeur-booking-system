@@ -7,7 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.5.0] - 2025-08-20 (Latest Session)
+## [1.6.0] - 2025-08-20 (Session 3)
+
+### Added
+- Luxe design system applied to all PDF templates
+  - Gradient headers matching email branding
+  - Info boxes, highlight boxes, and alert boxes
+  - Consistent typography and spacing
+- New PDF template for booking details (`resources/views/pdf/booking-details.blade.php`)
+- Dynamic business settings integration in PDFs
+  - Company name, address, phone, email from database
+  - No more hardcoded contact information
+
+### Changed 
+- Redesigned PDF receipt template with luxe styling
+- PDF templates optimized for single-page display
+- Reduced font sizes and spacing for better PDF rendering
+- Updated NotificationService to pass settings to PDF views
+- Updated ReceiptController to include business settings
+
+### Fixed
+- PDF templates now properly use business settings from admin panel
+- Cache clearing required after PDF template changes
+
+### Technical
+- PDF templates use same design language as email templates
+- Consistent branding across all customer communications
+- Must run `php artisan optimize:clear` after template changes
+
+## [1.5.0] - 2025-08-20 (Session 2)
 
 ### Added
 - PDF attachment controls in email template admin panel

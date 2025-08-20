@@ -351,8 +351,17 @@ class NotificationService
                 return [];
             }
 
+            // Get business settings for receipt
+            $settings = [
+                'business_name' => Setting::get('business_name', 'LuxRide'),
+                'business_address' => Setting::get('business_address', 'Florida, USA'),
+                'business_phone' => Setting::get('business_phone', '+1-813-333-8680'),
+                'business_email' => Setting::get('business_email', 'contact@luxridesuv.com'),
+            ];
+            
             $pdf = Pdf::loadView('pdf.receipt', [
                 'booking' => $booking,
+                'settings' => $settings,
             ]);
 
             $fileName = "receipt_{$booking->booking_number}.pdf";
@@ -386,7 +395,7 @@ class NotificationService
                 $booking->load('vehicleType');
             }
 
-            $pdf = Pdf::loadView('emails.booking-details', [
+            $pdf = Pdf::loadView('pdf.booking-details', [
                 'booking' => $booking,
                 'company' => $this->companyConfig,
             ]);

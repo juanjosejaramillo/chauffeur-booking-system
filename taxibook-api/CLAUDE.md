@@ -346,7 +346,36 @@ npm run dev
 - Removed route_polyline migration that referenced non-existent field
 - Fixed cleanup_duplicate_email_templates migration to use SimplifiedEmailTemplateSeeder
 
-## Recent Updates (2025-08-20 - Latest Session)
+## Recent Updates (2025-08-20 - Session 3)
+
+### PDF Template Redesign
+- **Luxe Email Design Applied to PDFs**:
+  - Receipt PDF now matches luxe email template styling
+  - Created dedicated PDF template for booking details
+  - Gradient header with company branding (#1a1a1a to #2d2d2d)
+  - Info boxes, highlight boxes, and alert boxes for structured content
+  - Consistent typography using system fonts
+  - Optimized for single-page display with reduced font sizes
+
+- **Dynamic Business Settings in PDFs**:
+  - PDFs now pull company information from Settings model
+  - Business name, address, phone, email dynamically loaded
+  - No more hardcoded contact information in templates
+  - ReceiptController passes settings to views
+  - NotificationService includes settings when generating PDFs
+
+- **PDF Template Structure**:
+  - `/resources/views/pdf/receipt.blade.php` - Payment receipt PDF
+  - `/resources/views/pdf/booking-details.blade.php` - Booking confirmation PDF
+  - Both use consistent luxe design language
+  - Responsive to content while maintaining single-page layout
+
+- **Cache Management**:
+  - Must run `php artisan optimize:clear` after PDF template changes
+  - Views are compiled and cached in Laravel
+  - PDF changes require view cache clearing to take effect
+
+## Recent Updates (2025-08-20 - Session 2)
 
 ### Frontend UI Improvements
 - **Removed from Payment Step**:
@@ -369,6 +398,20 @@ npm run dev
   - Consolidated all functionality into SimpleEmailTemplateForm.php
   - Prevents confusion and maintains single source of truth
 
+### PDF Generation System
+- **PDF Attachments in Emails**:
+  - Controlled via admin panel toggles per email template
+  - Two types: Receipt PDF and Booking Details PDF
+  - Generated on-demand when emails are sent
+  - Stored temporarily in `storage/app/temp/`
+  - Automatic cleanup after sending
+
+- **PDF Generation Flow**:
+  1. Email template checks `attach_receipt` or `attach_booking_details` flags
+  2. NotificationService generates PDFs if enabled
+  3. PDFs attached to email using Laravel's attachment system
+  4. Temporary files cleaned up after sending
+
 ### Production Deployment Notes
 - **Git Branch Issue**: Production may be on 'master' branch while GitHub uses 'main'
   - Solution: `git checkout -b main origin/main` then delete master branch
@@ -379,6 +422,26 @@ npm run dev
 - **React Router on Apache**: Requires .htaccess file in public folder for client-side routing
   - File automatically included in builds from `/public/.htaccess`
   - Enables proper handling of routes like `/tip/:token`
+
+## Testing Tools
+- **MailHog**: Local email testing at http://localhost:8025
+  - Captures all outgoing emails
+  - Displays PDF attachments
+  - Allows downloading attachments
+  - Shows email HTML/text content
+
+## Cache Commands
+After making changes to templates or configurations:
+```bash
+# Clear all caches
+php artisan optimize:clear
+
+# Or individually:
+php artisan config:clear  # Configuration cache
+php artisan cache:clear   # Application cache
+php artisan view:clear    # Compiled views
+php artisan route:clear   # Route cache
+```
 
 ## Contact & Support
 - **Company**: LuxRide SUV

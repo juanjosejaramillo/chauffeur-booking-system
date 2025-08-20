@@ -1,12 +1,14 @@
 # Features Documentation
 
-## Latest Configuration (v1.5.0 - 2025-08-20)
+## Latest Configuration (v1.6.0 - 2025-08-20)
 - **Email System**: Simplified to 8 essential triggers with PDF attachment controls
 - **Admin Email**: admin@luxridesuv.com  
 - **Business Phone**: +1-813-333-8680
 - **Minimum Booking**: 12 hours advance
 - **Seeders**: 5 active seeders for complete system setup
 - **PDF Attachments**: Configurable per email template via admin panel
+- **PDF Design**: Luxe template styling matching email design
+- **Dynamic Settings**: PDFs use business settings from database
 
 ## Core Features
 
@@ -94,7 +96,37 @@ Trigger-based email sending:
 - **Error Handling**: Retry failed emails
 - **Test Mode**: Send test emails
 
-### 3. Payment System
+#### PDF Attachments
+- **Receipt PDF**: Payment receipt with transaction details
+- **Booking Details PDF**: Full booking confirmation
+- **Toggle Control**: Enable/disable per email template
+- **Luxe Design**: Matching email template styling
+- **Dynamic Content**: Uses business settings from database
+- **Single Page**: Optimized for one-page display
+
+### 3. PDF Generation System
+
+#### PDF Templates
+- **Receipt Template** (`resources/views/pdf/receipt.blade.php`)
+  - Payment confirmation document
+  - Transaction details and totals
+  - Refund history if applicable
+  - Customer and service information
+
+- **Booking Details Template** (`resources/views/pdf/booking-details.blade.php`)
+  - Complete booking information
+  - Trip details and timing
+  - Pickup/dropoff locations
+  - Fare breakdown
+
+#### PDF Design Features
+- **Luxe Styling**: Gradient headers, info boxes, alert boxes
+- **Consistent Branding**: Matches email templates
+- **Dynamic Settings**: Company info from database
+- **Optimized Layout**: Single-page design
+- **Print Ready**: Proper print CSS styles
+
+### 4. Payment System
 
 #### Stripe Integration
 - **Dual Mode**: Test and Live environments

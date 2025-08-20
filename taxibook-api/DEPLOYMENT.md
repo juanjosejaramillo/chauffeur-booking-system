@@ -235,13 +235,19 @@ php artisan cache:clear
 php artisan route:clear
 php artisan view:clear
 
-# Rebuild caches
+# Or clear all at once
+php artisan optimize:clear
+
+# Rebuild caches for production
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 ```
 
-**Important**: Always run `php artisan config:clear` after changing `.env` values in production!
+**Important Notes**:
+- Always run `php artisan config:clear` after changing `.env` values in production!
+- Run `php artisan view:clear` after updating email or PDF templates
+- Use `php artisan optimize:clear` to clear all caches when troubleshooting
 
 #### 6. Exit Maintenance Mode
 ```bash
@@ -389,6 +395,22 @@ php artisan cache:clear
 php artisan config:clear
 ```
 
+## Template Updates
+
+### After Updating Email or PDF Templates
+```bash
+# Clear view cache to see changes
+php artisan view:clear
+
+# Or clear everything
+php artisan optimize:clear
+```
+
+### PDF Template Locations
+- Receipt: `/resources/views/pdf/receipt.blade.php`
+- Booking Details: `/resources/views/pdf/booking-details.blade.php`
+- Email templates: `/resources/views/emails/`
+
 ## Common Issues
 
 ### 500 Errors
@@ -406,6 +428,12 @@ php artisan config:clear
 - Verify SMTP credentials
 - Check Gmail app password
 - Review email logs in database
+
+### PDF Not Attaching to Emails
+- Check email template has PDF toggles enabled in admin panel
+- Verify PDF generation permissions in `storage/app/temp/`
+- Clear view cache: `php artisan view:clear`
+- Check logs for PDF generation errors
 
 ### Stripe Issues
 - Verify webhook endpoint
@@ -430,6 +458,25 @@ php artisan route:cache
 php artisan view:cache
 php artisan optimize
 ```
+
+### Testing Email with MailHog (Local)
+```bash
+# Start MailHog
+mailhog
+
+# Access web interface
+# http://localhost:8025
+
+# Configure .env
+MAIL_MAILER=smtp
+MAIL_HOST=localhost
+MAIL_PORT=1025
+MAIL_USERNAME=null
+MAIL_PASSWORD=null
+MAIL_ENCRYPTION=null
+```
+
+MailHog captures all emails including PDF attachments for testing.
 
 ## Contact Support
 

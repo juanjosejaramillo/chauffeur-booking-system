@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Booking;
+use App\Models\Setting;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -25,7 +26,10 @@ class ReceiptController extends Controller
             abort(403, 'Receipt not available - payment not processed');
         }
         
-        return view('pdf.receipt', compact('booking'));
+        // Get business settings
+        $settings = $this->getBusinessSettings();
+        
+        return view('pdf.receipt', compact('booking', 'settings'));
     }
     
     /**
@@ -44,7 +48,10 @@ class ReceiptController extends Controller
             abort(403, 'Receipt not available - payment not processed');
         }
         
-        $pdf = Pdf::loadView('pdf.receipt', compact('booking'));
+        // Get business settings
+        $settings = $this->getBusinessSettings();
+        
+        $pdf = Pdf::loadView('pdf.receipt', compact('booking', 'settings'));
         
         // Set paper size and orientation
         $pdf->setPaper('letter', 'portrait');
@@ -69,7 +76,10 @@ class ReceiptController extends Controller
             abort(403, 'Receipt not available - payment not processed');
         }
         
-        $pdf = Pdf::loadView('pdf.receipt', compact('booking'));
+        // Get business settings
+        $settings = $this->getBusinessSettings();
+        
+        $pdf = Pdf::loadView('pdf.receipt', compact('booking', 'settings'));
         
         // Set paper size and orientation
         $pdf->setPaper('letter', 'portrait');
@@ -114,5 +124,18 @@ class ReceiptController extends Controller
         // For now, allow access to anyone with the booking number
         // In production, you might want to add email verification or token-based access
         return $booking;
+    }
+    
+    /**
+     * Get business settings for receipt
+     */
+    private function getBusinessSettings()
+    {
+        return [
+            'business_name' => Setting::get('business_name', 'LuxRide'),
+            'business_address' => Setting::get('business_address', 'Florida, USA'),
+            'business_phone' => Setting::get('business_phone', '+1-813-333-8680'),
+            'business_email' => Setting::get('business_email', 'contact@luxridesuv.com'),
+        ];
     }
 }
