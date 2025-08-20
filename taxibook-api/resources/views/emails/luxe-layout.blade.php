@@ -350,10 +350,8 @@
             <!-- Footer -->
             <div class="email-footer">
                 <div class="footer-links">
-                    <a href="{{ config('app.url') }}/booking">Book a Ride</a>
-                    <a href="{{ config('app.url') }}/support">Support</a>
-                    <a href="{{ config('app.url') }}/terms">Terms</a>
-                    <a href="{{ config('app.url') }}/privacy">Privacy</a>
+                    <a href="https://book.luxridesuv.com">Book a Ride</a>
+                    <a href="https://luxridesuv.com/contact/">Contact Us</a>
                 </div>
                 
                 <p class="footer-text">
