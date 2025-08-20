@@ -360,6 +360,17 @@ npm run dev
 - Removed route_polyline migration that referenced non-existent field
 - Fixed cleanup_duplicate_email_templates migration to use SimplifiedEmailTemplateSeeder
 
+## Recent Updates (2025-08-20 - Session 5)
+
+### Fixed Duplicate Cancellation Emails
+- **Issue**: Cancellation emails were being sent twice when cancelling from admin panel
+- **Cause**: Both BookingObserver and EditBooking.php were firing BookingCancelled events
+- **Solution**: 
+  - Removed manual event triggers from EditBooking.php
+  - Let BookingObserver handle all cancellation events automatically
+  - Now stores cancellation_reason in database before status update
+- **Result**: Only one cancellation email is sent per cancellation
+
 ## Recent Updates (2025-08-20 - Session 4)
 
 ### Configurable Legal URLs

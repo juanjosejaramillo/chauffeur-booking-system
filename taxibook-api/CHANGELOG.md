@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.1] - 2025-08-20 (Session 5)
+
+### Fixed
+- Duplicate cancellation emails when cancelling from admin panel
+  - Removed manual BookingCancelled event triggers from EditBooking.php
+  - BookingObserver now handles all cancellation events consistently
+  - Cancellation reason is properly stored in database
+
+### Changed
+- Improved PDF receipt styling (user modifications)
+  - Enhanced header gradient and padding
+  - Better confirmation number display
+  - Improved footer styling
+  - Added thank you message with business name
+
+### Technical
+- Event handling now follows observer pattern consistently
+- Single source of truth for booking status changes
+- Prevents duplicate event firing in admin actions
+
 ## [1.7.0] - 2025-08-20 (Session 4)
 
 ### Added

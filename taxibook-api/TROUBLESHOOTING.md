@@ -2,6 +2,32 @@
 
 ## Common Issues & Solutions
 
+### Email Issues
+
+#### Duplicate Cancellation Emails
+**Problem**: Receiving two cancellation emails when cancelling a booking from admin panel
+
+**Cause**: Both BookingObserver and EditBooking.php were firing BookingCancelled events
+
+**Solution**: Fixed in v1.7.1
+- The system now uses only the BookingObserver to fire events
+- Manual event triggers have been removed from admin actions
+- Ensures only one email per status change
+
+**Prevention**:
+- Always let observers handle event firing for status changes
+- Don't manually fire events when updating model attributes that trigger observers
+
+#### Emails Not Sending
+**Problem**: Emails are not being sent despite being triggered
+
+**Solutions**:
+1. Check email settings in admin panel (Settings → Email Settings)
+2. Verify SMTP credentials in `.env` file
+3. Check email logs in admin panel (Email Queue)
+4. Clear cache: `php artisan optimize:clear`
+5. Check Laravel logs: `tail -f storage/logs/laravel.log`
+
 ### Installation Issues
 
 #### Composer Dependencies Failed

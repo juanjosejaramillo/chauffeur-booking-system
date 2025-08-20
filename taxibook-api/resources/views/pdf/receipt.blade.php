@@ -29,43 +29,61 @@
         /* Header with luxe gradient */
         .header {
             background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-            padding: 20px;
+            padding: 30px 20px;
             text-align: center;
         }
         
         .company-name {
             color: #ffffff;
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 300;
             letter-spacing: 3px;
             text-transform: uppercase;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
         }
         
         .receipt-title {
             color: #888;
-            font-size: 11px;
+            font-size: 12px;
             letter-spacing: 2px;
             text-transform: uppercase;
         }
         
         /* Main content wrapper */
         .content-wrapper {
-            padding: 25px;
+            padding: 30px 25px;
+        }
+        
+        /* Confirmation Number Box */
+        .confirmation-box {
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }
+        
+        .confirmation-label {
+            font-size: 11px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+        
+        .confirmation-number {
+            font-size: 24px;
+            font-weight: 500;
+            color: #1a1a1a;
+            letter-spacing: 2px;
         }
         
         /* Receipt Info Section */
         .receipt-info {
-            background-color: #fafafa;
-            border: 1px solid #f0f0f0;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .receipt-info-row {
             display: table;
             width: 100%;
+            margin-bottom: 20px;
         }
         
         .receipt-info-column {
@@ -78,16 +96,16 @@
             text-align: right;
         }
         
-        .receipt-number {
-            font-size: 16px;
-            font-weight: 500;
-            color: #1a1a1a;
+        .receipt-date-label {
+            font-size: 10px;
+            color: #888;
             margin-bottom: 3px;
         }
         
-        .receipt-date {
-            font-size: 10px;
-            color: #888;
+        .receipt-date-value {
+            font-size: 12px;
+            font-weight: 500;
+            color: #1a1a1a;
         }
         
         /* Info Box styling from luxe template */
@@ -137,18 +155,18 @@
         
         /* Service Details Table */
         .services-section {
-            margin: 15px 0;
+            margin: 20px 0;
         }
         
         .section-title {
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 600;
             color: #888;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin: 0 0 10px 0;
-            padding-bottom: 5px;
-            border-bottom: 1px solid #e8e8e8;
+            margin: 0 0 15px 0;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #f0f0f0;
         }
         
         .services-table {
@@ -182,9 +200,10 @@
         /* Highlight Box for totals */
         .highlight-box {
             background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
-            border-left: 3px solid #1a1a1a;
-            padding: 12px 15px;
-            margin: 15px 0;
+            border-left: 4px solid #1a1a1a;
+            padding: 20px;
+            margin: 25px 0;
+            border-radius: 0 8px 8px 0;
         }
         
         .total-row {
@@ -210,30 +229,30 @@
         }
         
         .total-row.grand-total {
-            margin-top: 8px;
-            padding-top: 8px;
-            border-top: 1px solid #1a1a1a;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px solid #1a1a1a;
         }
         
         .total-row.grand-total .total-label {
-            font-size: 12px;
+            font-size: 13px;
             font-weight: 600;
             color: #1a1a1a;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
         }
         
         .total-row.grand-total .total-value {
-            font-size: 14px;
-            font-weight: 600;
+            font-size: 16px;
+            font-weight: 700;
             color: #1a1a1a;
         }
         
         /* Alert Box for payment status */
         .alert-box {
-            border-radius: 6px;
-            padding: 10px 12px;
-            margin: 15px 0;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin: 20px 0;
         }
         
         .alert-box.success {
@@ -278,42 +297,54 @@
         /* Thank You Message */
         .thank-you {
             text-align: center;
-            padding: 15px;
-            margin: 15px 0;
+            padding: 25px;
+            margin: 25px 0;
+            background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+            border-radius: 8px;
         }
         
         .thank-you-text {
-            font-size: 11px;
-            color: #666;
+            font-size: 12px;
+            color: #4a4a4a;
             font-style: italic;
+            margin-bottom: 8px;
+        }
+        
+        .thank-you-subtext {
+            font-size: 10px;
+            color: #888;
         }
         
         /* Footer */
         .footer {
-            background-color: #fafafa;
-            padding: 15px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #f0f0f0 100%);
+            padding: 20px;
             text-align: center;
-            border-top: 1px solid #f0f0f0;
-            margin-top: 20px;
+            border-top: 2px solid #e8e8e8;
+            margin-top: 30px;
         }
         
         .footer-company {
-            font-size: 10px;
+            font-size: 12px;
             font-weight: 600;
             color: #1a1a1a;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
         }
         
         .footer-contact {
-            font-size: 9px;
-            color: #888;
+            font-size: 10px;
+            color: #666;
             margin-bottom: 3px;
         }
         
         .footer-note {
-            font-size: 8px;
-            color: #aaa;
-            margin-top: 8px;
+            font-size: 9px;
+            color: #999;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e0e0e0;
         }
         
         @media print {
@@ -334,17 +365,21 @@
         
         <!-- Main Content -->
         <div class="content-wrapper">
+            <!-- Confirmation Number -->
+            <div class="confirmation-box">
+                <div class="confirmation-label">Your Confirmation Number</div>
+                <div class="confirmation-number">{{ $booking->booking_number }}</div>
+            </div>
+            
             <!-- Receipt Info -->
             <div class="receipt-info">
-                <div class="receipt-info-row">
-                    <div class="receipt-info-column">
-                        <div class="receipt-number">#{{ $booking->booking_number }}</div>
-                        <div class="receipt-date">Booking Date: {{ $booking->created_at->format('F j, Y g:i A') }}</div>
-                    </div>
-                    <div class="receipt-info-column right">
-                        <div style="font-size: 10px; color: #888; margin-bottom: 3px;">Receipt Date</div>
-                        <div style="font-size: 12px; font-weight: 500;">{{ now()->format('F j, Y') }}</div>
-                    </div>
+                <div class="receipt-info-column">
+                    <div class="receipt-date-label">Booking Date</div>
+                    <div class="receipt-date-value">{{ $booking->created_at->format('F j, Y g:i A') }}</div>
+                </div>
+                <div class="receipt-info-column right">
+                    <div class="receipt-date-label">Receipt Date</div>
+                    <div class="receipt-date-value">{{ now()->format('F j, Y') }}</div>
                 </div>
             </div>
             
@@ -367,9 +402,30 @@
                 @endif
             </div>
             
+            <!-- Trip Details -->
+            <div class="info-box">
+                <div class="info-box-title">Trip Details</div>
+                <div class="info-row">
+                    <span class="info-label">Date & Time</span>
+                    <span class="info-value">{{ $booking->pickup_date->format('F j, Y') }} at {{ $booking->pickup_date->format('g:i A') }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Vehicle</span>
+                    <span class="info-value">{{ $booking->vehicleType->name ?? 'Premium Vehicle' }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Pickup</span>
+                    <span class="info-value">{{ $booking->pickup_address }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Dropoff</span>
+                    <span class="info-value">{{ $booking->dropoff_address }}</span>
+                </div>
+            </div>
+            
             <!-- Service Details -->
             <div class="services-section">
-                <div class="section-title">Service Details</div>
+                <div class="section-title">Charges</div>
                 <table class="services-table">
                     <thead>
                         <tr>
@@ -380,11 +436,12 @@
                     <tbody>
                         <tr>
                             <td>
-                                <strong>{{ $booking->vehicleType->name ?? 'Premium Transportation' }}</strong><br>
+                                <strong>Transportation Service</strong><br>
                                 <span style="color: #666; font-size: 9px;">
-                                    {{ $booking->pickup_date->format('F j, Y') }} at {{ $booking->pickup_date->format('g:i A') }}<br>
-                                    <strong>From:</strong> {{ $booking->pickup_address }}<br>
-                                    <strong>To:</strong> {{ $booking->dropoff_address }}
+                                    {{ $booking->vehicleType->name ?? 'Premium Vehicle' }}
+                                    @if($booking->estimated_distance)
+                                    • {{ number_format($booking->estimated_distance, 1) }} miles
+                                    @endif
                                 </span>
                             </td>
                             <td class="amount">${{ number_format($booking->subtotal ?? $booking->estimated_fare, 2) }}</td>
@@ -419,12 +476,10 @@
             
             <!-- Totals in Highlight Box -->
             <div class="highlight-box">
-                @if($booking->gratuity_amount > 0 || $booking->discount_amount > 0)
                 <div class="total-row">
-                    <div class="total-label">Subtotal:</div>
+                    <div class="total-label">Service Total:</div>
                     <div class="total-value">${{ number_format($booking->subtotal ?? $booking->estimated_fare, 2) }}</div>
                 </div>
-                @endif
                 
                 @if($booking->gratuity_amount > 0)
                 <div class="total-row">
@@ -441,8 +496,11 @@
                 @endif
                 
                 <div class="total-row grand-total">
-                    <div class="total-label">Total Amount</div>
-                    <div class="total-value">${{ number_format($booking->final_fare ?? $booking->estimated_fare, 2) }}</div>
+                    <div class="total-label">Total Charged</div>
+                    @php
+                        $totalCharged = ($booking->final_fare ?? $booking->estimated_fare) + $booking->gratuity_amount;
+                    @endphp
+                    <div class="total-value">${{ number_format($totalCharged, 2) }}</div>
                 </div>
                 
                 @if($booking->total_refunded > 0)
@@ -459,25 +517,31 @@
                 @endif
             </div>
             
-            <!-- Payment Information Alert Box -->
-            <div class="alert-box @if($booking->payment_status === 'captured' && $booking->total_refunded == 0) success @else warning @endif">
-                <div class="alert-title">Payment Information</div>
-                <div class="alert-content">
-                    <strong>Method:</strong> Credit Card<br>
-                    <strong>Status:</strong> 
-                    <span class="payment-status @if($booking->total_refunded > 0) refunded @endif">
-                        @if($booking->payment_status === 'captured' && $booking->total_refunded > 0)
-                            Partially Refunded
-                        @else
-                            {{ ucfirst($booking->payment_status) }}
-                        @endif
-                    </span>
-                    @if($booking->stripe_payment_intent_id)
-                    <br><span style="font-size: 9px; color: #666; margin-top: 5px; display: block;">
-                        Transaction ID: {{ $booking->stripe_payment_intent_id }}
-                    </span>
-                    @endif
+            <!-- Payment Information Box -->
+            <div class="info-box">
+                <div class="info-box-title">Payment Information</div>
+                <div class="info-row">
+                    <span class="info-label">Method</span>
+                    <span class="info-value">Credit Card</span>
                 </div>
+                <div class="info-row">
+                    <span class="info-label">Status</span>
+                    <span class="info-value">
+                        <span class="payment-status @if($booking->total_refunded > 0) refunded @endif">
+                            @if($booking->payment_status === 'captured' && $booking->total_refunded > 0)
+                                Partially Refunded
+                            @else
+                                {{ ucfirst($booking->payment_status) }}
+                            @endif
+                        </span>
+                    </span>
+                </div>
+                @if($booking->stripe_payment_intent_id)
+                <div class="info-row">
+                    <span class="info-label">Transaction ID</span>
+                    <span class="info-value" style="font-size: 9px;">{{ $booking->stripe_payment_intent_id }}</span>
+                </div>
+                @endif
             </div>
             
             @if($booking->total_refunded > 0 && $booking->transactions)
@@ -495,7 +559,8 @@
             
             <!-- Thank You Message -->
             <div class="thank-you">
-                <div class="thank-you-text">Thank you for choosing our premium transportation service</div>
+                <div class="thank-you-text">Thank you for choosing {{ $settings['business_name'] ?? 'LuxRide' }}</div>
+                <div class="thank-you-subtext">We appreciate your business and look forward to serving you again</div>
             </div>
         </div>
         
@@ -504,7 +569,10 @@
             <div class="footer-company">{{ $settings['business_name'] ?? 'LuxRide' }}</div>
             <div class="footer-contact">{{ $settings['business_address'] ?? 'Florida, USA' }}</div>
             <div class="footer-contact">{{ $settings['business_phone'] ?? '+1-813-333-8680' }} • {{ $settings['business_email'] ?? 'contact@luxridesuv.com' }}</div>
-            <div class="footer-note">This is an official receipt for your records</div>
+            <div class="footer-note">
+                This is an official receipt for your records<br>
+                Receipt #{{ $booking->booking_number }} • Generated on {{ now()->format('F j, Y g:i A') }}
+            </div>
         </div>
     </div>
 </body>

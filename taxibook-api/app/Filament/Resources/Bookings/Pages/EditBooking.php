@@ -5,7 +5,6 @@ namespace App\Filament\Resources\Bookings\Pages;
 use App\Filament\Resources\BookingResource;
 use App\Services\StripeService;
 use App\Services\TipService;
-use App\Events\BookingCancelled;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
@@ -74,11 +73,12 @@ class EditBooking extends EditRecord
                         $stripeService = app(StripeService::class);
                         $stripeService->cancelPaymentIntent($this->record);
                         
-                        // Update booking status to cancelled
-                        $this->record->update(['status' => 'cancelled']);
-                        
-                        // Trigger booking cancelled event
-                        event(new BookingCancelled($this->record->fresh(), 'Payment authorization cancelled by admin'));
+                        // Update booking status to cancelled with reason
+                        $this->record->update([
+                            'status' => 'cancelled',
+                            'cancellation_reason' => 'Payment authorization cancelled by admin'
+                        ]);
+                        // Observer will automatically trigger BookingCancelled event
                         
                         Notification::make()
                             ->title('Payment Cancelled')
@@ -128,9 +128,11 @@ class EditBooking extends EditRecord
                         
                         // Update booking status to cancelled if full refund
                         if ($data['amount'] >= ($this->record->final_fare ?? $this->record->estimated_fare)) {
-                            $this->record->update(['status' => 'cancelled']);
-                            // Trigger booking cancelled event
-                            event(new BookingCancelled($this->record->fresh(), 'Full refund processed'));
+                            $this->record->update([
+                                'status' => 'cancelled',
+                                'cancellation_reason' => 'Full refund processed: ' . ($data['reason'] ?? 'No reason provided')
+                            ]);
+                            // Observer will automatically trigger BookingCancelled event
                         }
                         
                         Notification::make()

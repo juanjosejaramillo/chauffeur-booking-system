@@ -223,6 +223,19 @@ Each email template now has PDF attachment toggles in the admin panel:
 4. Check timing calculation is correct
 5. Verify bookings exist in the time window
 
+### Duplicate Cancellation Emails (Fixed 2025-08-20)
+
+#### Issue:
+Users were receiving two cancellation emails when admin cancelled a booking.
+
+#### Cause:
+Both BookingObserver and EditBooking.php were firing BookingCancelled events:
+- EditBooking.php manually fired the event after status update
+- BookingObserver automatically fired the event when status changed to 'cancelled'
+
+#### Solution:
+Removed manual event triggers from EditBooking.php. The BookingObserver now handles all cancellation events automatically when the status changes to 'cancelled'. This ensures only one event is fired per cancellation.
+
 ### Common Issues Fixed:
 
 #### ❌ Before: Confusing Configuration
