@@ -52,19 +52,26 @@ class MapboxService
         });
     }
 
-    public function getRoute(float $fromLat, float $fromLng, float $toLat, float $toLng): ?array
+    public function getRoute(float $fromLat, float $fromLng, float $toLat, float $toLng, ?string $departureTime = null): ?array
     {
+        // Include departure time in cache key if provided
         $cacheKey = "mapbox_route_{$fromLat}_{$fromLng}_{$toLat}_{$toLng}";
+        if ($departureTime) {
+            $cacheKey .= "_" . md5($departureTime);
+        }
         
         \Log::info('MapboxService::getRoute called', [
             'from' => [$fromLat, $fromLng],
             'to' => [$toLat, $toLng],
+            'departure_time' => $departureTime,
             'cache_key' => $cacheKey
         ]);
         
-        return Cache::remember($cacheKey, 3600, function () use ($fromLat, $fromLng, $toLat, $toLng) {
+        return Cache::remember($cacheKey, 3600, function () use ($fromLat, $fromLng, $toLat, $toLng, $departureTime) {
             $coordinates = "{$fromLng},{$fromLat};{$toLng},{$toLat}";
-            $url = "{$this->baseUrl}/directions/v5/mapbox/driving/{$coordinates}";
+            // Use driving-traffic profile when departure time is provided for traffic data
+            $profile = $departureTime ? 'driving-traffic' : 'driving';
+            $url = "{$this->baseUrl}/directions/v5/mapbox/{$profile}/{$coordinates}";
             
             \Log::info('Making Mapbox API request', [
                 'url' => $url,
@@ -74,11 +81,18 @@ class MapboxService
             $startTime = microtime(true);
             
             try {
-                $response = Http::timeout(10)->get($url, [
+                $params = [
                     'access_token' => $this->apiKey,
                     'geometries' => 'polyline',
                     'overview' => 'full',
-                ]);
+                ];
+                
+                // Add departure time if provided (for traffic-aware routing)
+                if ($departureTime) {
+                    $params['depart_at'] = $departureTime;
+                }
+                
+                $response = Http::timeout(10)->get($url, $params);
                 
                 $duration = round((microtime(true) - $startTime) * 1000, 2);
                 \Log::info('Mapbox API response received', [

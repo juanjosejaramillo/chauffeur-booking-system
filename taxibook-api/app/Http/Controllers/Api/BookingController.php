@@ -100,14 +100,26 @@ class BookingController extends Controller
             'pickup_lng' => 'required|numeric|between:-180,180',
             'dropoff_lat' => 'required|numeric|between:-90,90',
             'dropoff_lng' => 'required|numeric|between:-180,180',
+            'pickup_date' => 'nullable|date',
+            'pickup_time' => 'nullable|string',
         ]);
+
+        // Combine pickup date and time if provided
+        $pickupDateTime = null;
+        if (isset($validated['pickup_date'])) {
+            $pickupDateTime = $validated['pickup_date'];
+            if (isset($validated['pickup_time'])) {
+                $pickupDateTime .= ' ' . $validated['pickup_time'];
+            }
+        }
 
         try {
             $prices = $this->pricingService->calculatePrices(
                 $validated['pickup_lat'],
                 $validated['pickup_lng'],
                 $validated['dropoff_lat'],
-                $validated['dropoff_lng']
+                $validated['dropoff_lng'],
+                $pickupDateTime
             );
 
             return response()->json($prices);

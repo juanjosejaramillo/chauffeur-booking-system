@@ -43,8 +43,8 @@ Core business logic encapsulated in service classes:
 ```php
 NotificationService     # Email notifications, template rendering
 StripeService          # Payment processing, intents, refunds
-MapboxService          # Geocoding, route calculation
-PricingService         # Fare calculation, pricing tiers
+MapboxService          # Geocoding, route calculation, traffic-aware routing
+PricingService         # Fare calculation with traffic-adjusted time, pricing tiers
 TipService            # Gratuity processing (hardcoded email)
 EmailComponentsService # Email template components
 ```

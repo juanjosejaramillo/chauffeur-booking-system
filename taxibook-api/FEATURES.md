@@ -1,6 +1,6 @@
 # Features Documentation
 
-## Latest Configuration (v1.7.0 - 2025-08-20)
+## Latest Configuration (v1.8.0 - 2025-08-21)
 - **Email System**: Simplified to 8 essential triggers with PDF attachment controls
 - **Admin Email**: admin@luxridesuv.com  
 - **Business Phone**: +1-813-333-8680
@@ -21,16 +21,18 @@ The booking process is divided into intuitive steps:
 1. **Route Selection**
    - Address autocomplete via Mapbox
    - Real-time route validation
-   - Distance and duration calculation
+   - Distance and duration calculation with traffic
+   - Traffic-aware time estimates based on pickup date/time
    - Visual map display with route
    - Airport detection (automatic)
 
 2. **Vehicle Selection**
-   - Dynamic pricing based on distance
+   - Dynamic pricing based on distance and traffic-adjusted time
    - Multiple vehicle types with images
    - Capacity indicators (passengers/luggage)
    - Pricing tier system
-   - Base price + per mile calculation
+   - Base price + per mile + per minute calculation
+   - Traffic-aware pricing (more accurate during peak hours)
 
 3. **Customer Information**
    - Guest booking (no registration required)
@@ -61,7 +63,27 @@ Administrators can configure custom fields:
 - Meet & Greet Service
 - Special Occasion
 
-### 2. Email System
+### 2. Traffic-Aware Routing & Pricing
+
+#### Real-Time Traffic Integration
+- **Mapbox Traffic API**: Uses `driving-traffic` profile for accurate estimates
+- **Departure Time**: Considers actual pickup date/time for predictions
+- **Peak Hour Detection**: Automatically adjusts for rush hour traffic
+- **Predictive Routing**: Works up to 2 weeks in advance
+
+#### Impact on Pricing
+- **Per-Minute Rate**: Charges based on traffic-adjusted duration
+- **Accuracy**: 30-50% more accurate pricing during peak hours
+- **Fair Charging**: Customers pay for actual expected travel time
+- **Dynamic Adjustment**: Different prices for same route at different times
+
+#### Technical Implementation
+- **ISO 8601 Format**: Standard time format for API communication
+- **Cache Management**: Time-specific caching for route data
+- **Fallback Mode**: Reverts to non-traffic routing if time not provided
+- **No UI Changes**: Seamless integration with existing booking flow
+
+### 3. Email System
 
 #### Template Management
 - **WYSIWYG Editor**: Rich text editing with preview

@@ -183,6 +183,8 @@ const useBookingStore = create(
         pickup_lng: tripDetails.pickupLng,
         dropoff_lat: tripDetails.dropoffLat,
         dropoff_lng: tripDetails.dropoffLng,
+        pickup_date: tripDetails.pickupDate,
+        pickup_time: tripDetails.pickupTime,
       });
       
       set({ 

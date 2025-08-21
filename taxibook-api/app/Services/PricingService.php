@@ -13,10 +13,20 @@ class PricingService
         $this->mapboxService = $mapboxService;
     }
 
-    public function calculatePrices(float $fromLat, float $fromLng, float $toLat, float $toLng): array
+    public function calculatePrices(float $fromLat, float $fromLng, float $toLat, float $toLng, ?string $pickupDateTime = null): array
     {
-        // Get route information from Mapbox
-        $route = $this->mapboxService->getRoute($fromLat, $fromLng, $toLat, $toLng);
+        // Convert pickup datetime to ISO 8601 format for Mapbox API if provided
+        $departureTime = null;
+        if ($pickupDateTime) {
+            try {
+                $departureTime = \Carbon\Carbon::parse($pickupDateTime)->toIso8601String();
+            } catch (\Exception $e) {
+                \Log::warning('Invalid pickup datetime provided', ['datetime' => $pickupDateTime]);
+            }
+        }
+        
+        // Get route information from Mapbox with traffic consideration
+        $route = $this->mapboxService->getRoute($fromLat, $fromLng, $toLat, $toLng, $departureTime);
         
         if (!$route) {
             throw new \Exception('Unable to calculate route');
