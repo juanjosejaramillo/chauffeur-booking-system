@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.0] - 2025-08-21
+
+### Added
+- Dynamic Stripe settings UI with visual mode indicators
+  - Color-coded status boxes (amber for test, green for live)
+  - "(Currently Active)" labels on active credential sections
+  - Dark mode support for all UI elements
+
+### Changed
+- Stripe credential sections only show for selected mode
+- Section descriptions dynamically update based on active mode
+- Form sections are now collapsible for better organization
+
+### Fixed
+- Filament v4 compatibility issues with schema components
+- Corrected imports for Tabs, Section, Form, and Get utilities
+- Stripe mode switching now provides immediate visual feedback
+
+### Technical
+- ManageSettings uses `Filament\Schemas\Components` namespace
+- Automatic cache clearing on settings save
+- Reactive form updates using Filament v4's Get utility
+
 ## [1.8.0] - 2025-08-21
 
 ### Added

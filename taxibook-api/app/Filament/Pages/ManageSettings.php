@@ -3,10 +3,12 @@
 namespace App\Filament\Pages;
 
 use App\Models\Setting;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Actions;
@@ -16,10 +18,10 @@ use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
-use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Actions\Action;
 use Filament\Support\Exceptions\Halt;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Facades\Cache;
 
 class ManageSettings extends Page
@@ -175,6 +177,35 @@ class ManageSettings extends Page
                                             ->reactive()
                                             ->helperText('Enable or disable Stripe payment processing'),
                                         
+                                        // Mode Status Indicator
+                                        Placeholder::make('stripe_mode_status')
+                                            ->label('')
+                                            ->content(fn (Get $get) => 
+                                                $get('stripe_enabled') ? 
+                                                new HtmlString(
+                                                    $get('stripe_mode') === 'live' ?
+                                                    '<div class="p-4 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800">
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200">
+                                                                LIVE MODE
+                                                            </span>
+                                                            <span class="text-sm text-green-700 dark:text-green-300">Your system is processing real payments</span>
+                                                        </div>
+                                                        <p class="mt-2 text-sm text-green-600 dark:text-green-400">Customers will be charged real money. Make sure your live credentials are correct.</p>
+                                                    </div>' :
+                                                    '<div class="p-4 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+                                                        <div class="flex items-center gap-2">
+                                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900 text-amber-800 dark:text-amber-200">
+                                                                TEST MODE
+                                                            </span>
+                                                            <span class="text-sm text-amber-700 dark:text-amber-300">Your system is in testing mode</span>
+                                                        </div>
+                                                        <p class="mt-2 text-sm text-amber-600 dark:text-amber-400">No real payments will be processed. Use test cards for testing.</p>
+                                                    </div>'
+                                                ) : ''
+                                            )
+                                            ->visible(fn (Get $get) => $get('stripe_enabled')),
+                                        
                                         Select::make('stripe_mode')
                                             ->label('Stripe Mode')
                                             ->options([
@@ -183,10 +214,21 @@ class ManageSettings extends Page
                                             ])
                                             ->default('test')
                                             ->required()
+                                            ->reactive()
                                             ->visible(fn (Get $get) => $get('stripe_enabled'))
-                                            ->helperText('Choose between test and live mode'),
+                                            ->helperText('Switch between test and live payment processing'),
                                         
-                                        Section::make('Test Credentials')
+                                        // Test Credentials Section - Now with dynamic title
+                                        Section::make(fn (Get $get) => 
+                                            $get('stripe_mode') === 'test' ? 
+                                            'Test Credentials (Currently Active)' : 
+                                            'Test Credentials'
+                                        )
+                                            ->description(fn (Get $get) =>
+                                                $get('stripe_mode') === 'test' ?
+                                                'These credentials are currently being used' :
+                                                'These credentials will be used when in test mode'
+                                            )
                                             ->schema([
                                                 TextInput::make('stripe_test_publishable_key')
                                                     ->label('Test Publishable Key')
@@ -209,9 +251,21 @@ class ManageSettings extends Page
                                                     ->helperText('Your Stripe test secret key (sk_test_...)'),
                                             ])
                                             ->columns(1)
-                                            ->visible(fn (Get $get) => $get('stripe_enabled')),
+                                            ->visible(fn (Get $get) => $get('stripe_enabled') && $get('stripe_mode') === 'test')
+                                            ->collapsible()
+                                            ->collapsed(false),
                                         
-                                        Section::make('Live Credentials')
+                                        // Live Credentials Section - Now with dynamic title
+                                        Section::make(fn (Get $get) => 
+                                            $get('stripe_mode') === 'live' ? 
+                                            'Live Credentials (Currently Active)' : 
+                                            'Live Credentials'
+                                        )
+                                            ->description(fn (Get $get) =>
+                                                $get('stripe_mode') === 'live' ?
+                                                'These credentials are currently being used for real payments' :
+                                                'These credentials will be used when in live mode'
+                                            )
                                             ->schema([
                                                 TextInput::make('stripe_live_publishable_key')
                                                     ->label('Live Publishable Key')
@@ -234,7 +288,9 @@ class ManageSettings extends Page
                                                     ->helperText('Your Stripe live secret key (sk_live_...)'),
                                             ])
                                             ->columns(1)
-                                            ->visible(fn (Get $get) => $get('stripe_enabled') && $get('stripe_mode') === 'live'),
+                                            ->visible(fn (Get $get) => $get('stripe_enabled') && $get('stripe_mode') === 'live')
+                                            ->collapsible()
+                                            ->collapsed(false),
                                         
                                         TextInput::make('stripe_webhook_secret')
                                             ->label('Webhook Secret')

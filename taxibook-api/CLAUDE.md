@@ -537,6 +537,30 @@ php artisan view:clear    # Compiled views
 php artisan route:clear   # Route cache
 ```
 
+## Recent Updates (2025-08-21 - Session 2)
+
+### Stripe Settings UI Improvements
+- **Dynamic Mode Labels**: Stripe credential sections now show "(Currently Active)" suffix when that mode is selected
+- **Visual Status Indicators**: 
+  - Color-coded status boxes at top of Stripe settings
+  - TEST MODE: Amber badge with warning about test payments
+  - LIVE MODE: Green badge with warning about real payments
+  - Dark mode support with proper color contrasts
+- **Improved UX**:
+  - Only shows credentials for currently selected mode
+  - Dynamic section descriptions based on active mode
+  - Sections are collapsible for better organization
+  - Reactive form updates when switching modes
+- **Filament v4 Compatibility**: 
+  - Fixed imports for Filament v4 schema components
+  - Uses `Filament\Schemas\Components` for Tabs, Section, Form
+  - Uses `Filament\Schemas\Components\Utilities\Get` for reactive logic
+- **Automatic Key Switching**:
+  - SettingsServiceProvider (lines 66-90) automatically switches between test/live keys
+  - StripeService uses correct keys based on mode
+  - Frontend API endpoint returns appropriate public key
+  - Cache clearing ensures immediate effect after saving
+
 ## Contact & Support
 - **Company**: LuxRide SUV
 - **Admin Email**: admin@luxridesuv.com
