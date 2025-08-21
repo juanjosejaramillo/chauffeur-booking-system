@@ -4,6 +4,22 @@
 
 ### Email Issues
 
+#### Confusing Email Template Form (Fixed v1.7.2)
+**Problem**: Form required selecting trigger events for time-based emails
+
+**Cause**: Form validation didn't match the simplified email system logic
+
+**Solution**: 
+- Redesigned form with conditional validation
+- Triggers only required for immediate emails
+- Trigger field hidden for scheduled emails
+- Clear visual feedback with color-coded summary boxes
+
+**How it works now**:
+- Select email type first (Event-triggered vs Time-based)
+- Form dynamically adjusts based on selection
+- No more selecting irrelevant triggers for scheduled emails
+
 #### Duplicate Cancellation Emails
 **Problem**: Receiving two cancellation emails when cancelling a booking from admin panel
 

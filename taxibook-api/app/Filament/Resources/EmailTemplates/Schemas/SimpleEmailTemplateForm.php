@@ -11,6 +11,7 @@ use Filament\Forms\Components\CheckboxList;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use App\Models\EmailTemplate;
+use Illuminate\Support\HtmlString;
 
 class SimpleEmailTemplateForm
 {
@@ -39,40 +40,79 @@ class SimpleEmailTemplateForm
                 
                 // 2. When to Send
                 Section::make('Triggers & Timing')
-                    ->description('Define when this email should be sent')
+                    ->description('Choose how this email should be triggered')
                     ->columns(3)
                     ->schema([
-                        CheckboxList::make('trigger_events')
-                            ->label('Send this email when:')
-                            ->options(EmailTemplate::getAvailableTriggers())
-                            ->columns(2)
-                            ->required()
+                        Placeholder::make('timing_explanation')
+                            ->label('')
+                            ->content(new HtmlString('
+                                <div style="background: #F3F4F6; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
+                                    <h4 style="margin: 0 0 12px 0; color: #1F2937;">📚 Two Types of Emails:</h4>
+                                    <div style="display: grid; gap: 12px;">
+                                        <div>
+                                            <strong>⚡ Event-Triggered:</strong> Sends IMMEDIATELY when something happens (booking confirmed, cancelled, etc.)
+                                            <br><small style="color: #6B7280;">→ Requires selecting trigger events below</small>
+                                        </div>
+                                        <div>
+                                            <strong>⏰ Time-Based:</strong> Sends AUTOMATICALLY at scheduled times (reminders, follow-ups)
+                                            <br><small style="color: #6B7280;">→ Does NOT use trigger events, only timing configuration</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            '))
                             ->columnSpan(3),
-                        
+                            
                         Select::make('send_timing_type')
-                            ->label('Timing')
+                            ->label('Email Type')
                             ->options([
-                                'immediate' => 'Send immediately',
-                                'before_pickup' => 'Before pickup',
-                                'after_pickup' => 'After pickup',
-                                'after_booking' => 'After booking',
-                                'after_completion' => 'After completion',
+                                'immediate' => '⚡ Event-triggered (Send immediately when something happens)',
+                                'before_pickup' => '⏰ Time-based: Before pickup',
+                                'after_pickup' => '⏰ Time-based: After pickup',
+                                'after_booking' => '⏰ Time-based: After booking created',
+                                'after_completion' => '⏰ Time-based: After trip completed',
                             ])
                             ->default('immediate')
                             ->reactive()
-                            ->columnSpan(1),
+                            ->helperText(fn ($get) => 
+                                $get('send_timing_type') === 'immediate' 
+                                    ? '📧 Email sends instantly when an event occurs'
+                                    : '📅 Email sends automatically at the scheduled time'
+                            )
+                            ->columnSpan(3),
+                        
+                        CheckboxList::make('trigger_events')
+                            ->label(fn ($get) => 
+                                $get('send_timing_type') === 'immediate' 
+                                    ? '⚡ Select trigger events (REQUIRED)' 
+                                    : '🚫 Events (DO NOT SELECT - Not used for scheduled emails)'
+                            )
+                            ->options(EmailTemplate::getAvailableTriggers())
+                            ->columns(2)
+                            ->required(fn ($get) => $get('send_timing_type') === 'immediate')
+                            ->visible(fn ($get) => $get('send_timing_type') === 'immediate')
+                            ->helperText('These events will trigger the email to send immediately')
+                            ->columnSpan(3),
                         
                         TextInput::make('send_timing_value')
-                            ->label('Time')
+                            ->label(fn ($get) => 
+                                match($get('send_timing_type')) {
+                                    'before_pickup' => 'How long BEFORE pickup?',
+                                    'after_pickup' => 'How long AFTER pickup?',
+                                    'after_booking' => 'How long AFTER booking created?',
+                                    'after_completion' => 'How long AFTER trip completed?',
+                                    default => 'Time'
+                                }
+                            )
                             ->numeric()
-                            ->default(1)
+                            ->default(24)
                             ->minValue(1)
                             ->visible(fn ($get) => $get('send_timing_type') !== 'immediate')
                             ->required(fn ($get) => $get('send_timing_type') !== 'immediate')
+                            ->placeholder('Enter number')
                             ->columnSpan(1),
                         
                         Select::make('send_timing_unit')
-                            ->label('Unit')
+                            ->label('Time Unit')
                             ->options([
                                 'minutes' => 'Minutes',
                                 'hours' => 'Hours',
@@ -84,35 +124,40 @@ class SimpleEmailTemplateForm
                             ->columnSpan(1),
                             
                         Placeholder::make('timing_preview')
-                            ->label('')
+                            ->label('📌 Summary')
                             ->content(function ($get) {
-                                $triggers = $get('trigger_events') ?? [];
-                                if (empty($triggers)) {
-                                    return '⚠️ Please select at least one trigger event above';
-                                }
-                                
                                 $type = $get('send_timing_type');
+                                $triggers = $get('trigger_events') ?? [];
                                 
                                 if ($type === 'immediate') {
-                                    return '✅ Email will be sent immediately when any selected event occurs';
+                                    if (empty($triggers)) {
+                                        return new HtmlString('<div style="background: #FEF2F2; border: 2px solid #DC2626; padding: 12px; border-radius: 8px; color: #991B1B;">
+                                            <strong>❌ ACTION REQUIRED:</strong> Select at least one event above that will trigger this email
+                                        </div>');
+                                    }
+                                    return new HtmlString('<div style="background: #D1FAE5; border: 2px solid #10B981; padding: 12px; border-radius: 8px; color: #065F46;">
+                                        <strong>✅ IMMEDIATE EMAIL:</strong> Will send instantly when any selected event occurs<br>
+                                        <small>No delay - sends right away when triggered</small>
+                                    </div>');
                                 }
                                 
-                                $value = $get('send_timing_value') ?? 1;
+                                $value = $get('send_timing_value') ?? 24;
                                 $unit = $get('send_timing_unit') ?? 'hours';
                                 $unitLabel = $value == 1 ? rtrim($unit, 's') : $unit;
                                 
-                                switch ($type) {
-                                    case 'before_pickup':
-                                        return "✅ Email will be sent {$value} {$unitLabel} before pickup time";
-                                    case 'after_pickup':
-                                        return "✅ Email will be sent {$value} {$unitLabel} after pickup time";
-                                    case 'after_booking':
-                                        return "✅ Email will be sent {$value} {$unitLabel} after booking is created";
-                                    case 'after_completion':
-                                        return "✅ Email will be sent {$value} {$unitLabel} after trip is completed";
-                                    default:
-                                        return '';
+                                $message = match($type) {
+                                    'before_pickup' => "📅 <strong>SCHEDULED EMAIL:</strong> Will automatically send <strong>{$value} {$unitLabel} BEFORE</strong> the pickup time<br><small>Example: If pickup is at 2:00 PM and you set 2 hours, email sends at 12:00 PM</small>",
+                                    'after_pickup' => "📅 <strong>SCHEDULED EMAIL:</strong> Will automatically send <strong>{$value} {$unitLabel} AFTER</strong> the pickup time<br><small>Example: If pickup was at 2:00 PM and you set 1 hour, email sends at 3:00 PM</small>",
+                                    'after_booking' => "📅 <strong>SCHEDULED EMAIL:</strong> Will automatically send <strong>{$value} {$unitLabel} AFTER</strong> booking is created<br><small>Example: Customer books today at 10:00 AM, email sends {$value} {$unitLabel} later</small>",
+                                    'after_completion' => "📅 <strong>SCHEDULED EMAIL:</strong> Will automatically send <strong>{$value} {$unitLabel} AFTER</strong> trip is marked complete<br><small>Example: Trip completes at 4:00 PM, follow-up email sends {$value} {$unitLabel} later</small>",
+                                    default => ''
+                                };
+                                
+                                if ($message) {
+                                    return new HtmlString('<div style="background: #EFF6FF; border: 2px solid #3B82F6; padding: 12px; border-radius: 8px; color: #1E3A8A;">' . $message . '</div>');
                                 }
+                                
+                                return '';
                             })
                             ->columnSpan(3),
                     ]),

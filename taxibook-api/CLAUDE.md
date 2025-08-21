@@ -360,6 +360,21 @@ npm run dev
 - Removed route_polyline migration that referenced non-existent field
 - Fixed cleanup_duplicate_email_templates migration to use SimplifiedEmailTemplateSeeder
 
+## Recent Updates (2025-08-21)
+
+### Email Template Form UX Improvements
+- **Issue**: Form required trigger selection even for time-based emails, causing confusion
+- **Solution**: Complete redesign of email template form for clarity:
+  - **Conditional Validation**: Triggers only required for immediate emails
+  - **Smart Field Visibility**: Trigger selection hidden for scheduled emails
+  - **Clear Type Selection**: Email type selector with icons (⚡ for event-triggered, ⏰ for time-based)
+  - **Dynamic Labels**: Form fields change labels based on email type selected
+  - **Visual Feedback**: Color-coded summary boxes (red for errors, green for immediate, blue for scheduled)
+  - **Educational Content**: Info box explaining the two email types
+  - **Real Examples**: Shows exactly when emails will be sent with examples
+- **Technical**: Uses HtmlString for proper HTML rendering in Filament Placeholder components
+- **Result**: Zero confusion about email configuration - clear separation between event-triggered and time-based emails
+
 ## Recent Updates (2025-08-20 - Session 5)
 
 ### Fixed Duplicate Cancellation Emails

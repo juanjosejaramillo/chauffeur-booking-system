@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.2] - 2025-08-21
+
+### Changed
+- Complete UX redesign of email template form in admin panel
+  - Email type selector moved to top with clear icons
+  - Trigger events only visible for immediate emails
+  - Dynamic field labels based on email type
+  - Color-coded summary boxes for visual feedback
+  - Educational info box explaining email types
+  - Real-world examples in summary messages
+
+### Fixed
+- Email template form incorrectly requiring triggers for scheduled emails
+- HTML content not rendering properly in Filament Placeholder components
+- Confusing form validation that contradicted simplified email system design
+
+### Technical
+- Added conditional validation for trigger_events field
+- Implemented HtmlString for proper HTML rendering
+- Improved form reactivity with dynamic field visibility
+- Enhanced helper text and labels for clarity
+
 ## [1.7.1] - 2025-08-20 (Session 5)
 
 ### Fixed

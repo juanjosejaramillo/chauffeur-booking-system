@@ -191,6 +191,27 @@ Check admin panel to ensure all templates are configured correctly with either:
 
 ## Admin Panel Features
 
+### Email Template Form UX (Updated 2025-08-21)
+The email template form has been completely redesigned for clarity:
+
+#### Clear Email Type Selection
+- **First Choice**: Select between ⚡ Event-triggered or ⏰ Time-based emails
+- **Smart Form**: Fields dynamically change based on your selection
+- **No Confusion**: Trigger events only shown for immediate emails
+
+#### Visual Feedback
+- **Info Box**: Educational content explaining the two email types
+- **Color-Coded Summary**:
+  - 🔴 Red: Action required
+  - 🟢 Green: Immediate email configured correctly
+  - 🔵 Blue: Scheduled email with timing details
+- **Real Examples**: Shows exactly when emails will send
+
+#### Conditional Validation
+- **Immediate Emails**: Must select trigger events
+- **Scheduled Emails**: Triggers not required (and hidden)
+- **Dynamic Labels**: Fields update labels based on context
+
 ### PDF Attachments Control (Added 2025-08-20)
 Each email template now has PDF attachment toggles in the admin panel:
 - **Attach PDF Receipt**: Include payment receipt PDF when available
