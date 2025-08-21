@@ -46,16 +46,16 @@ class SimpleEmailTemplateForm
                         Placeholder::make('timing_explanation')
                             ->label('')
                             ->content(new HtmlString('
-                                <div style="background: #F3F4F6; padding: 16px; border-radius: 8px; margin-bottom: 16px;">
-                                    <h4 style="margin: 0 0 12px 0; color: #1F2937;">📚 Two Types of Emails:</h4>
-                                    <div style="display: grid; gap: 12px;">
-                                        <div>
-                                            <strong>⚡ Event-Triggered:</strong> Sends IMMEDIATELY when something happens (booking confirmed, cancelled, etc.)
-                                            <br><small style="color: #6B7280;">→ Requires selecting trigger events below</small>
+                                <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg mb-4 border border-gray-200 dark:border-gray-700">
+                                    <h4 class="text-gray-900 dark:text-gray-100 font-bold mb-3">📚 Two Types of Emails:</h4>
+                                    <div class="space-y-3">
+                                        <div class="text-gray-700 dark:text-gray-300">
+                                            <strong class="text-amber-600 dark:text-amber-400">⚡ Event-Triggered:</strong> Sends IMMEDIATELY when something happens (booking confirmed, cancelled, etc.)
+                                            <br><small class="text-gray-500 dark:text-gray-400">→ Requires selecting trigger events below</small>
                                         </div>
-                                        <div>
-                                            <strong>⏰ Time-Based:</strong> Sends AUTOMATICALLY at scheduled times (reminders, follow-ups)
-                                            <br><small style="color: #6B7280;">→ Does NOT use trigger events, only timing configuration</small>
+                                        <div class="text-gray-700 dark:text-gray-300">
+                                            <strong class="text-blue-600 dark:text-blue-400">⏰ Time-Based:</strong> Sends AUTOMATICALLY at scheduled times (reminders, follow-ups)
+                                            <br><small class="text-gray-500 dark:text-gray-400">→ Does NOT use trigger events, only timing configuration</small>
                                         </div>
                                     </div>
                                 </div>
@@ -131,13 +131,15 @@ class SimpleEmailTemplateForm
                                 
                                 if ($type === 'immediate') {
                                     if (empty($triggers)) {
-                                        return new HtmlString('<div style="background: #FEF2F2; border: 2px solid #DC2626; padding: 12px; border-radius: 8px; color: #991B1B;">
-                                            <strong>❌ ACTION REQUIRED:</strong> Select at least one event above that will trigger this email
+                                        return new HtmlString('<div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-500 dark:border-red-400 p-3 rounded-lg">
+                                            <strong class="text-red-700 dark:text-red-400">❌ ACTION REQUIRED:</strong> 
+                                            <span class="text-red-600 dark:text-red-300">Select at least one event above that will trigger this email</span>
                                         </div>');
                                     }
-                                    return new HtmlString('<div style="background: #D1FAE5; border: 2px solid #10B981; padding: 12px; border-radius: 8px; color: #065F46;">
-                                        <strong>✅ IMMEDIATE EMAIL:</strong> Will send instantly when any selected event occurs<br>
-                                        <small>No delay - sends right away when triggered</small>
+                                    return new HtmlString('<div class="bg-green-50 dark:bg-green-900/20 border-2 border-green-500 dark:border-green-400 p-3 rounded-lg">
+                                        <strong class="text-green-700 dark:text-green-400">✅ IMMEDIATE EMAIL:</strong> 
+                                        <span class="text-green-600 dark:text-green-300">Will send instantly when any selected event occurs</span><br>
+                                        <small class="text-green-500 dark:text-green-400">No delay - sends right away when triggered</small>
                                     </div>');
                                 }
                                 
@@ -146,15 +148,15 @@ class SimpleEmailTemplateForm
                                 $unitLabel = $value == 1 ? rtrim($unit, 's') : $unit;
                                 
                                 $message = match($type) {
-                                    'before_pickup' => "📅 <strong>SCHEDULED EMAIL:</strong> Will automatically send <strong>{$value} {$unitLabel} BEFORE</strong> the pickup time<br><small>Example: If pickup is at 2:00 PM and you set 2 hours, email sends at 12:00 PM</small>",
-                                    'after_pickup' => "📅 <strong>SCHEDULED EMAIL:</strong> Will automatically send <strong>{$value} {$unitLabel} AFTER</strong> the pickup time<br><small>Example: If pickup was at 2:00 PM and you set 1 hour, email sends at 3:00 PM</small>",
-                                    'after_booking' => "📅 <strong>SCHEDULED EMAIL:</strong> Will automatically send <strong>{$value} {$unitLabel} AFTER</strong> booking is created<br><small>Example: Customer books today at 10:00 AM, email sends {$value} {$unitLabel} later</small>",
-                                    'after_completion' => "📅 <strong>SCHEDULED EMAIL:</strong> Will automatically send <strong>{$value} {$unitLabel} AFTER</strong> trip is marked complete<br><small>Example: Trip completes at 4:00 PM, follow-up email sends {$value} {$unitLabel} later</small>",
+                                    'before_pickup' => "<span class='text-blue-600 dark:text-blue-300'>📅 <strong class='text-blue-700 dark:text-blue-400'>SCHEDULED EMAIL:</strong> Will automatically send <strong>{$value} {$unitLabel} BEFORE</strong> the pickup time</span><br><small class='text-blue-500 dark:text-blue-400'>Example: If pickup is at 2:00 PM and you set 2 hours, email sends at 12:00 PM</small>",
+                                    'after_pickup' => "<span class='text-blue-600 dark:text-blue-300'>📅 <strong class='text-blue-700 dark:text-blue-400'>SCHEDULED EMAIL:</strong> Will automatically send <strong>{$value} {$unitLabel} AFTER</strong> the pickup time</span><br><small class='text-blue-500 dark:text-blue-400'>Example: If pickup was at 2:00 PM and you set 1 hour, email sends at 3:00 PM</small>",
+                                    'after_booking' => "<span class='text-blue-600 dark:text-blue-300'>📅 <strong class='text-blue-700 dark:text-blue-400'>SCHEDULED EMAIL:</strong> Will automatically send <strong>{$value} {$unitLabel} AFTER</strong> booking is created</span><br><small class='text-blue-500 dark:text-blue-400'>Example: Customer books today at 10:00 AM, email sends {$value} {$unitLabel} later</small>",
+                                    'after_completion' => "<span class='text-blue-600 dark:text-blue-300'>📅 <strong class='text-blue-700 dark:text-blue-400'>SCHEDULED EMAIL:</strong> Will automatically send <strong>{$value} {$unitLabel} AFTER</strong> trip is marked complete</span><br><small class='text-blue-500 dark:text-blue-400'>Example: Trip completes at 4:00 PM, follow-up email sends {$value} {$unitLabel} later</small>",
                                     default => ''
                                 };
                                 
                                 if ($message) {
-                                    return new HtmlString('<div style="background: #EFF6FF; border: 2px solid #3B82F6; padding: 12px; border-radius: 8px; color: #1E3A8A;">' . $message . '</div>');
+                                    return new HtmlString('<div class="bg-blue-50 dark:bg-blue-900/20 border-2 border-blue-500 dark:border-blue-400 p-3 rounded-lg">' . $message . '</div>');
                                 }
                                 
                                 return '';

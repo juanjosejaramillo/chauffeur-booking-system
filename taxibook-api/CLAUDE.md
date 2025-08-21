@@ -372,8 +372,12 @@ npm run dev
   - **Visual Feedback**: Color-coded summary boxes (red for errors, green for immediate, blue for scheduled)
   - **Educational Content**: Info box explaining the two email types
   - **Real Examples**: Shows exactly when emails will be sent with examples
-- **Technical**: Uses HtmlString for proper HTML rendering in Filament Placeholder components
-- **Result**: Zero confusion about email configuration - clear separation between event-triggered and time-based emails
+  - **Dark Mode Support**: All UI elements now use Tailwind's dark mode classes for proper contrast
+- **Technical**: 
+  - Uses HtmlString for proper HTML rendering in Filament Placeholder components
+  - Implemented Tailwind dark mode classes (dark:bg-*, dark:text-*) for theme-aware colors
+  - Semi-transparent backgrounds for better dark mode appearance
+- **Result**: Zero confusion about email configuration with full dark/light mode support
 
 ## Recent Updates (2025-08-20 - Session 5)
 

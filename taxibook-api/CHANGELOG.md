@@ -17,17 +17,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Color-coded summary boxes for visual feedback
   - Educational info box explaining email types
   - Real-world examples in summary messages
+  - Full dark mode support with proper contrast
 
 ### Fixed
 - Email template form incorrectly requiring triggers for scheduled emails
 - HTML content not rendering properly in Filament Placeholder components
 - Confusing form validation that contradicted simplified email system design
+- Poor readability in dark mode - all elements now theme-aware
 
 ### Technical
 - Added conditional validation for trigger_events field
 - Implemented HtmlString for proper HTML rendering
 - Improved form reactivity with dynamic field visibility
 - Enhanced helper text and labels for clarity
+- Added Tailwind dark mode classes for all UI elements
+- Used semi-transparent backgrounds for better dark mode appearance
 
 ## [1.7.1] - 2025-08-20 (Session 5)
 
