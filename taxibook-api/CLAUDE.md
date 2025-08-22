@@ -581,6 +581,26 @@ php artisan route:clear   # Route cache
   - Frontend API endpoint returns appropriate public key
   - Cache clearing ensures immediate effect after saving
 
+## Recent Updates (2025-08-22 - Latest)
+
+### Enhanced Venue/POI Name Display
+- **Issue**: When selecting venues like airports or hotels, only the street address was shown, not the venue name
+- **Solution**: Enhanced address display to include venue names with full addresses
+- **Changes**:
+  - Modified `selectSuggestion` function in TripDetailsLuxury.jsx
+  - Format: "Venue Name - Full Address" for all venues/POIs
+  - Example: "Orlando International Airport - 1 Jeff Fuqua Boulevard, Orlando, FL 32827"
+- **Enhanced Detection Logic**:
+  - Includes any location with a meaningful name (not just street addresses)
+  - Detects hotels, restaurants, stadiums, hospitals, attractions, etc.
+  - Checks if place name doesn't start with a street number
+  - Includes any place_type that's not just 'address'
+- **Benefits**:
+  - Drivers immediately recognize destination venues
+  - Admin panel shows meaningful location names
+  - Customers confirm they selected the right location
+  - Matches how people naturally describe locations ("Pick me up at the Marriott")
+
 ## Contact & Support
 - **Company**: LuxRide SUV
 - **Admin Email**: admin@luxridesuv.com

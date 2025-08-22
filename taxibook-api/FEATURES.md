@@ -20,6 +20,8 @@ The booking process is divided into intuitive steps:
 
 1. **Route Selection**
    - Address autocomplete via Mapbox with complete address display
+   - Venue/POI names displayed with addresses (e.g., "Orlando International Airport - 1 Jeff Fuqua Blvd")
+   - Enhanced venue detection for hotels, restaurants, attractions, hospitals, etc.
    - Real-time route validation
    - Distance and duration calculation with traffic
    - Traffic-aware time estimates based on pickup date/time

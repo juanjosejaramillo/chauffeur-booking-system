@@ -329,11 +329,32 @@ const TripDetailsLuxury = () => {
     }
     
     if (type === 'pickup') {
-      // Store the full address or build it from name and place_formatted
-      const addressToStore = suggestion.full_address || 
+      // Store the venue name with address for POIs/airports, or just address for regular locations
+      let addressToStore = suggestion.full_address || 
         (suggestion.place_name && suggestion.place_formatted ? 
           `${suggestion.place_name}, ${suggestion.place_formatted}` : 
           suggestion.place_name || '');
+      
+      // If we have both a venue name and full address, and they're different, combine them
+      if (suggestion.place_name && suggestion.full_address && 
+          !suggestion.full_address.toLowerCase().includes(suggestion.place_name.toLowerCase())) {
+        
+        // Determine if this is a venue/POI that should show its name
+        const hasVenueName = suggestion.place_name && 
+          !suggestion.place_name.match(/^\d+\s/); // Not starting with street number
+        
+        const isVenue = 
+          suggestion.isAirport || 
+          suggestion.place_type?.includes('poi') ||
+          suggestion.place_type?.includes('venue') ||
+          (suggestion.place_type && suggestion.place_type !== 'address') ||
+          hasVenueName;
+        
+        // For any venue with a meaningful name, show it first
+        if (isVenue) {
+          addressToStore = `${suggestion.place_name} - ${suggestion.full_address}`;
+        }
+      }
       
       setTripDetails({
         pickupAddress: addressToStore,
@@ -354,11 +375,32 @@ const TripDetailsLuxury = () => {
           .addTo(map.current);
       }
     } else {
-      // Store the full address or build it from name and place_formatted
-      const addressToStore = suggestion.full_address || 
+      // Store the venue name with address for POIs/airports, or just address for regular locations
+      let addressToStore = suggestion.full_address || 
         (suggestion.place_name && suggestion.place_formatted ? 
           `${suggestion.place_name}, ${suggestion.place_formatted}` : 
           suggestion.place_name || '');
+      
+      // If we have both a venue name and full address, and they're different, combine them
+      if (suggestion.place_name && suggestion.full_address && 
+          !suggestion.full_address.toLowerCase().includes(suggestion.place_name.toLowerCase())) {
+        
+        // Determine if this is a venue/POI that should show its name
+        const hasVenueName = suggestion.place_name && 
+          !suggestion.place_name.match(/^\d+\s/); // Not starting with street number
+        
+        const isVenue = 
+          suggestion.isAirport || 
+          suggestion.place_type?.includes('poi') ||
+          suggestion.place_type?.includes('venue') ||
+          (suggestion.place_type && suggestion.place_type !== 'address') ||
+          hasVenueName;
+        
+        // For any venue with a meaningful name, show it first
+        if (isVenue) {
+          addressToStore = `${suggestion.place_name} - ${suggestion.full_address}`;
+        }
+      }
       
       setTripDetails({
         dropoffAddress: addressToStore,

@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.11.0] - 2025-08-22
+
+### Added
+- Enhanced venue/POI name display in address fields
+  - Shows format: "Venue Name - Full Address" for all venues
+  - Example: "Orlando International Airport - 1 Jeff Fuqua Boulevard, Orlando, FL 32827"
+
+### Changed
+- Improved venue detection logic to include all locations with meaningful names
+  - Hotels, restaurants, stadiums, hospitals, attractions now show venue names
+  - Better matches how customers naturally describe locations
+  - Only plain residential addresses show without venue names
+
+### Technical
+- Enhanced `selectSuggestion` function in TripDetailsLuxury.jsx
+- Checks if place name doesn't start with street number (indicating venue)
+- Includes any place_type that's not just 'address'
+- More inclusive POI detection for better user experience
+
 ## [1.10.0] - 2025-08-21
 
 ### Added
