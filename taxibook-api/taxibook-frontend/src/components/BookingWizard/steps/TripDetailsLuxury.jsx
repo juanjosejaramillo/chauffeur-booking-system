@@ -478,22 +478,24 @@ const TripDetailsLuxury = () => {
   };
   
   const getDefaultDateTime = () => {
+    // Always default to tomorrow at 10:00 AM
     const defaultDate = new Date();
-    defaultDate.setHours(defaultDate.getHours() + bookingSettings.minimum_hours);
+    defaultDate.setDate(defaultDate.getDate() + 1); // Set to tomorrow
+    defaultDate.setHours(10, 0, 0, 0); // Set to 10:00 AM
     
-    const today = new Date();
-    if (!bookingSettings.allow_same_day && 
-        defaultDate.toDateString() === today.toDateString()) {
-      defaultDate.setDate(defaultDate.getDate() + 1);
-      defaultDate.setHours(7, 0, 0, 0);
+    // Round minutes according to time increment setting
+    const minutes = defaultDate.getMinutes();
+    const roundedMinutes = Math.ceil(minutes / bookingSettings.time_increment) * bookingSettings.time_increment;
+    if (roundedMinutes >= 60) {
+      defaultDate.setHours(defaultDate.getHours() + 1, 0, 0, 0);
     } else {
-      const minutes = defaultDate.getMinutes();
-      const roundedMinutes = Math.ceil(minutes / bookingSettings.time_increment) * bookingSettings.time_increment;
-      if (roundedMinutes >= 60) {
-        defaultDate.setHours(defaultDate.getHours() + 1, 0, 0, 0);
-      } else {
-        defaultDate.setMinutes(roundedMinutes, 0, 0);
-      }
+      defaultDate.setMinutes(roundedMinutes, 0, 0);
+    }
+    
+    // Ensure the default date meets minimum booking hours requirement
+    const minDateTime = getMinDateTime();
+    if (defaultDate < minDateTime) {
+      return minDateTime;
     }
     
     return defaultDate;
