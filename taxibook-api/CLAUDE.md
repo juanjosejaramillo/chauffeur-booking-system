@@ -537,6 +537,26 @@ php artisan view:clear    # Compiled views
 php artisan route:clear   # Route cache
 ```
 
+## Recent Updates (2025-08-21 - Session 3)
+
+### Route Polyline Visualization
+- **Map Route Display**: Added gold-colored polyline showing the route from pickup to destination
+- **Automatic Route Drawing**: Route automatically displays when both locations are selected
+- **Backend Change**: MapboxService now returns GeoJSON format instead of polyline for easier handling
+- **Luxury Styling**: Route displayed in gold color (#B8860B) with 4px width and rounded caps
+
+### Mapbox Address Display Improvements
+- **Complete Address Extraction**: Now properly extracts full_address, place_formatted from Mapbox API
+- **Better Autocomplete Display**: Shows venue name with complete address below
+- **Address Format**: Displays as "Venue Name" with "City, State ZIP, Country" underneath
+- **Direct API Field Usage**: Uses Mapbox's provided fields instead of building from context
+
+### Map Loading Bug Fix
+- **Fixed Style Loading Error**: Resolved "Style is not done loading" error when navigating back
+- **Proper Initialization**: Map waits for style to load before adding sources/layers
+- **Marker Recreation**: Automatically recreates markers when returning to the step
+- **Route Persistence**: Route redraws when navigating back to address step
+
 ## Recent Updates (2025-08-21 - Session 2)
 
 ### Stripe Settings UI Improvements

@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.0] - 2025-08-21
+
+### Added
+- Route polyline visualization on map with luxury gold styling
+- Automatic route drawing when both pickup and destination are selected
+- Complete address display in Mapbox autocomplete suggestions
+- Map state restoration when navigating back to address step
+
+### Changed
+- MapboxService now returns GeoJSON format instead of encoded polyline
+- Improved Mapbox address extraction to use API-provided fields directly
+- Enhanced autocomplete display with venue names and full addresses
+
+### Fixed
+- "Style is not done loading" error when returning to address step
+- Map markers not recreating when navigating back
+- Incomplete address display in autocomplete dropdown
+- Route not persisting when returning to trip details
+
+### Technical
+- Added style loading checks before map operations
+- Implemented proper map event listeners for initialization
+- Better error handling for map operations
+- Route layer management with proper cleanup
+
 ## [1.9.0] - 2025-08-21
 
 ### Added

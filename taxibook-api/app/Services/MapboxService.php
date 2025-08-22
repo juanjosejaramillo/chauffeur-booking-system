@@ -83,7 +83,7 @@ class MapboxService
             try {
                 $params = [
                     'access_token' => $this->apiKey,
-                    'geometries' => 'polyline',
+                    'geometries' => 'geojson',
                     'overview' => 'full',
                 ];
                 

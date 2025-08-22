@@ -1,6 +1,6 @@
 # Features Documentation
 
-## Latest Configuration (v1.8.0 - 2025-08-21)
+## Latest Configuration (v1.10.0 - 2025-08-21)
 - **Email System**: Simplified to 8 essential triggers with PDF attachment controls
 - **Admin Email**: admin@luxridesuv.com  
 - **Business Phone**: +1-813-333-8680
@@ -19,11 +19,13 @@
 The booking process is divided into intuitive steps:
 
 1. **Route Selection**
-   - Address autocomplete via Mapbox
+   - Address autocomplete via Mapbox with complete address display
    - Real-time route validation
    - Distance and duration calculation with traffic
    - Traffic-aware time estimates based on pickup date/time
-   - Visual map display with route
+   - Visual map display with gold route polyline
+   - Interactive map with markers for pickup/dropoff
+   - Automatic route visualization when both locations selected
    - Airport detection (automatic)
 
 2. **Vehicle Selection**
