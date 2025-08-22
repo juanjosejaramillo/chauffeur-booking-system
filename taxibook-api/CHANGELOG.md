@@ -10,33 +10,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.11.0] - 2025-08-22
 
 ### Added
-- Enhanced venue/POI name display in address fields
-  - Shows format: "Venue Name - Full Address" for all venues
-  - Example: "Orlando International Airport - 1 Jeff Fuqua Boulevard, Orlando, FL 32827"
+- Complete migration from Mapbox to Google Maps API
+  - Google Places API for superior autocomplete with venue names
+  - Google Directions API with real-time traffic data
+  - Google Geocoding API for accurate address resolution
+  - New backend endpoints for address search and place details
+  - Enhanced venue/POI name display: "Venue Name - Full Address"
 
 ### Changed
-- Improved venue detection logic to include all locations with meaningful names
-  - Hotels, restaurants, stadiums, hospitals, attractions now show venue names
-  - Better matches how customers naturally describe locations
-  - Only plain residential addresses show without venue names
+- Replaced MapboxService with GoogleMapsService
+- Rewrote TripDetailsLuxury.jsx to use Google Maps JavaScript API
+- Updated admin panel with Google Maps settings
+- Improved address autocomplete with better business data
+- Enhanced traffic-aware routing for more accurate pricing
+
+### Removed
+- All Mapbox dependencies and code
+- MapboxService.php
+- Mapbox npm packages
+- Mapbox configuration settings
 
 ### Technical
-- Enhanced `selectSuggestion` function in TripDetailsLuxury.jsx
-- Checks if place name doesn't start with street number (indicating venue)
-- Includes any place_type that's not just 'address'
-- More inclusive POI detection for better user experience
+- New GoogleMapsService.php with Places, Directions, and Geocoding APIs
+- Traffic prediction models: best_guess, optimistic, pessimistic
+- Place IDs for consistent location reference
+- Custom map styling with luxury gold route polylines
+- Better POI detection and venue name display
 
 ## [1.10.0] - 2025-08-21
 
 ### Added
 - Route polyline visualization on map with luxury gold styling
 - Automatic route drawing when both pickup and destination are selected
-- Complete address display in Mapbox autocomplete suggestions
+- Complete address display in Google Maps autocomplete suggestions
 - Map state restoration when navigating back to address step
 
 ### Changed
-- MapboxService now returns GeoJSON format instead of encoded polyline
-- Improved Mapbox address extraction to use API-provided fields directly
+- GoogleMapsService returns encoded polyline format for route visualization
+- Improved Google Maps address extraction using structured formatting
 - Enhanced autocomplete display with venue names and full addresses
 
 ### Fixed
@@ -78,7 +89,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Traffic-aware time estimation for accurate pricing
-  - MapboxService now uses `driving-traffic` profile for traffic data
+  - GoogleMapsService now uses real-time traffic data for accurate estimates
   - Departure time parameter for predictive traffic routing
   - ISO 8601 format support for time-based routing
 
@@ -94,7 +105,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - More realistic ETAs for customers and drivers
 
 ### Technical
-- MapboxService::getRoute() accepts optional $departureTime parameter
+- GoogleMapsService::getRoute() accepts optional $departureTime parameter
 - PricingService::calculatePrices() accepts optional $pickupDateTime parameter
 - Automatic fallback to non-traffic routing when time not provided
 

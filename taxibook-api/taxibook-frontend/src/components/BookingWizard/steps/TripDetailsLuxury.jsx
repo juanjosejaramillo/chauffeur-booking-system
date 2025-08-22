@@ -1,12 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import mapboxgl from 'mapbox-gl';
+import { Loader } from '@googlemaps/js-api-loader';
 import useBookingStore from '../../../store/bookingStore';
 import { useSettings } from '../../../hooks/useSettings';
-import 'mapbox-gl/dist/mapbox-gl.css';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-
-mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_TOKEN || '';
+import api from '../../../config/api';
 
 // Common Florida airports for better matching
 const FLORIDA_AIRPORTS = [
@@ -51,9 +49,11 @@ const TripDetailsLuxury = () => {
   
   const mapContainer = useRef(null);
   const map = useRef(null);
+  const google = useRef(null);
   const pickupMarker = useRef(null);
   const dropoffMarker = useRef(null);
-  const routeLayerId = useRef('route-layer');
+  const directionsRenderer = useRef(null);
+  const directionsService = useRef(null);
   const pickupTimeout = useRef(null);
   const dropoffTimeout = useRef(null);
   const pickupRef = useRef(null);
@@ -62,46 +62,87 @@ const TripDetailsLuxury = () => {
   const dropoffDropdownRef = useRef(null);
 
   useEffect(() => {
-    if (!map.current && mapContainer.current && mapboxgl.accessToken) {
-      try {
-        map.current = new mapboxgl.Map({
-          container: mapContainer.current,
-          style: 'mapbox://styles/mapbox/light-v11', // Lighter, cleaner map style
-          center: [-82.4572, 27.9506], // Default to Tampa, FL
-          zoom: 10,
-          attributionControl: false,
-        });
+    if (!map.current && mapContainer.current && settings?.google_maps?.api_key) {
+      const loader = new Loader({
+        apiKey: settings.google_maps.api_key,
+        version: 'weekly',
+        libraries: ['places', 'geometry'],
+      });
 
-        // Add navigation controls with custom positioning
-        map.current.addControl(new mapboxgl.NavigationControl(), 'bottom-right');
-        
-        // When map style is loaded, recreate existing markers if any
-        map.current.on('load', () => {
-          // Recreate pickup marker if exists
+      loader
+        .load()
+        .then((googleMaps) => {
+          google.current = googleMaps;
+          
+          // Initialize map with similar style to Mapbox light theme
+          map.current = new googleMaps.maps.Map(mapContainer.current, {
+            center: { lat: 27.9506, lng: -82.4572 }, // Tampa, FL
+            zoom: 10,
+            disableDefaultUI: true, // Hide default controls
+            zoomControl: true,
+            zoomControlOptions: {
+              position: googleMaps.maps.ControlPosition.TOP_RIGHT
+            },
+            styles: [
+              {
+                featureType: 'all',
+                elementType: 'geometry',
+                stylers: [{ color: '#f5f5f5' }]
+              },
+              {
+                featureType: 'water',
+                elementType: 'geometry',
+                stylers: [{ color: '#a3ccff' }] // More pronounced blue for water
+              },
+              {
+                featureType: 'water',
+                elementType: 'labels.text.fill',
+                stylers: [{ color: '#5580aa' }]
+              },
+              {
+                featureType: 'landscape',
+                elementType: 'geometry',
+                stylers: [{ color: '#e8e3d3' }] // Warmer land color
+              },
+              {
+                featureType: 'road',
+                elementType: 'geometry',
+                stylers: [{ color: '#ffffff' }]
+              },
+              {
+                featureType: 'road',
+                elementType: 'geometry.stroke',
+                stylers: [{ color: '#d0d0d0' }]
+              }
+            ]
+          });
+
+          // Initialize directions service and renderer
+          directionsService.current = new googleMaps.maps.DirectionsService();
+          directionsRenderer.current = new googleMaps.maps.DirectionsRenderer({
+            suppressMarkers: true, // We'll use custom markers
+            polylineOptions: {
+              strokeColor: '#B8860B', // Luxury gold color
+              strokeWeight: 4,
+              strokeOpacity: 0.8
+            }
+          });
+          directionsRenderer.current.setMap(map.current);
+          
+          // Recreate existing markers if any
           if (tripDetails.pickupLat && tripDetails.pickupLng) {
-            const el = document.createElement('div');
-            el.className = 'w-8 h-8 bg-luxury-gold rounded-full shadow-luxury flex items-center justify-center text-luxury-white font-semibold';
-            el.innerHTML = 'P';
-            pickupMarker.current = new mapboxgl.Marker(el)
-              .setLngLat([tripDetails.pickupLng, tripDetails.pickupLat])
-              .addTo(map.current);
+            createPickupMarker(tripDetails.pickupLat, tripDetails.pickupLng);
           }
           
-          // Recreate dropoff marker if exists
           if (tripDetails.dropoffLat && tripDetails.dropoffLng) {
-            const el = document.createElement('div');
-            el.className = 'w-8 h-8 bg-luxury-black rounded-full shadow-luxury flex items-center justify-center text-luxury-white';
-            el.innerHTML = 'D';
-            dropoffMarker.current = new mapboxgl.Marker(el)
-              .setLngLat([tripDetails.dropoffLng, tripDetails.dropoffLat])
-              .addTo(map.current);
+            createDropoffMarker(tripDetails.dropoffLat, tripDetails.dropoffLng);
           }
           
           // Fit bounds if both markers exist
           if (tripDetails.pickupLat && tripDetails.dropoffLat) {
-            const bounds = new mapboxgl.LngLatBounds();
-            bounds.extend([tripDetails.pickupLng, tripDetails.pickupLat]);
-            bounds.extend([tripDetails.dropoffLng, tripDetails.dropoffLat]);
+            const bounds = new googleMaps.maps.LatLngBounds();
+            bounds.extend({ lat: tripDetails.pickupLat, lng: tripDetails.pickupLng });
+            bounds.extend({ lat: tripDetails.dropoffLat, lng: tripDetails.dropoffLng });
             map.current.fitBounds(bounds, { padding: 100 });
           }
           
@@ -109,32 +150,33 @@ const TripDetailsLuxury = () => {
           if (routeInfo) {
             drawRoute();
           }
+        })
+        .catch((error) => {
+          console.error('Error loading Google Maps:', error);
+          setLocalError('Failed to load map. Please refresh the page.');
         });
-      } catch (error) {
-        console.error('Error initializing map:', error);
-      }
     }
 
     return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
+      if (pickupMarker.current) {
+        pickupMarker.current.setMap(null);
         pickupMarker.current = null;
+      }
+      if (dropoffMarker.current) {
+        dropoffMarker.current.setMap(null);
         dropoffMarker.current = null;
       }
     };
-  }, []);
+  }, [settings]);
 
   // Handle click outside to close dropdowns
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Check pickup dropdown
       if (pickupRef.current && !pickupRef.current.contains(event.target) && 
           pickupDropdownRef.current && !pickupDropdownRef.current.contains(event.target)) {
         setShowPickupSuggestions(false);
       }
       
-      // Check dropoff dropdown
       if (dropoffRef.current && !dropoffRef.current.contains(event.target) && 
           dropoffDropdownRef.current && !dropoffDropdownRef.current.contains(event.target)) {
         setShowDropoffSuggestions(false);
@@ -146,6 +188,65 @@ const TripDetailsLuxury = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  const createPickupMarker = (lat, lng) => {
+    if (!google.current || !map.current) return;
+    
+    if (pickupMarker.current) {
+      pickupMarker.current.setMap(null);
+    }
+    
+    // Create custom marker similar to Mapbox style
+    const markerDiv = document.createElement('div');
+    markerDiv.className = 'custom-marker';
+    markerDiv.innerHTML = '<div style="width: 32px; height: 32px; background-color: #B8860B; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; box-shadow: 0 2px 6px rgba(0,0,0,0.3);">P</div>';
+    
+    pickupMarker.current = new google.current.maps.Marker({
+      position: { lat, lng },
+      map: map.current,
+      icon: {
+        path: google.current.maps.SymbolPath.CIRCLE,
+        scale: 16,
+        fillColor: '#B8860B',
+        fillOpacity: 1,
+        strokeColor: '#FFFFFF',
+        strokeWeight: 3,
+      },
+      label: {
+        text: 'P',
+        color: '#FFFFFF',
+        fontSize: '14px',
+        fontWeight: 'bold'
+      }
+    });
+  };
+
+  const createDropoffMarker = (lat, lng) => {
+    if (!google.current || !map.current) return;
+    
+    if (dropoffMarker.current) {
+      dropoffMarker.current.setMap(null);
+    }
+    
+    dropoffMarker.current = new google.current.maps.Marker({
+      position: { lat, lng },
+      map: map.current,
+      icon: {
+        path: google.current.maps.SymbolPath.CIRCLE,
+        scale: 16,
+        fillColor: '#1a1a1a',
+        fillOpacity: 1,
+        strokeColor: '#FFFFFF',
+        strokeWeight: 3,
+      },
+      label: {
+        text: 'D',
+        color: '#FFFFFF',
+        fontSize: '14px',
+        fontWeight: 'bold'
+      }
+    });
+  };
 
   const searchAddresses = async (query, type) => {
     if (query.length < 2) {
@@ -166,113 +267,51 @@ const TripDetailsLuxury = () => {
         setIsLoadingDropoff(true);
       }
 
-      const sessionToken = `session-${Date.now()}`;
-      const searchBoxUrl = `https://api.mapbox.com/search/searchbox/v1/suggest`;
-      
-      const params = new URLSearchParams({
-        q: query,
-        access_token: mapboxgl.accessToken,
-        session_token: sessionToken,
-        language: 'en',
-        limit: '10',
-        country: 'US',
-        proximity: '-81.5158,27.6648',
-        types: 'poi,address,place'
+      // Use our backend API for Google Places search
+      const response = await api.post('/bookings/search-addresses', {
+        query,
+        lat: 27.9506, // Tampa Bay center for better local results
+        lng: -82.4572,
       });
 
-      const response = await fetch(`${searchBoxUrl}?${params}`);
-      const data = await response.json();
+      const suggestions = response.data.suggestions || [];
       
-      // Debug: Log the raw response to see what Mapbox is returning
-      console.log('Mapbox suggestions response:', data);
+      // Format suggestions to match the expected structure
+      const formattedSuggestions = suggestions.map(suggestion => ({
+        id: suggestion.place_id,
+        place_id: suggestion.place_id,
+        place_name: suggestion.name,
+        full_address: suggestion.full_description || suggestion.address,
+        place_formatted: suggestion.address,
+        isVenue: suggestion.is_venue,
+        isAirport: suggestion.types?.some(type => type.includes('airport')) || 
+                  suggestion.name?.toLowerCase().includes('airport'),
+        isHotel: suggestion.types?.some(type => type.includes('lodging')) || 
+                 suggestion.name?.toLowerCase().includes('hotel'),
+        types: suggestion.types,
+        latitude: suggestion.latitude,
+        longitude: suggestion.longitude,
+        rating: suggestion.rating
+      }));
       
-      if (data.suggestions && data.suggestions.length > 0) {
-        const suggestions = data.suggestions.map(suggestion => {
-          const properties = suggestion.properties || {};
-          const context = properties.context || {};
-          
-          // Get the main name (venue/POI name) directly from suggestion
-          const mainName = suggestion.name || '';
-          
-          // Get the address components directly from properties
-          const streetAddress = suggestion.address || properties.address || '';
-          const fullAddress = suggestion.full_address || properties.full_address || '';
-          const placeFormatted = suggestion.place_formatted || properties.place_formatted || '';
-          
-          // Build display address - prefer full_address, fallback to place_formatted
-          let displayAddress = '';
-          if (fullAddress) {
-            displayAddress = fullAddress;
-          } else if (placeFormatted) {
-            displayAddress = placeFormatted;
-          } else {
-            // Fallback: build from context if nothing else available
-            const addressComponents = [];
-            if (streetAddress) {
-              addressComponents.push(streetAddress);
-            }
-            if (context.place?.name) {
-              addressComponents.push(context.place.name);
-            }
-            if (context.region) {
-              addressComponents.push(context.region.region_code || context.region.name);
-            }
-            if (context.postcode?.name) {
-              addressComponents.push(context.postcode.name);
-            }
-            displayAddress = addressComponents.join(', ');
-          }
-          
-          // Debug: Log what we're getting from Mapbox
-          console.log('Mapbox suggestion data:', {
-            name: mainName,
-            address: streetAddress,
-            full_address: fullAddress,
-            place_formatted: placeFormatted,
-            displayAddress: displayAddress,
-            raw_suggestion: suggestion
-          });
-          
-          const nameAndCategory = (suggestion.name + ' ' + (properties.category || '')).toLowerCase();
-          const isAirport = nameAndCategory.includes('airport') || 
-                           nameAndCategory.includes('international') ||
-                           properties.poi_category?.includes('airport');
-          
-          return {
-            id: suggestion.mapbox_id || suggestion.id || `place-${Date.now()}-${Math.random()}`,
-            place_name: mainName,
-            center: properties.coordinates ? [properties.coordinates.longitude, properties.coordinates.latitude] : null,
-            place_type: properties.category || properties.poi_category || suggestion.place_type?.[0] || null,
-            isAirport: isAirport,
-            full_address: displayAddress,
-            place_formatted: placeFormatted,
-            mapbox_id: suggestion.mapbox_id
-          };
-        });
-        
-        suggestions.sort((a, b) => {
-          if (a.isAirport && !b.isAirport) return -1;
-          if (!a.isAirport && b.isAirport) return 1;
-          return 0;
-        });
-        
-        const finalSuggestions = suggestions.slice(0, 8);
-        
-        if (type === 'pickup') {
-          setPickupSuggestions(finalSuggestions);
-          setShowPickupSuggestions(true);
-        } else {
-          setDropoffSuggestions(finalSuggestions);
-          setShowDropoffSuggestions(true);
-        }
+      // Sort airports to top
+      formattedSuggestions.sort((a, b) => {
+        if (a.isAirport && !b.isAirport) return -1;
+        if (!a.isAirport && b.isAirport) return 1;
+        return 0;
+      });
+      
+      const finalSuggestions = formattedSuggestions.slice(0, 8);
+      
+      if (type === 'pickup') {
+        setPickupSuggestions(finalSuggestions);
+        setShowPickupSuggestions(true);
       } else {
-        if (type === 'pickup') {
-          setPickupSuggestions([]);
-        } else {
-          setDropoffSuggestions([]);
-        }
+        setDropoffSuggestions(finalSuggestions);
+        setShowDropoffSuggestions(true);
       }
     } catch (error) {
+      console.error('Search error:', error);
     } finally {
       if (type === 'pickup') {
         setIsLoadingPickup(false);
@@ -299,205 +338,103 @@ const TripDetailsLuxury = () => {
   };
 
   const selectSuggestion = async (suggestion, type) => {
-    let lng, lat;
-    
-    if (!suggestion.center && suggestion.mapbox_id) {
-      try {
-        const retrieveUrl = `https://api.mapbox.com/search/searchbox/v1/retrieve/${suggestion.mapbox_id}`;
-        const params = new URLSearchParams({
-          access_token: mapboxgl.accessToken,
-          session_token: `session-${Date.now()}`
+    try {
+      let latitude, longitude, addressToStore;
+      
+      // Check if we already have coordinates from the search results
+      if (suggestion.latitude && suggestion.longitude) {
+        latitude = suggestion.latitude;
+        longitude = suggestion.longitude;
+        
+        // Format address: include venue name if it's a venue
+        addressToStore = suggestion.full_address || suggestion.address;
+        if (suggestion.isVenue && suggestion.place_name && 
+            !addressToStore.toLowerCase().includes(suggestion.place_name.toLowerCase())) {
+          addressToStore = `${suggestion.place_name} - ${addressToStore}`;
+        }
+      } else {
+        // Fallback to getting place details if coordinates not available
+        const response = await api.post('/bookings/place-details', {
+          place_id: suggestion.place_id,
         });
-        
-        const response = await fetch(`${retrieveUrl}?${params}`);
-        const data = await response.json();
-        
-        if (data.features && data.features.length > 0) {
-          const feature = data.features[0];
-          if (feature.geometry && feature.geometry.coordinates) {
-            [lng, lat] = feature.geometry.coordinates;
-          }
-        }
-      } catch (error) {
-      }
-    } else if (suggestion.center) {
-      [lng, lat] = suggestion.center;
-    }
-    
-    if (!lng || !lat) {
-      return;
-    }
-    
-    if (type === 'pickup') {
-      // Store the venue name with address for POIs/airports, or just address for regular locations
-      let addressToStore = suggestion.full_address || 
-        (suggestion.place_name && suggestion.place_formatted ? 
-          `${suggestion.place_name}, ${suggestion.place_formatted}` : 
-          suggestion.place_name || '');
-      
-      // If we have both a venue name and full address, and they're different, combine them
-      if (suggestion.place_name && suggestion.full_address && 
-          !suggestion.full_address.toLowerCase().includes(suggestion.place_name.toLowerCase())) {
-        
-        // Determine if this is a venue/POI that should show its name
-        const hasVenueName = suggestion.place_name && 
-          !suggestion.place_name.match(/^\d+\s/); // Not starting with street number
-        
-        const isVenue = 
-          suggestion.isAirport || 
-          suggestion.place_type?.includes('poi') ||
-          suggestion.place_type?.includes('venue') ||
-          (suggestion.place_type && suggestion.place_type !== 'address') ||
-          hasVenueName;
-        
-        // For any venue with a meaningful name, show it first
-        if (isVenue) {
-          addressToStore = `${suggestion.place_name} - ${suggestion.full_address}`;
-        }
-      }
-      
-      setTripDetails({
-        pickupAddress: addressToStore,
-        pickupLat: lat,
-        pickupLng: lng,
-        isAirportPickup: suggestion.isAirport || false,
-      });
-      setShowPickupSuggestions(false);
-      
-      if (pickupMarker.current) {
-        pickupMarker.current.setLngLat([lng, lat]);
-      } else {
-        const el = document.createElement('div');
-        el.className = 'w-8 h-8 bg-luxury-gold rounded-full shadow-luxury flex items-center justify-center text-luxury-white';
-        el.innerHTML = 'P';
-        pickupMarker.current = new mapboxgl.Marker(el)
-          .setLngLat([lng, lat])
-          .addTo(map.current);
-      }
-    } else {
-      // Store the venue name with address for POIs/airports, or just address for regular locations
-      let addressToStore = suggestion.full_address || 
-        (suggestion.place_name && suggestion.place_formatted ? 
-          `${suggestion.place_name}, ${suggestion.place_formatted}` : 
-          suggestion.place_name || '');
-      
-      // If we have both a venue name and full address, and they're different, combine them
-      if (suggestion.place_name && suggestion.full_address && 
-          !suggestion.full_address.toLowerCase().includes(suggestion.place_name.toLowerCase())) {
-        
-        // Determine if this is a venue/POI that should show its name
-        const hasVenueName = suggestion.place_name && 
-          !suggestion.place_name.match(/^\d+\s/); // Not starting with street number
-        
-        const isVenue = 
-          suggestion.isAirport || 
-          suggestion.place_type?.includes('poi') ||
-          suggestion.place_type?.includes('venue') ||
-          (suggestion.place_type && suggestion.place_type !== 'address') ||
-          hasVenueName;
-        
-        // For any venue with a meaningful name, show it first
-        if (isVenue) {
-          addressToStore = `${suggestion.place_name} - ${suggestion.full_address}`;
-        }
-      }
-      
-      setTripDetails({
-        dropoffAddress: addressToStore,
-        dropoffLat: lat,
-        dropoffLng: lng,
-        isAirportDropoff: suggestion.isAirport || false,
-      });
-      setShowDropoffSuggestions(false);
-      
-      if (dropoffMarker.current) {
-        dropoffMarker.current.setLngLat([lng, lat]);
-      } else {
-        const el = document.createElement('div');
-        el.className = 'w-8 h-8 bg-luxury-black rounded-full shadow-luxury flex items-center justify-center text-luxury-white';
-        el.innerHTML = 'D';
-        dropoffMarker.current = new mapboxgl.Marker(el)
-          .setLngLat([lng, lat])
-          .addTo(map.current);
-      }
-    }
 
-    // Check if both locations are now selected
-    const hasPickup = type === 'pickup' ? true : !!tripDetails.pickupLat;
-    const hasDropoff = type === 'dropoff' ? true : !!tripDetails.dropoffLat;
-    
-    // Fit map to show both markers if both exist
-    if (hasPickup && hasDropoff) {
-      const bounds = new mapboxgl.LngLatBounds();
-      if (type === 'pickup') {
-        bounds.extend([lng, lat]);
-        bounds.extend([tripDetails.dropoffLng, tripDetails.dropoffLat]);
-      } else {
-        bounds.extend([tripDetails.pickupLng, tripDetails.pickupLat]);
-        bounds.extend([lng, lat]);
+        const place = response.data.place;
+        latitude = place.latitude;
+        longitude = place.longitude;
+        
+        // Format address: include venue name if it's a venue
+        addressToStore = place.address;
+        if (suggestion.isVenue && suggestion.place_name && 
+            !place.address.toLowerCase().includes(suggestion.place_name.toLowerCase())) {
+          addressToStore = `${suggestion.place_name} - ${place.address}`;
+        }
       }
-      map.current.fitBounds(bounds, { padding: 100 });
       
-      // Automatically validate route when both locations are selected
-      // This will trigger the useEffect to draw the route
-      if (tripDetails.pickupDate && tripDetails.pickupTime) {
-        validateRoute();
+      if (type === 'pickup') {
+        setTripDetails({
+          pickupAddress: addressToStore,
+          pickupLat: latitude,
+          pickupLng: longitude,
+          isAirportPickup: suggestion.isAirport || false,
+        });
+        setShowPickupSuggestions(false);
+        
+        createPickupMarker(latitude, longitude);
+      } else {
+        setTripDetails({
+          dropoffAddress: addressToStore,
+          dropoffLat: latitude,
+          dropoffLng: longitude,
+          isAirportDropoff: suggestion.isAirport || false,
+        });
+        setShowDropoffSuggestions(false);
+        
+        createDropoffMarker(latitude, longitude);
       }
-    } else {
-      map.current.flyTo({ center: [lng, lat], zoom: 14 });
+
+      // Check if both locations are now selected
+      const hasPickup = type === 'pickup' ? true : !!tripDetails.pickupLat;
+      const hasDropoff = type === 'dropoff' ? true : !!tripDetails.dropoffLat;
+      
+      // Fit map to show both markers if both exist
+      if (hasPickup && hasDropoff && google.current && map.current) {
+        const bounds = new google.current.maps.LatLngBounds();
+        if (type === 'pickup') {
+          bounds.extend({ lat: latitude, lng: longitude });
+          bounds.extend({ lat: tripDetails.dropoffLat, lng: tripDetails.dropoffLng });
+        } else {
+          bounds.extend({ lat: tripDetails.pickupLat, lng: tripDetails.pickupLng });
+          bounds.extend({ lat: latitude, lng: longitude });
+        }
+        map.current.fitBounds(bounds, { padding: 100 });
+        
+        // Automatically validate route when both locations are selected
+        if (tripDetails.pickupDate && tripDetails.pickupTime) {
+          validateRoute();
+        }
+      } else if (map.current) {
+        map.current.setCenter({ lat: latitude, lng: longitude });
+        map.current.setZoom(14);
+      }
+    } catch (error) {
+      console.error('Error getting place details:', error);
     }
   };
 
   const drawRoute = () => {
-    if (!map.current || !routeInfo?.polyline) return;
+    if (!directionsService.current || !directionsRenderer.current || !tripDetails.pickupLat || !tripDetails.dropoffLat) return;
     
-    // Wait for map to be loaded before drawing
-    if (!map.current.isStyleLoaded()) {
-      // If style is not loaded, wait for it
-      map.current.once('styledata', () => {
-        drawRoute(); // Retry once style is loaded
-      });
-      return;
-    }
-    
-    try {
-      // Remove existing route layer if it exists
-      if (map.current.getLayer(routeLayerId.current)) {
-        map.current.removeLayer(routeLayerId.current);
+    const request = {
+      origin: { lat: tripDetails.pickupLat, lng: tripDetails.pickupLng },
+      destination: { lat: tripDetails.dropoffLat, lng: tripDetails.dropoffLng },
+      travelMode: google.current.maps.TravelMode.DRIVING,
+    };
+
+    directionsService.current.route(request, (result, status) => {
+      if (status === 'OK') {
+        directionsRenderer.current.setDirections(result);
       }
-      if (map.current.getSource('route')) {
-        map.current.removeSource('route');
-      }
-      
-      // Add the route as a GeoJSON source
-      // The polyline from backend is now in GeoJSON format
-      map.current.addSource('route', {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          properties: {},
-          geometry: routeInfo.polyline // This is now a GeoJSON geometry object
-        }
-      });
-      
-      // Add the route layer with luxury gold styling
-      map.current.addLayer({
-        id: routeLayerId.current,
-        type: 'line',
-        source: 'route',
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round'
-        },
-        paint: {
-          'line-color': '#B8860B', // Luxury gold color
-          'line-width': 4,
-          'line-opacity': 0.8
-        }
-      });
-    } catch (error) {
-      console.error('Error drawing route:', error);
-    }
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -524,6 +461,7 @@ const TripDetailsLuxury = () => {
       drawRoute(); // Draw the route after successful validation
       nextStep();
     } catch (error) {
+      // Error handled by store
     }
   };
 
@@ -541,19 +479,14 @@ const TripDetailsLuxury = () => {
   
   const getDefaultDateTime = () => {
     const defaultDate = new Date();
-    const currentHour = defaultDate.getHours();
-    
-    // Add minimum booking hours
     defaultDate.setHours(defaultDate.getHours() + bookingSettings.minimum_hours);
     
-    // If it's still today and same day booking is not allowed, move to tomorrow
     const today = new Date();
     if (!bookingSettings.allow_same_day && 
         defaultDate.toDateString() === today.toDateString()) {
       defaultDate.setDate(defaultDate.getDate() + 1);
-      defaultDate.setHours(7, 0, 0, 0); // Set to 7 AM next day
+      defaultDate.setHours(7, 0, 0, 0);
     } else {
-      // Round to next available time increment
       const minutes = defaultDate.getMinutes();
       const roundedMinutes = Math.ceil(minutes / bookingSettings.time_increment) * bookingSettings.time_increment;
       if (roundedMinutes >= 60) {
@@ -570,15 +503,12 @@ const TripDetailsLuxury = () => {
   const defaultDateTime = getDefaultDateTime();
   
   const [selectedDateTime, setSelectedDateTime] = useState(() => {
-    // If we have saved trip details, validate they're still in the future
     if (tripDetails.pickupDate && tripDetails.pickupTime) {
       const savedDateTime = new Date(`${tripDetails.pickupDate}T${tripDetails.pickupTime}`);
-      // Check if saved date is still valid (in the future and respects minimum booking time)
       if (savedDateTime >= minDateTime) {
         return savedDateTime;
       }
     }
-    // Otherwise use the calculated default
     return defaultDateTime;
   });
   
@@ -634,13 +564,13 @@ const TripDetailsLuxury = () => {
                   value={tripDetails.pickupAddress}
                   onChange={(e) => handleAddressChange(e.target.value, 'pickup')}
                   onFocus={() => tripDetails.pickupAddress.length >= 2 && setShowPickupSuggestions(true)}
-                  className="input-luxury text-lg"
+                  className="w-full px-4 py-3 bg-white border border-luxury-gray/20 text-luxury-black placeholder-luxury-gray/50 focus:outline-none focus:ring-2 focus:ring-luxury-gold focus:border-transparent transition-all duration-200 text-lg"
                   placeholder="Airport, hotel, or address"
                   required
                 />
                 
                 {isLoadingPickup && (
-                  <div className="absolute right-0 top-12">
+                  <div className="absolute right-4 top-12">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-luxury-gold"></div>
                   </div>
                 )}
@@ -660,15 +590,52 @@ const TripDetailsLuxury = () => {
                         className={`w-full text-left px-6 py-4 transition-all duration-200 
                           ${suggestion.isAirport 
                             ? 'bg-luxury-light-gray hover:bg-luxury-gold/10' 
+                            : suggestion.isHotel
+                            ? 'bg-luxury-cream/50 hover:bg-luxury-gold/10'
                             : 'hover:bg-luxury-cream'} 
                           border-b border-luxury-light-gray last:border-b-0`}
                       >
-                        <p className="text-sm font-medium text-luxury-black">
-                          {suggestion.place_name}
-                        </p>
-                        <p className="text-xs text-luxury-gray/60 mt-1">
-                          {suggestion.place_formatted || suggestion.full_address || ''}
-                        </p>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              {suggestion.isAirport && (
+                                <svg className="w-4 h-4 text-luxury-gold flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                                </svg>
+                              )}
+                              {suggestion.isHotel && (
+                                <svg className="w-4 h-4 text-luxury-gold flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                              )}
+                              {suggestion.isVenue && !suggestion.isAirport && !suggestion.isHotel && (
+                                <svg className="w-4 h-4 text-luxury-gray/50 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                              )}
+                              {!suggestion.isVenue && (
+                                <svg className="w-4 h-4 text-luxury-gray/40 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                </svg>
+                              )}
+                              <p className="text-sm font-medium text-luxury-black">
+                                {suggestion.place_name}
+                              </p>
+                            </div>
+                            <p className="text-xs text-luxury-gray/60 mt-1 ml-6">
+                              {suggestion.place_formatted || suggestion.full_address || ''}
+                            </p>
+                          </div>
+                          {suggestion.rating && (
+                            <div className="ml-3 flex items-center gap-1">
+                              <svg className="w-3 h-3 text-luxury-gold fill-current" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                              </svg>
+                              <span className="text-xs text-luxury-gray">{suggestion.rating}</span>
+                            </div>
+                          )}
+                        </div>
                       </button>
                     ))}
                   </div>
@@ -685,13 +652,13 @@ const TripDetailsLuxury = () => {
                   value={tripDetails.dropoffAddress}
                   onChange={(e) => handleAddressChange(e.target.value, 'dropoff')}
                   onFocus={() => tripDetails.dropoffAddress.length >= 2 && setShowDropoffSuggestions(true)}
-                  className="input-luxury text-lg"
+                  className="w-full px-4 py-3 bg-white border border-luxury-gray/20 text-luxury-black placeholder-luxury-gray/50 focus:outline-none focus:ring-2 focus:ring-luxury-gold focus:border-transparent transition-all duration-200 text-lg"
                   placeholder="Your destination"
                   required
                 />
                 
                 {isLoadingDropoff && (
-                  <div className="absolute right-0 top-12">
+                  <div className="absolute right-4 top-12">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-luxury-gold"></div>
                   </div>
                 )}
@@ -711,15 +678,52 @@ const TripDetailsLuxury = () => {
                         className={`w-full text-left px-6 py-4 transition-all duration-200 
                           ${suggestion.isAirport 
                             ? 'bg-luxury-light-gray hover:bg-luxury-gold/10' 
+                            : suggestion.isHotel
+                            ? 'bg-luxury-cream/50 hover:bg-luxury-gold/10'
                             : 'hover:bg-luxury-cream'} 
                           border-b border-luxury-light-gray last:border-b-0`}
                       >
-                        <p className="text-sm font-medium text-luxury-black">
-                          {suggestion.place_name}
-                        </p>
-                        <p className="text-xs text-luxury-gray/60 mt-1">
-                          {suggestion.place_formatted || suggestion.full_address || ''}
-                        </p>
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              {suggestion.isAirport && (
+                                <svg className="w-4 h-4 text-luxury-gold flex-shrink-0" fill="currentColor" viewBox="0 0 24 24">
+                                  <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                                </svg>
+                              )}
+                              {suggestion.isHotel && (
+                                <svg className="w-4 h-4 text-luxury-gold flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                              )}
+                              {suggestion.isVenue && !suggestion.isAirport && !suggestion.isHotel && (
+                                <svg className="w-4 h-4 text-luxury-gray/50 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                              )}
+                              {!suggestion.isVenue && (
+                                <svg className="w-4 h-4 text-luxury-gray/40 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                                </svg>
+                              )}
+                              <p className="text-sm font-medium text-luxury-black">
+                                {suggestion.place_name}
+                              </p>
+                            </div>
+                            <p className="text-xs text-luxury-gray/60 mt-1 ml-6">
+                              {suggestion.place_formatted || suggestion.full_address || ''}
+                            </p>
+                          </div>
+                          {suggestion.rating && (
+                            <div className="ml-3 flex items-center gap-1">
+                              <svg className="w-3 h-3 text-luxury-gold fill-current" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                              </svg>
+                              <span className="text-xs text-luxury-gray">{suggestion.rating}</span>
+                            </div>
+                          )}
+                        </div>
                       </button>
                     ))}
                   </div>
@@ -753,7 +757,6 @@ const TripDetailsLuxury = () => {
                   wrapperClassName="w-full"
                   required
                   filterDate={(date) => {
-                    // If same day booking is not allowed, exclude today
                     if (!bookingSettings.allow_same_day) {
                       const today = new Date();
                       today.setHours(0, 0, 0, 0);
@@ -765,7 +768,6 @@ const TripDetailsLuxury = () => {
                     const currentDate = new Date();
                     const selectedDate = new Date(selectedDateTime || currentDate);
                     
-                    // If it's today, filter times that are at least minimum_hours from now
                     if (selectedDate.toDateString() === currentDate.toDateString()) {
                       const minTime = new Date();
                       minTime.setHours(minTime.getHours() + bookingSettings.minimum_hours);

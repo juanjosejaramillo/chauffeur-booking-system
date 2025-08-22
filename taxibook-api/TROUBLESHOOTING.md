@@ -191,14 +191,14 @@ Mail::raw('Test email', function($message) {
 ```
 3. Clear config cache: `php artisan config:clear`
 
-#### Mapbox Not Loading
+#### Google Maps Not Loading
 **Problem**: Map doesn't appear
 
 **Solution**:
-1. Verify Mapbox token in settings
+1. Verify Google Maps API key in settings
 2. Check browser console for errors
-3. Ensure token has correct scopes
-4. Check domain restrictions on Mapbox
+3. Ensure APIs are enabled (Maps JavaScript API, Places API, Directions API)
+4. Check API key restrictions in Google Cloud Console
 
 #### React Build Errors
 **Error**: Build fails with module errors
@@ -374,7 +374,7 @@ php artisan queue:retry all
 
 **Solution**:
 1. Check vehicle pricing tiers in admin
-2. Verify distance calculation from Mapbox
+2. Verify distance calculation from Google Maps
 3. Review fare_breakdown in database
 4. Check for airport fees or surcharges
 

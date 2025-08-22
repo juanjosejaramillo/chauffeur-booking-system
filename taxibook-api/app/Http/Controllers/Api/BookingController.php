@@ -7,7 +7,7 @@ use App\Models\Booking;
 use App\Models\User;
 use App\Models\VehicleType;
 use App\Models\Transaction;
-use App\Services\MapboxService;
+use App\Services\GoogleMapsService;
 use App\Services\PricingService;
 use App\Services\StripeService;
 use App\Events\BookingConfirmed;
@@ -18,16 +18,16 @@ use Illuminate\Support\Facades\DB;
 
 class BookingController extends Controller
 {
-    private MapboxService $mapboxService;
+    private GoogleMapsService $mapsService;
     private PricingService $pricingService;
     private StripeService $stripeService;
 
     public function __construct(
-        MapboxService $mapboxService,
+        GoogleMapsService $mapsService,
         PricingService $pricingService,
         StripeService $stripeService
     ) {
-        $this->mapboxService = $mapboxService;
+        $this->mapsService = $mapsService;
         $this->pricingService = $pricingService;
         $this->stripeService = $stripeService;
     }
@@ -65,10 +65,10 @@ class BookingController extends Controller
         }
 
         // Get route information
-        \Log::info('Calling Mapbox service...');
+        \Log::info('Calling Google Maps service...');
         $startTime = microtime(true);
         
-        $route = $this->mapboxService->getRoute(
+        $route = $this->mapsService->getRoute(
             $validated['pickup_lat'],
             $validated['pickup_lng'],
             $validated['dropoff_lat'],
@@ -165,7 +165,7 @@ class BookingController extends Controller
         }
 
         // Calculate route and pricing
-        $route = $this->mapboxService->getRoute(
+        $route = $this->mapsService->getRoute(
             $validated['pickup_lat'],
             $validated['pickup_lng'],
             $validated['dropoff_lat'],
@@ -435,5 +435,94 @@ class BookingController extends Controller
             ->paginate(10);
 
         return response()->json($bookings);
+    }
+
+    /**
+     * Search for addresses using Google Places Autocomplete
+     */
+    public function searchAddresses(Request $request)
+    {
+        $validated = $request->validate([
+            'query' => 'required|string|min:2|max:100',
+            'lat' => 'nullable|numeric|between:-90,90',
+            'lng' => 'nullable|numeric|between:-180,180',
+        ]);
+
+        try {
+            $results = $this->mapsService->autocomplete(
+                $validated['query'],
+                $validated['lat'] ?? null,
+                $validated['lng'] ?? null
+            );
+
+            if (!$results) {
+                return response()->json([
+                    'suggestions' => []
+                ]);
+            }
+
+            // Format results for frontend
+            $suggestions = array_map(function ($result) {
+                return [
+                    'place_id' => $result['place_id'],
+                    'name' => $result['name'],
+                    'address' => $result['address'],
+                    'full_description' => $result['full_description'],
+                    'is_venue' => $result['is_venue'],
+                    'is_airport' => $result['is_airport'] ?? false,
+                    'types' => $result['types'] ?? [],
+                    'latitude' => $result['latitude'] ?? null,
+                    'longitude' => $result['longitude'] ?? null,
+                    'rating' => $result['rating'] ?? null,
+                ];
+            }, $results);
+
+            return response()->json([
+                'suggestions' => $suggestions
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Address search error', [
+                'error' => $e->getMessage(),
+                'query' => $validated['query']
+            ]);
+
+            return response()->json([
+                'error' => 'Failed to search addresses',
+                'suggestions' => []
+            ], 500);
+        }
+    }
+
+    /**
+     * Get place details from Google Places
+     */
+    public function getPlaceDetails(Request $request)
+    {
+        $validated = $request->validate([
+            'place_id' => 'required|string',
+        ]);
+
+        try {
+            $details = $this->mapsService->getPlaceDetails($validated['place_id']);
+
+            if (!$details) {
+                return response()->json([
+                    'error' => 'Place not found'
+                ], 404);
+            }
+
+            return response()->json([
+                'place' => $details
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Place details error', [
+                'error' => $e->getMessage(),
+                'place_id' => $validated['place_id']
+            ]);
+
+            return response()->json([
+                'error' => 'Failed to get place details'
+            ], 500);
+        }
     }
 }

@@ -417,4 +417,6 @@ const useBookingStore = create(
   )
 );
 
+export { useBookingStore };
+
 export default useBookingStore;

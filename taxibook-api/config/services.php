@@ -40,8 +40,8 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
-    'mapbox' => [
-        'api_key' => env('MAPBOX_API_KEY'),
+    'google' => [
+        'maps_api_key' => env('GOOGLE_MAPS_API_KEY'),
     ],
 
 ];

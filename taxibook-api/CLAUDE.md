@@ -30,10 +30,11 @@ LuxRide is a premium chauffeur booking system for luxury transportation services
   - Payment intents API
   - Saved cards functionality
   - Gratuity/tips system
-- **Maps & Geocoding**: Mapbox GL JS (v3.14)
-  - Route calculation
-  - Distance/duration estimation
-  - Address autocomplete
+- **Maps & Geocoding**: Google Maps API
+  - Google Places API for autocomplete with venue names
+  - Google Directions API with real-time traffic
+  - Google Geocoding API for address lookup
+  - Superior business/POI data accuracy
 - **Email**: SMTP (Gmail configured)
 - **PDF Generation**: DomPDF (receipts)
 - **QR Codes**: Simple QRCode (tip links)
@@ -266,7 +267,7 @@ npm run dev
 ### Important Services
 - `NotificationService` - Email sending
 - `StripeService` - Payment processing
-- `MapboxService` - Maps and geocoding
+- `GoogleMapsService` - Maps and geocoding
 - `PricingService` - Fare calculation
 - `TipService` - Gratuity handling
 
@@ -364,12 +365,12 @@ npm run dev
 
 ### Traffic-Aware Time Estimation
 - **Issue**: System was using static time estimates regardless of pickup date/time, leading to inaccurate pricing
-- **Solution**: Implemented traffic-aware routing using Mapbox's traffic data
+- **Solution**: Implemented traffic-aware routing using Google Maps' traffic data
 - **Changes**:
-  - MapboxService now accepts optional departure time parameter
+  - GoogleMapsService now accepts optional departure time parameter
   - Switches to `driving-traffic` profile when departure time is provided
   - Includes `depart_at` parameter for traffic predictions
-  - PricingService passes pickup datetime to MapboxService
+  - PricingService passes pickup datetime to GoogleMapsService
   - BookingController validates and passes pickup date/time
   - Frontend sends pickup date/time when calculating prices
 - **Impact**: 
@@ -542,14 +543,14 @@ php artisan route:clear   # Route cache
 ### Route Polyline Visualization
 - **Map Route Display**: Added gold-colored polyline showing the route from pickup to destination
 - **Automatic Route Drawing**: Route automatically displays when both locations are selected
-- **Backend Change**: MapboxService now returns GeoJSON format instead of polyline for easier handling
+- **Backend Change**: GoogleMapsService now returns encoded polyline for route visualization
 - **Luxury Styling**: Route displayed in gold color (#B8860B) with 4px width and rounded caps
 
-### Mapbox Address Display Improvements
-- **Complete Address Extraction**: Now properly extracts full_address, place_formatted from Mapbox API
+### Google Maps Address Display Improvements
+- **Complete Address Extraction**: Now properly extracts place names and addresses from Google Places API
 - **Better Autocomplete Display**: Shows venue name with complete address below
 - **Address Format**: Displays as "Venue Name" with "City, State ZIP, Country" underneath
-- **Direct API Field Usage**: Uses Mapbox's provided fields instead of building from context
+- **Direct API Field Usage**: Uses Google's structured formatting for cleaner display
 
 ### Map Loading Bug Fix
 - **Fixed Style Loading Error**: Resolved "Style is not done loading" error when navigating back
@@ -583,23 +584,37 @@ php artisan route:clear   # Route cache
 
 ## Recent Updates (2025-08-22 - Latest)
 
+### Complete Migration to Google Maps
+- **Motivation**: Google Maps provides superior accuracy for business locations and traffic data
+- **Backend Changes**:
+  - Created `GoogleMapsService.php` as the primary mapping service
+  - Implements Google Places API for rich autocomplete with venue names
+  - Google Directions API with real-time and predictive traffic
+  - Traffic models: best_guess (default), optimistic, pessimistic
+  - New API endpoints: `/api/bookings/search-addresses` and `/api/bookings/place-details`
+- **Frontend Changes**:
+  - Complete rewrite of `TripDetailsLuxury.jsx` using Google Maps JavaScript API
+  - Rich autocomplete showing venue names prominently
+  - Format: "Venue Name - Full Address" for POIs
+  - Custom gold/black markers matching luxury theme
+  - Route polyline in luxury gold color
+- **Settings Updates**:
+  - Google Maps settings in admin panel
+  - Admin panel "Maps Settings" tab for API key and traffic model
+  - Database migration to update settings
+- **Benefits**:
+  - More accurate business/venue names (hotels, airports, restaurants)
+  - Better traffic predictions for accurate pricing
+  - Richer place data (business hours, ratings available if needed)
+  - Place IDs for consistent location reference
+  - Superior address parsing and geocoding
+
 ### Enhanced Venue/POI Name Display
 - **Issue**: When selecting venues like airports or hotels, only the street address was shown, not the venue name
 - **Solution**: Enhanced address display to include venue names with full addresses
-- **Changes**:
-  - Modified `selectSuggestion` function in TripDetailsLuxury.jsx
-  - Format: "Venue Name - Full Address" for all venues/POIs
-  - Example: "Orlando International Airport - 1 Jeff Fuqua Boulevard, Orlando, FL 32827"
-- **Enhanced Detection Logic**:
-  - Includes any location with a meaningful name (not just street addresses)
-  - Detects hotels, restaurants, stadiums, hospitals, attractions, etc.
-  - Checks if place name doesn't start with a street number
-  - Includes any place_type that's not just 'address'
-- **Benefits**:
-  - Drivers immediately recognize destination venues
-  - Admin panel shows meaningful location names
-  - Customers confirm they selected the right location
-  - Matches how people naturally describe locations ("Pick me up at the Marriott")
+- **Format**: "Orlando International Airport - 1 Jeff Fuqua Boulevard, Orlando, FL 32827"
+- **Detection**: Automatically identifies venues, POIs, and businesses
+- **Benefits**: Drivers immediately recognize destinations, better UX for customers
 
 ## Contact & Support
 - **Company**: LuxRide SUV

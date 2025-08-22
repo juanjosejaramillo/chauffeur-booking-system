@@ -306,78 +306,28 @@ class ManageSettings extends Page
                                     ->columns(1),
                             ]),
                         
-                        Tab::make('Mapbox Settings')
+                        Tab::make('Maps Settings')
                             ->icon('heroicon-o-map')
                             ->schema([
-                                Section::make('Mapbox API Configuration')
-                                    ->description('Configure your Mapbox integration for maps and geocoding')
+                                Section::make('Google Maps API Configuration')
+                                    ->description('Configure your Google Maps integration for maps, places, and directions')
                                     ->schema([
-                                        Toggle::make('mapbox_enabled')
-                                            ->label('Enable Mapbox')
-                                            ->default(true)
-                                            ->reactive()
-                                            ->helperText('Enable or disable Mapbox integration'),
-                                        
-                                        TextInput::make('mapbox_public_token')
-                                            ->label('Mapbox Public Token')
+                                        TextInput::make('google_maps_api_key')
+                                            ->label('Google Maps API Key')
                                             ->password()
                                             ->revealable()
-                                            ->required(fn (Get $get) => $get('mapbox_enabled'))
-                                            ->visible(fn (Get $get) => $get('mapbox_enabled'))
-                                            ->regex('/^pk\.[a-zA-Z0-9._-]+$/')
-                                            ->validationMessages([
-                                                'regex' => 'Must be a valid Mapbox public token (pk....)'
-                                            ])
-                                            ->helperText('Your Mapbox public access token (pk....)'),
+                                            ->required()
+                                            ->helperText('Your Google Maps API key - Enable Maps JavaScript API, Places API, Directions API, and Geocoding API'),
                                         
-                                        TextInput::make('mapbox_secret_token')
-                                            ->label('Mapbox Secret Token')
-                                            ->password()
-                                            ->revealable()
-                                            ->visible(fn (Get $get) => $get('mapbox_enabled'))
-                                            ->regex('/^sk\.[a-zA-Z0-9._-]+$/')
-                                            ->validationMessages([
-                                                'regex' => 'Must be a valid Mapbox secret token (sk....)'
-                                            ])
-                                            ->helperText('Your Mapbox secret access token (sk....) - Optional, for server-side operations'),
-                                        
-                                        Select::make('mapbox_map_style')
-                                            ->label('Default Map Style')
+                                        Select::make('google_traffic_model')
+                                            ->label('Traffic Prediction Model')
                                             ->options([
-                                                'mapbox://styles/mapbox/streets-v12' => 'Streets',
-                                                'mapbox://styles/mapbox/light-v11' => 'Light',
-                                                'mapbox://styles/mapbox/dark-v11' => 'Dark',
-                                                'mapbox://styles/mapbox/satellite-v9' => 'Satellite',
-                                                'mapbox://styles/mapbox/satellite-streets-v12' => 'Satellite Streets',
-                                                'mapbox://styles/mapbox/navigation-day-v1' => 'Navigation Day',
-                                                'mapbox://styles/mapbox/navigation-night-v1' => 'Navigation Night',
+                                                'best_guess' => 'Best Guess (Recommended)',
+                                                'optimistic' => 'Optimistic (Lighter Traffic)',
+                                                'pessimistic' => 'Pessimistic (Heavier Traffic)',
                                             ])
-                                            ->default('mapbox://styles/mapbox/streets-v12')
-                                            ->visible(fn (Get $get) => $get('mapbox_enabled'))
-                                            ->helperText('Choose the default map style for your application'),
-                                        
-                                        TextInput::make('mapbox_default_latitude')
-                                            ->label('Default Latitude')
-                                            ->numeric()
-                                            ->default('40.7128')
-                                            ->visible(fn (Get $get) => $get('mapbox_enabled'))
-                                            ->helperText('Default map center latitude'),
-                                        
-                                        TextInput::make('mapbox_default_longitude')
-                                            ->label('Default Longitude')
-                                            ->numeric()
-                                            ->default('-74.0060')
-                                            ->visible(fn (Get $get) => $get('mapbox_enabled'))
-                                            ->helperText('Default map center longitude'),
-                                        
-                                        TextInput::make('mapbox_default_zoom')
-                                            ->label('Default Zoom Level')
-                                            ->numeric()
-                                            ->minValue(1)
-                                            ->maxValue(20)
-                                            ->default(12)
-                                            ->visible(fn (Get $get) => $get('mapbox_enabled'))
-                                            ->helperText('Default map zoom level (1-20)'),
+                                            ->default('best_guess')
+                                            ->helperText('How Google predicts traffic for future trips'),
                                     ])
                                     ->columns(2),
                             ]),
@@ -680,59 +630,6 @@ class ManageSettings extends Page
                 'type' => 'password',
                 'description' => 'Stripe webhook secret',
                 'is_encrypted' => true,
-                'order' => 7,
-            ],
-            
-            // Mapbox Settings
-            'mapbox_enabled' => [
-                'group' => 'mapbox',
-                'display_name' => 'Mapbox Enabled',
-                'type' => 'boolean',
-                'description' => 'Enable Mapbox integration',
-                'order' => 1,
-            ],
-            'mapbox_public_token' => [
-                'group' => 'mapbox',
-                'display_name' => 'Public Token',
-                'type' => 'password',
-                'description' => 'Mapbox public access token',
-                'is_encrypted' => true,
-                'order' => 2,
-            ],
-            'mapbox_secret_token' => [
-                'group' => 'mapbox',
-                'display_name' => 'Secret Token',
-                'type' => 'password',
-                'description' => 'Mapbox secret access token',
-                'is_encrypted' => true,
-                'order' => 3,
-            ],
-            'mapbox_map_style' => [
-                'group' => 'mapbox',
-                'display_name' => 'Map Style',
-                'type' => 'text',
-                'description' => 'Default map style',
-                'order' => 4,
-            ],
-            'mapbox_default_latitude' => [
-                'group' => 'mapbox',
-                'display_name' => 'Default Latitude',
-                'type' => 'number',
-                'description' => 'Default map center latitude',
-                'order' => 5,
-            ],
-            'mapbox_default_longitude' => [
-                'group' => 'mapbox',
-                'display_name' => 'Default Longitude',
-                'type' => 'number',
-                'description' => 'Default map center longitude',
-                'order' => 6,
-            ],
-            'mapbox_default_zoom' => [
-                'group' => 'mapbox',
-                'display_name' => 'Default Zoom',
-                'type' => 'number',
-                'description' => 'Default map zoom level',
                 'order' => 7,
             ],
             

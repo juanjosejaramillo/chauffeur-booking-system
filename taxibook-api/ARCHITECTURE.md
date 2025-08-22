@@ -11,7 +11,7 @@ The LuxRide system follows a modern web application architecture with separated 
          │                       │                        │
          ▼                       ▼                        │
 ┌─────────────────┐     ┌─────────────────┐             │
-│    Mapbox       │     │     Stripe      │             │
+│  Google Maps    │     │     Stripe      │             │
 │      API        │     │      API        │             │
 └─────────────────┘     └─────────────────┘             │
                                 │                        │
@@ -43,7 +43,7 @@ Core business logic encapsulated in service classes:
 ```php
 NotificationService     # Email notifications, template rendering
 StripeService          # Payment processing, intents, refunds
-MapboxService          # Geocoding, route calculation, traffic-aware routing
+GoogleMapsService      # Geocoding, route calculation, traffic-aware routing
 PricingService         # Fare calculation with traffic-adjusted time, pricing tiers
 TipService            # Gratuity processing (hardcoded email)
 EmailComponentsService # Email template components
@@ -223,13 +223,13 @@ Webhook Confirmation (Server)
 Update Booking Status
 ```
 
-### Mapbox Integration
+### Google Maps Integration
 ```
 Address Input
     ↓
-Geocoding API
+Places Autocomplete API
     ↓
-Route Calculation
+Directions API (with traffic)
     ↓
 Distance/Duration
     ↓

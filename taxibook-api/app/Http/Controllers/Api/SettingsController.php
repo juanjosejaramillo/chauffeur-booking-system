@@ -62,6 +62,9 @@ class SettingsController extends Controller
         $termsUrl = Setting::get('terms_url', 'https://luxridesuv.com/terms');
         $cancellationPolicyUrl = Setting::get('cancellation_policy_url', 'https://luxridesuv.com/cancellation-policy');
         
+        // Google Maps settings
+        $googleMapsApiKey = Setting::get('google_maps_api_key', env('GOOGLE_MAPS_API_KEY'));
+        
         return response()->json([
             'support_phone' => $supportPhone,
             'business_email' => $businessEmail,
@@ -76,6 +79,9 @@ class SettingsController extends Controller
                 'enabled' => $stripeEnabled,
                 'mode' => $stripeMode,
                 'public_key' => $stripePublicKey,
+            ],
+            'google_maps' => [
+                'api_key' => $googleMapsApiKey,
             ],
             'legal' => [
                 'terms_url' => $termsUrl,

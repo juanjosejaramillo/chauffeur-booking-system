@@ -19,16 +19,16 @@
 The booking process is divided into intuitive steps:
 
 1. **Route Selection**
-   - Address autocomplete via Mapbox with complete address display
-   - Venue/POI names displayed with addresses (e.g., "Orlando International Airport - 1 Jeff Fuqua Blvd")
-   - Enhanced venue detection for hotels, restaurants, attractions, hospitals, etc.
-   - Real-time route validation
-   - Distance and duration calculation with traffic
-   - Traffic-aware time estimates based on pickup date/time
-   - Visual map display with gold route polyline
-   - Interactive map with markers for pickup/dropoff
+   - Address autocomplete via Google Places API with rich venue data
+   - Venue/POI names prominently displayed (e.g., "Orlando International Airport - 1 Jeff Fuqua Blvd")
+   - Superior business detection (hotels, restaurants, hospitals, attractions)
+   - Real-time route validation with Google Directions API
+   - Distance and duration calculation with real-time traffic
+   - Traffic-aware pricing using predictive traffic models
+   - Visual map display with luxury gold route polyline
+   - Custom markers with gold (pickup) and black (dropoff) styling
    - Automatic route visualization when both locations selected
-   - Airport detection (automatic)
+   - Airport detection with terminal information available
 
 2. **Vehicle Selection**
    - Dynamic pricing based on distance and traffic-adjusted time
@@ -70,7 +70,7 @@ Administrators can configure custom fields:
 ### 2. Traffic-Aware Routing & Pricing
 
 #### Real-Time Traffic Integration
-- **Mapbox Traffic API**: Uses `driving-traffic` profile for accurate estimates
+- **Google Directions API**: Uses real-time traffic data for accurate estimates
 - **Departure Time**: Considers actual pickup date/time for predictions
 - **Peak Hour Detection**: Automatically adjusts for rush hour traffic
 - **Predictive Routing**: Works up to 2 weeks in advance
@@ -180,7 +180,7 @@ Trigger-based email sending:
 #### Settings Tabs
 1. **Business Information**: Company details, contact info, admin settings
 2. **Stripe Settings**: Payment gateway configuration
-3. **Mapbox Settings**: Maps and geocoding setup
+3. **Google Maps Settings**: Maps and geocoding setup
 4. **Booking Settings**: Rules and restrictions
 5. **Email Settings**: Mail configuration
 6. **Legal Settings**: Document URLs and policies
@@ -248,7 +248,7 @@ Trigger-based email sending:
 - **Email Settings**: 
   - From: LuxRide
   - Reply-To: contact@luxridesuv.com
-- **Map Settings**: Mapbox configuration
+- **Map Settings**: Google Maps configuration
 - **Booking Settings**: 
   - 12 hours minimum advance
   - 5 minute time increments
@@ -398,7 +398,7 @@ Total = Base Fare
 
 #### Current Integrations
 - **Stripe**: Payment processing
-- **Mapbox**: Maps and geocoding
+- **Google Maps**: Maps, geocoding, and traffic data
 - **Gmail SMTP**: Email delivery
 - **DomPDF**: Document generation
 - **Simple QRCode**: QR generation
@@ -457,7 +457,7 @@ if (feature('new-feature')) {
 
 ### Required Services
 - **Stripe Account**: Payment processing
-- **Mapbox Account**: Maps and geocoding
+- **Google Cloud Account**: Maps, Places, and Directions APIs
 - **SMTP Service**: Email delivery
 - **SSL Certificate**: Secure connections
 

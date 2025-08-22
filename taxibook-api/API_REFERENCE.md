@@ -111,8 +111,8 @@ GET /settings/public
 {
   "stripe_enabled": true,
   "stripe_publishable_key": "pk_test_...",
-  "mapbox_enabled": true,
-  "mapbox_public_token": "pk...",
+  "google_maps_enabled": true,
+  "google_maps_api_key": "AIza...",
   "business_name": "LuxRide",
   "business_phone": "1-800-LUXRIDE",
   "business_email": "contact@luxridesuv.com",

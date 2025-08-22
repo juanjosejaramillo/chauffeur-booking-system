@@ -17,6 +17,8 @@ Route::get('/settings/public', [SettingsController::class, 'getPublicSettings'])
 Route::prefix('bookings')->group(function () {
     Route::post('/validate-route', [BookingController::class, 'validateRoute']);
     Route::post('/calculate-prices', [BookingController::class, 'calculatePrices']);
+    Route::post('/search-addresses', [BookingController::class, 'searchAddresses']);
+    Route::post('/place-details', [BookingController::class, 'getPlaceDetails']);
     Route::post('/send-verification', [BookingVerificationController::class, 'sendVerificationCode']);
     Route::post('/verify-email', [BookingVerificationController::class, 'verifyCode']);
     Route::post('/resend-verification', [BookingVerificationController::class, 'resendCode']);

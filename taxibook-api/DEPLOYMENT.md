@@ -266,9 +266,10 @@ Configure in Filament Admin Panel (`/admin/settings`):
    - Live Secret Key: `sk_live_...`
 3. **Webhook Secret**: `whsec_...`
 
-### Mapbox Configuration
+### Google Maps Configuration
 Configure in Admin Panel:
-- Public Token: `pk.eyJ1Ijoi...`
+- API Key: `AIza...`
+- Traffic Model: best_guess (default)
 
 ### Email Settings
 Configure in Admin Panel:
@@ -301,7 +302,7 @@ export default {
 VITE_API_URL=https://book.luxridesuv.com/api
 VITE_APP_URL=https://book.luxridesuv.com
 VITE_STRIPE_PUBLIC_KEY=pk_live_...
-VITE_MAPBOX_TOKEN=pk.eyJ1IjoibHV4cmlkZXN1diI...
+VITE_GOOGLE_MAPS_API_KEY=AIza...
 ```
 
 ### Deploy Frontend

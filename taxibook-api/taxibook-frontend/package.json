@@ -10,12 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@googlemaps/js-api-loader": "^1.16.10",
+    "@googlemaps/react-wrapper": "^1.2.0",
     "@headlessui/react": "^2.2.7",
     "@heroicons/react": "^2.2.0",
     "@stripe/react-stripe-js": "^3.9.0",
     "@stripe/stripe-js": "^7.8.0",
     "axios": "^1.11.0",
-    "mapbox-gl": "^3.14.0",
     "react": "^19.1.1",
     "react-datepicker": "^8.5.0",
     "react-dom": "^19.1.1",

@@ -155,15 +155,25 @@ class SettingsSeeder extends Seeder
                 'order' => 5,
             ],
             
-            // Mapbox Settings
+            // Google Maps Settings
             [
-                'group' => 'mapbox',
-                'key' => 'mapbox_access_token',
-                'display_name' => 'Mapbox Access Token',
-                'value' => env('MAPBOX_ACCESS_TOKEN', ''),
-                'type' => 'text',
-                'description' => 'Mapbox API access token for maps and geocoding',
+                'group' => 'maps',
+                'key' => 'google_maps_api_key',
+                'display_name' => 'Google Maps API Key',
+                'value' => env('GOOGLE_MAPS_API_KEY', ''),
+                'type' => 'password',
+                'description' => 'Google Maps API key for maps, places, directions, and geocoding',
                 'order' => 1,
+            ],
+            [
+                'group' => 'maps',
+                'key' => 'google_traffic_model',
+                'display_name' => 'Traffic Prediction Model',
+                'value' => 'best_guess',
+                'type' => 'select',
+                'options' => ['best_guess' => 'Best Guess (Recommended)', 'optimistic' => 'Optimistic', 'pessimistic' => 'Pessimistic'],
+                'description' => 'How to predict traffic: best_guess uses historical and live data, optimistic assumes lighter traffic, pessimistic assumes heavier traffic',
+                'order' => 2,
             ],
             
             // Booking Settings

@@ -107,21 +107,18 @@ if (!function_exists('stripe_key')) {
     }
 }
 
-if (!function_exists('mapbox_token')) {
+if (!function_exists('google_maps_api_key')) {
     /**
-     * Get the Mapbox token.
+     * Get the Google Maps API key.
      *
-     * @param string $type 'public' or 'secret'
      * @return string|null
      */
-    function mapbox_token($type = 'public')
+    function google_maps_api_key()
     {
-        if (!setting('mapbox_enabled', true)) {
+        if (!setting('google_maps_enabled', true)) {
             return null;
         }
 
-        return $type === 'public' 
-            ? setting('mapbox_public_token')
-            : setting('mapbox_secret_token');
+        return setting('google_maps_api_key');
     }
 }

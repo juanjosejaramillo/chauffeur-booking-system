@@ -6,16 +6,16 @@ use App\Models\VehicleType;
 
 class PricingService
 {
-    private MapboxService $mapboxService;
+    private GoogleMapsService $mapsService;
 
-    public function __construct(MapboxService $mapboxService)
+    public function __construct(GoogleMapsService $mapsService)
     {
-        $this->mapboxService = $mapboxService;
+        $this->mapsService = $mapsService;
     }
 
     public function calculatePrices(float $fromLat, float $fromLng, float $toLat, float $toLng, ?string $pickupDateTime = null): array
     {
-        // Convert pickup datetime to ISO 8601 format for Mapbox API if provided
+        // Convert pickup datetime to ISO 8601 format for Google Maps API if provided
         $departureTime = null;
         if ($pickupDateTime) {
             try {
@@ -25,8 +25,8 @@ class PricingService
             }
         }
         
-        // Get route information from Mapbox with traffic consideration
-        $route = $this->mapboxService->getRoute($fromLat, $fromLng, $toLat, $toLng, $departureTime);
+        // Get route information from Google Maps with traffic consideration
+        $route = $this->mapsService->getRoute($fromLat, $fromLng, $toLat, $toLng, $departureTime);
         
         if (!$route) {
             throw new \Exception('Unable to calculate route');

@@ -96,28 +96,13 @@ class SettingsServiceProvider extends ServiceProvider
             }
         }
 
-        // Override Mapbox configuration
-        if (isset($settings['mapbox_enabled']) && $settings['mapbox_enabled']) {
-            if (isset($settings['mapbox_public_token'])) {
-                Config::set('services.mapbox.token', $settings['mapbox_public_token']);
-                Config::set('mapbox.public_token', $settings['mapbox_public_token']);
-            }
-            if (isset($settings['mapbox_secret_token'])) {
-                Config::set('services.mapbox.secret', $settings['mapbox_secret_token']);
-                Config::set('mapbox.secret_token', $settings['mapbox_secret_token']);
-            }
-            if (isset($settings['mapbox_map_style'])) {
-                Config::set('mapbox.default_style', $settings['mapbox_map_style']);
-            }
-            if (isset($settings['mapbox_default_latitude'])) {
-                Config::set('mapbox.default_latitude', $settings['mapbox_default_latitude']);
-            }
-            if (isset($settings['mapbox_default_longitude'])) {
-                Config::set('mapbox.default_longitude', $settings['mapbox_default_longitude']);
-            }
-            if (isset($settings['mapbox_default_zoom'])) {
-                Config::set('mapbox.default_zoom', $settings['mapbox_default_zoom']);
-            }
+        // Override Google Maps configuration
+        if (isset($settings['google_maps_api_key'])) {
+            Config::set('services.google.maps_api_key', $settings['google_maps_api_key']);
+            Config::set('google.api_key', $settings['google_maps_api_key']);
+        }
+        if (isset($settings['google_traffic_model'])) {
+            Config::set('google.traffic_model', $settings['google_traffic_model']);
         }
 
         // Override app configuration
@@ -153,7 +138,7 @@ class SettingsServiceProvider extends ServiceProvider
         // Store settings mode for reference
         Config::set('settings.stripe_mode', $settings['stripe_mode'] ?? 'test');
         Config::set('settings.stripe_enabled', $settings['stripe_enabled'] ?? false);
-        Config::set('settings.mapbox_enabled', $settings['mapbox_enabled'] ?? false);
+        Config::set('settings.google_maps_enabled', $settings['google_maps_enabled'] ?? true);
         Config::set('settings.maintenance_mode', $settings['maintenance_mode'] ?? false);
     }
     
