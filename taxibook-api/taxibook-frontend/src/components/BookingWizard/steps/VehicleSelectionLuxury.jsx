@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import useBookingStore from '../../../store/bookingStore';
+import { GoogleTracking } from '../../../services/googleTracking';
 
 const VehicleSelectionLuxury = () => {
   const {
@@ -16,12 +17,22 @@ const VehicleSelectionLuxury = () => {
 
   const [localError, setLocalError] = useState('');
   const [showFareBreakdown, setShowFareBreakdown] = useState(null);
+  const hasTrackedView = useRef(false);
 
   useEffect(() => {
     // Always recalculate prices when component mounts
     // This ensures fresh prices when users go back and change locations
     calculatePrices();
   }, []); // Empty dependency array - only run on mount
+
+  useEffect(() => {
+    // Track view_item when prices are first displayed (only once)
+    if (availableVehicles && availableVehicles.length > 0 && !loading && !hasTrackedView.current) {
+      const lowestPrice = Math.min(...availableVehicles.map(v => v.estimated_fare || v.total_price || 0));
+      GoogleTracking.trackViewItem(lowestPrice);
+      hasTrackedView.current = true;
+    }
+  }, [availableVehicles, loading]);
 
   const handleSelectVehicle = (vehicle) => {
     setSelectedVehicle(vehicle);
@@ -32,6 +43,13 @@ const VehicleSelectionLuxury = () => {
       setLocalError('Please select a vehicle to continue');
       return;
     }
+    
+    // Track add_to_cart when user proceeds with their final selection
+    const fare = selectedVehicle.estimated_fare || selectedVehicle.total_price || 0;
+    const vehicleName = selectedVehicle.display_name || selectedVehicle.name;
+    const vehicleDescription = selectedVehicle.description || 'Chauffeur Service';
+    GoogleTracking.trackAddToCart(vehicleName, fare, vehicleDescription);
+    
     nextStep();
   };
 

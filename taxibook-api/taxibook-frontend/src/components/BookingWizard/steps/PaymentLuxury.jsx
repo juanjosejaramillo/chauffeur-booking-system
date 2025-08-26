@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import {
   Elements,
@@ -10,6 +10,7 @@ import {
 } from '@stripe/react-stripe-js';
 import useBookingStore from '../../../store/bookingStore';
 import useSettings from '../../../hooks/useSettings';
+import { GoogleTracking } from '../../../services/googleTracking';
 
 const PaymentForm = () => {
   const stripe = useStripe();
@@ -34,9 +35,20 @@ const PaymentForm = () => {
   const [processing, setProcessing] = useState(false);
   const [customTip, setCustomTip] = useState('');
   const [postalCode, setPostalCode] = useState('');
+  const hasTrackedCheckout = useRef(false);
 
   const baseFare = selectedVehicle?.estimated_fare || selectedVehicle?.total_price || 0;
   const totalAmount = baseFare + gratuityAmount;
+
+  useEffect(() => {
+    // Track begin_checkout when payment page loads (only once)
+    if (baseFare > 0 && !hasTrackedCheckout.current && selectedVehicle) {
+      const vehicleName = selectedVehicle.display_name || selectedVehicle.name || 'Chauffeur Service';
+      const vehicleDescription = selectedVehicle.description || 'Chauffeur Service';
+      GoogleTracking.trackBeginCheckout(baseFare, vehicleName, vehicleDescription);
+      hasTrackedCheckout.current = true;
+    }
+  }, []); // Only track once on mount
 
   const gratuityOptions = [
     { percentage: 0, label: 'No tip' },

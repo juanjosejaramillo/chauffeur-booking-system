@@ -1,12 +1,27 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useBookingStore from '../../../store/bookingStore';
 import useSettings from '../../../hooks/useSettings';
+import { GoogleTracking } from '../../../services/googleTracking';
 
 const ConfirmationLuxury = () => {
   const navigate = useNavigate();
   const { settings } = useSettings();
   const { booking, selectedVehicle, tripDetails, customerInfo, gratuityAmount, resetBooking } = useBookingStore();
+  const hasTrackedPurchase = useRef(false);
+
+  useEffect(() => {
+    // Track purchase when booking is confirmed (only once)
+    if (!hasTrackedPurchase.current) {
+      if (booking?.id && selectedVehicle) {
+        const baseFare = booking?.base_fare || selectedVehicle.estimated_fare || selectedVehicle.total_price || 0;
+        const vehicleName = selectedVehicle.display_name || selectedVehicle.name || 'Chauffeur Service';
+        const vehicleDescription = selectedVehicle.description || 'Chauffeur Service';
+        GoogleTracking.trackPurchase(booking.id, baseFare, vehicleName, vehicleDescription);
+        hasTrackedPurchase.current = true;
+      }
+    }
+  }, [booking, selectedVehicle]);
 
   const handleNewBooking = () => {
     resetBooking();
