@@ -542,14 +542,23 @@ const TripDetailsLuxury = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-luxury-cream to-luxury-light-gray">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
-        <div className="text-center mb-12 animate-fade-in">
-          <h1 className="font-display text-4xl md:text-5xl text-luxury-black mb-4">
-            Your Journey Begins Here
-          </h1>
-          <p className="text-luxury-gray/70 text-lg tracking-wide">
-            Experience seamless luxury transportation
-          </p>
+        {/* Header with logo on left and text in center */}
+        <div className="flex items-center justify-between mb-12 animate-fade-in">
+          <img 
+            src="/luxride-logo.svg" 
+            alt="LuxRide" 
+            className="h-16 sm:h-20 lg:h-24 object-contain"
+            style={{ backgroundColor: 'transparent' }}
+          />
+          <div className="text-center flex-1">
+            <h1 className="font-display text-4xl md:text-5xl text-luxury-black mb-4">
+              LuxRide
+            </h1>
+            <p className="text-luxury-gray/70 text-lg tracking-wide">
+              Experience seamless luxury transportation
+            </p>
+          </div>
+          <div className="w-16 sm:w-20 lg:w-24"></div> {/* Spacer for balance */}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
