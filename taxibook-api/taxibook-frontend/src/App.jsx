@@ -1,12 +1,32 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import BookingWizard from './components/BookingWizard/BookingWizard';
 import TipPayment from './pages/TipPayment';
 import TipSuccess from './pages/TipSuccess';
 import TipAlready from './pages/TipAlready';
+import { HotjarTracking } from './services/hotjarTracking';
+
+// Component to track page views
+function PageViewTracker() {
+  const location = useLocation();
+  
+  useEffect(() => {
+    // Track virtual page view on route change
+    HotjarTracking.vpv(location.pathname);
+  }, [location]);
+  
+  return null;
+}
 
 function App() {
+  useEffect(() => {
+    // Initialize Hotjar when app loads
+    HotjarTracking.initialize();
+  }, []);
+  
   return (
     <Router>
+      <PageViewTracker />
       <div className="min-h-screen bg-gray-50">
         <Routes>
           <Route path="/" element={<BookingWizard />} />

@@ -7,6 +7,7 @@ import ReviewBookingLuxury from './steps/ReviewBookingLuxury';
 import PaymentLuxury from './steps/PaymentLuxury';
 import ConfirmationLuxury from './steps/ConfirmationLuxury';
 import WizardProgressLuxury from './WizardProgressLuxury';
+import { HotjarTracking } from '../../services/hotjarTracking';
 
 const BookingWizard = () => {
   const { currentStep, resetBooking, prevStep, setCurrentStep } = useBookingStore();
@@ -77,8 +78,20 @@ const BookingWizard = () => {
     };
   }, [currentStep, setCurrentStep, resetBooking, backPressCount]);
 
-  // Update history when moving forward through steps
+  // Update history when moving forward through steps and track with Hotjar
   useEffect(() => {
+    // Track booking step progression in Hotjar
+    const stepNames = {
+      1: 'trip_details',
+      2: 'vehicle_selection',
+      3: 'customer_info',
+      4: 'review_booking',
+      5: 'payment',
+      6: 'confirmation'
+    };
+    
+    HotjarTracking.trackBookingStep(currentStep, stepNames[currentStep] || 'unknown');
+    
     // Only push state when moving forward (not on back navigation)
     const lastStep = window.history.state?.step;
     if (lastStep && currentStep > lastStep) {

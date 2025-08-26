@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import useBookingStore from '../../../store/bookingStore';
 import useSettings from '../../../hooks/useSettings';
 import { GoogleTracking } from '../../../services/googleTracking';
+import { HotjarTracking } from '../../../services/hotjarTracking';
 
 const ConfirmationLuxury = () => {
   const navigate = useNavigate();
@@ -17,7 +18,17 @@ const ConfirmationLuxury = () => {
         const baseFare = booking?.base_fare || selectedVehicle.estimated_fare || selectedVehicle.total_price || 0;
         const vehicleName = selectedVehicle.display_name || selectedVehicle.name || 'Chauffeur Service';
         const vehicleDescription = selectedVehicle.description || 'Chauffeur Service';
+        
+        // Track with Google Ads
         GoogleTracking.trackPurchase(booking.id, baseFare, vehicleName, vehicleDescription);
+        
+        // Track with Hotjar
+        HotjarTracking.trackBookingConversion({
+          id: booking.id,
+          amount: baseFare,
+          vehicleType: vehicleName
+        });
+        
         hasTrackedPurchase.current = true;
       }
     }
