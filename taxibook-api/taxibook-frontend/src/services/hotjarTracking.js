@@ -1,33 +1,15 @@
 /**
  * Hotjar Analytics Service
- * Tracks user behavior, session recordings, and heatmaps
+ * Uses traditional Hotjar script loaded in index.html
  */
-
-import Hotjar from '@hotjar/browser';
-
-// Hotjar configuration
-const HOTJAR_SITE_ID = 6503063;
-const HOTJAR_VERSION = 6;
 
 export const HotjarTracking = {
   /**
-   * Initialize Hotjar tracking
-   * Only runs in production environment
+   * Check if Hotjar is available
+   * @returns {boolean} Whether Hotjar is loaded and ready
    */
-  initialize: () => {
-    // Only initialize in production
-    if (process.env.NODE_ENV === 'production') {
-      try {
-        Hotjar.init(HOTJAR_SITE_ID, HOTJAR_VERSION);
-        
-        // Debug logging in development (this won't run in production)
-        console.log('🔥 Hotjar initialized successfully');
-      } catch (error) {
-        console.error('Failed to initialize Hotjar:', error);
-      }
-    } else if (process.env.NODE_ENV === 'development') {
-      console.log('🔥 Hotjar disabled in development mode');
-    }
+  isAvailable: () => {
+    return typeof window !== 'undefined' && typeof window.hj === 'function';
   },
 
   /**
@@ -36,9 +18,10 @@ export const HotjarTracking = {
    * @param {object} attributes - User attributes (email, name, etc.)
    */
   identify: (userId, attributes = {}) => {
-    if (process.env.NODE_ENV === 'production' && window.hj) {
+    if (HotjarTracking.isAvailable()) {
       try {
         window.hj('identify', userId, attributes);
+        console.log('Hotjar: User identified');
       } catch (error) {
         console.error('Failed to identify user in Hotjar:', error);
       }
@@ -50,9 +33,10 @@ export const HotjarTracking = {
    * @param {string} eventName - Name of the event to track
    */
   event: (eventName) => {
-    if (process.env.NODE_ENV === 'production' && window.hj) {
+    if (HotjarTracking.isAvailable()) {
       try {
         window.hj('event', eventName);
+        console.log(`Hotjar: Event tracked - ${eventName}`);
       } catch (error) {
         console.error('Failed to track Hotjar event:', error);
       }
@@ -64,9 +48,10 @@ export const HotjarTracking = {
    * @param {string} path - The virtual page path
    */
   vpv: (path) => {
-    if (process.env.NODE_ENV === 'production' && window.hj) {
+    if (HotjarTracking.isAvailable()) {
       try {
         window.hj('vpv', path);
+        console.log(`Hotjar: Virtual page view - ${path}`);
       } catch (error) {
         console.error('Failed to track virtual page view:', error);
       }
@@ -79,9 +64,10 @@ export const HotjarTracking = {
    * @param {any} stateData - Data associated with the state
    */
   stateChange: (stateName, stateData) => {
-    if (process.env.NODE_ENV === 'production' && window.hj) {
+    if (HotjarTracking.isAvailable()) {
       try {
         window.hj('stateChange', stateName, stateData);
+        console.log(`Hotjar: State change - ${stateName}`);
       } catch (error) {
         console.error('Failed to track state change:', error);
       }
@@ -94,14 +80,12 @@ export const HotjarTracking = {
    * @param {string} stepName - Name of the step
    */
   trackBookingStep: (step, stepName) => {
-    if (process.env.NODE_ENV === 'production') {
-      HotjarTracking.event(`booking_step_${step}_${stepName}`);
-      HotjarTracking.stateChange('booking_step', {
-        step,
-        stepName,
-        timestamp: new Date().toISOString()
-      });
-    }
+    HotjarTracking.event(`booking_step_${step}_${stepName}`);
+    HotjarTracking.stateChange('booking_step', {
+      step,
+      stepName,
+      timestamp: new Date().toISOString()
+    });
   },
 
   /**
@@ -109,14 +93,12 @@ export const HotjarTracking = {
    * @param {object} bookingData - Booking details
    */
   trackBookingConversion: (bookingData) => {
-    if (process.env.NODE_ENV === 'production') {
-      HotjarTracking.event('booking_completed');
-      HotjarTracking.stateChange('booking_completed', {
-        bookingId: bookingData.id,
-        amount: bookingData.amount,
-        vehicle: bookingData.vehicleType,
-        timestamp: new Date().toISOString()
-      });
-    }
+    HotjarTracking.event('booking_completed');
+    HotjarTracking.stateChange('booking_completed', {
+      bookingId: bookingData.id,
+      amount: bookingData.amount,
+      vehicle: bookingData.vehicleType,
+      timestamp: new Date().toISOString()
+    });
   }
 };

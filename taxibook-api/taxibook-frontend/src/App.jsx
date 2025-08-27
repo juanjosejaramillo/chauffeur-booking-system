@@ -19,10 +19,7 @@ function PageViewTracker() {
 }
 
 function App() {
-  useEffect(() => {
-    // Initialize Hotjar when app loads
-    HotjarTracking.initialize();
-  }, []);
+  // Hotjar is now initialized via script tag in index.html
   
   return (
     <Router>
