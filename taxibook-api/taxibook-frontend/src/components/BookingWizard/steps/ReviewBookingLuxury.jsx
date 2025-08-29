@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import useBookingStore from '../../../store/bookingStore';
 import useSettings from '../../../hooks/useSettings';
+import { ClarityTracking } from '../../../services/clarityTracking';
 
 const ReviewBookingLuxury = () => {
   const {
@@ -28,16 +29,25 @@ const ReviewBookingLuxury = () => {
     
     if (!agreed) {
       setLocalError('Please agree to the terms and conditions');
+      ClarityTracking.trackError('review_booking', 'validation', 'Terms not agreed');
       return;
     }
 
     try {
+      // Track booking creation attempt
+      ClarityTracking.event('booking_creation_attempted');
+      
       // Create booking without payment
       await createBooking();
+      
+      // Track successful booking creation
+      ClarityTracking.event('booking_creation_success');
+      
       // Move to payment step
       nextStep();
     } catch (error) {
-      // Error is already set in store, just log it
+      // Track booking creation failure
+      ClarityTracking.trackError('review_booking', 'booking_creation', error.message || 'Unknown error');
     }
   };
 
@@ -227,7 +237,10 @@ const ReviewBookingLuxury = () => {
               <input
                 type="checkbox"
                 checked={agreed}
-                onChange={(e) => setAgreed(e.target.checked)}
+                onChange={(e) => {
+                  setAgreed(e.target.checked);
+                  ClarityTracking.event(`terms_agreement_${e.target.checked ? 'checked' : 'unchecked'}`);
+                }}
                 className="mt-1 w-4 h-4 accent-luxury-gold"
               />
               <span className="text-xs text-luxury-gray/70 leading-relaxed">
@@ -236,6 +249,7 @@ const ReviewBookingLuxury = () => {
                   href={termsUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
+                  onClick={() => ClarityTracking.trackLegalDocument('terms', 'clicked')}
                   className="text-luxury-gold hover:text-luxury-gold-dark underline"
                 >
                   terms and conditions
@@ -244,7 +258,8 @@ const ReviewBookingLuxury = () => {
                 <a 
                   href={cancellationPolicyUrl}
                   target="_blank"
-                  rel="noopener noreferrer" 
+                  rel="noopener noreferrer"
+                  onClick={() => ClarityTracking.trackLegalDocument('cancellation_policy', 'clicked')}
                   className="text-luxury-gold hover:text-luxury-gold-dark underline"
                 >
                   cancellation policy

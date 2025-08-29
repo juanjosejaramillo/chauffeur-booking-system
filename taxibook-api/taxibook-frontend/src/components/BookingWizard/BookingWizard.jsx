@@ -7,12 +7,13 @@ import ReviewBookingLuxury from './steps/ReviewBookingLuxury';
 import PaymentLuxury from './steps/PaymentLuxury';
 import ConfirmationLuxury from './steps/ConfirmationLuxury';
 import WizardProgressLuxury from './WizardProgressLuxury';
-import { HotjarTracking } from '../../services/hotjarTracking';
+import { ClarityTracking } from '../../services/clarityTracking';
 
 const BookingWizard = () => {
-  const { currentStep, resetBooking, prevStep, setCurrentStep } = useBookingStore();
+  const { currentStep, resetBooking, setCurrentStep } = useBookingStore();
   const [backPressCount, setBackPressCount] = useState(0);
   const backPressTimeoutRef = useRef(null);
+  const previousStepRef = useRef(currentStep);
 
   // Handle browser back button navigation
   useEffect(() => {
@@ -35,6 +36,14 @@ const BookingWizard = () => {
         
         // If pressed twice within 1 second, reset booking and go to step 1
         if (newCount >= 2) {
+          // Track booking abandonment from confirmation
+          ClarityTracking.event('booking_abandoned_from_confirmation');
+          ClarityTracking.trackNavigation('reset_from_confirmation', {
+            from: 'confirmation',
+            to: 'trip_details',
+            method: 'double_back'
+          });
+          
           sessionStorage.removeItem('booking-storage'); // Clear persisted data
           resetBooking(); // Reset all booking data
           setCurrentStep(1);
@@ -55,6 +64,12 @@ const BookingWizard = () => {
         // Navigate to the step stored in history
         const targetStep = event.state.step;
         if (targetStep >= 1 && targetStep <= 5) {
+          // Track browser back button usage
+          ClarityTracking.trackNavigation('browser_back', {
+            from: `step_${currentStep}`,
+            to: `step_${targetStep}`,
+            method: 'browser_back'
+          });
           setCurrentStep(targetStep);
         }
       } else if (currentStep > 1) {
@@ -78,9 +93,14 @@ const BookingWizard = () => {
     };
   }, [currentStep, setCurrentStep, resetBooking, backPressCount]);
 
-  // Update history when moving forward through steps and track with Hotjar
+  // Update history when moving forward through steps and track with Clarity
   useEffect(() => {
-    // Track booking step progression in Hotjar
+    // Initialize Clarity tracking on first mount
+    if (!previousStepRef.current) {
+      ClarityTracking.initialize();
+    }
+
+    // Track step changes with Clarity
     const stepNames = {
       1: 'trip_details',
       2: 'vehicle_selection',
@@ -90,7 +110,30 @@ const BookingWizard = () => {
       6: 'confirmation'
     };
     
-    HotjarTracking.trackBookingStep(currentStep, stepNames[currentStep] || 'unknown');
+    const stepName = stepNames[currentStep] || 'unknown';
+    
+    // Track booking step progression
+    ClarityTracking.trackBookingStep(currentStep, stepName, {
+      previous_step: previousStepRef.current,
+      navigation_direction: currentStep > previousStepRef.current ? 'forward' : 'backward'
+    });
+    
+    // Track navigation patterns
+    if (previousStepRef.current && previousStepRef.current !== currentStep) {
+      ClarityTracking.trackNavigation('step_change', {
+        from: stepNames[previousStepRef.current] || 'unknown',
+        to: stepName,
+        method: currentStep > previousStepRef.current ? 'next_button' : 'back_navigation'
+      });
+    }
+    
+    // Track if user started booking process
+    if (currentStep === 1 && !previousStepRef.current) {
+      ClarityTracking.event('booking_started');
+    }
+    
+    // Update previous step reference
+    previousStepRef.current = currentStep;
     
     // Only push state when moving forward (not on back navigation)
     const lastStep = window.history.state?.step;

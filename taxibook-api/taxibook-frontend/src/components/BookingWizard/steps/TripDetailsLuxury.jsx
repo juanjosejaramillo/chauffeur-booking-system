@@ -5,6 +5,7 @@ import { useSettings } from '../../../hooks/useSettings';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import api from '../../../config/api';
+import { ClarityTracking } from '../../../services/clarityTracking';
 
 // Common Florida airports for better matching
 const FLORIDA_AIRPORTS = [
@@ -379,6 +380,22 @@ const TripDetailsLuxury = () => {
         });
         setShowPickupSuggestions(false);
         
+        // Track successful address selection
+        ClarityTracking.trackAddressSearch('pickup', 'completed', {
+          isAirport: suggestion.isAirport || false,
+          isVenue: !!suggestion.name && !suggestion.isAirport,
+          query: suggestion.description
+        });
+        
+        // Set location type tags
+        if (suggestion.isAirport) {
+          ClarityTracking.setTag('pickup_type', 'airport');
+        } else if (suggestion.name) {
+          ClarityTracking.setTag('pickup_type', 'venue');
+        } else {
+          ClarityTracking.setTag('pickup_type', 'address');
+        }
+        
         createPickupMarker(latitude, longitude);
       } else {
         setTripDetails({
@@ -388,6 +405,22 @@ const TripDetailsLuxury = () => {
           isAirportDropoff: suggestion.isAirport || false,
         });
         setShowDropoffSuggestions(false);
+        
+        // Track successful address selection
+        ClarityTracking.trackAddressSearch('dropoff', 'completed', {
+          isAirport: suggestion.isAirport || false,
+          isVenue: !!suggestion.name && !suggestion.isAirport,
+          query: suggestion.description
+        });
+        
+        // Set location type tags
+        if (suggestion.isAirport) {
+          ClarityTracking.setTag('dropoff_type', 'airport');
+        } else if (suggestion.name) {
+          ClarityTracking.setTag('dropoff_type', 'venue');
+        } else {
+          ClarityTracking.setTag('dropoff_type', 'address');
+        }
         
         createDropoffMarker(latitude, longitude);
       }
@@ -459,9 +492,28 @@ const TripDetailsLuxury = () => {
     try {
       await validateRoute();
       drawRoute(); // Draw the route after successful validation
+      
+      // Track successful trip details completion
+      ClarityTracking.event('trip_details_completed');
+      
+      // Set trip type tags
+      const tripType = tripDetails.isAirportPickup || tripDetails.isAirportDropoff ? 'airport_transfer' : 'point_to_point';
+      ClarityTracking.setTag('trip_type', tripType);
+      
+      // Track if same-day booking
+      const today = new Date().toDateString();
+      const pickupDay = new Date(tripDetails.pickupDate).toDateString();
+      if (today === pickupDay) {
+        ClarityTracking.setTag('booking_type', 'same_day');
+      } else {
+        ClarityTracking.setTag('booking_type', 'advance');
+      }
+      
       nextStep();
     } catch (error) {
       // Error handled by store
+      // Track route validation error
+      ClarityTracking.trackError('trip_details', 'route_validation_failed', error?.message || 'Unknown error');
     }
   };
 

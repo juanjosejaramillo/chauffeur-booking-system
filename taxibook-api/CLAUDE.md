@@ -38,6 +38,11 @@ LuxRide is a premium chauffeur booking system for luxury transportation services
 - **Email**: SMTP (Gmail configured)
 - **PDF Generation**: DomPDF (receipts)
 - **QR Codes**: Simple QRCode (tip links)
+- **Analytics & Tracking**: Microsoft Clarity
+  - Session recordings and heatmaps
+  - Custom event tracking for booking funnel
+  - User identification with privacy-compliant hashing
+  - Conversion tracking and session prioritization
 
 ## Project Structure
 
@@ -270,6 +275,7 @@ npm run dev
 - `GoogleMapsService` - Maps and geocoding
 - `PricingService` - Fare calculation
 - `TipService` - Gratuity handling
+- `ClarityTracking` - Microsoft Clarity analytics (Frontend)
 
 ### Key Admin Routes
 - `/admin` - Admin dashboard
@@ -284,6 +290,39 @@ npm run dev
 - `POST /api/bookings/validate-route` - Validate route
 - `GET /api/settings/public` - Public settings
 - `POST /api/tip/{token}/process` - Process tip
+
+## Recent Updates (2025-08-29)
+
+### Analytics Integration - Microsoft Clarity
+- **Removed**: Hotjar tracking code and all dependencies
+  - Deleted `src/services/hotjarTracking.js`
+  - Removed Hotjar script from `index.html`
+  - Uninstalled `@hotjar/browser` npm package
+- **Added**: Microsoft Clarity for behavioral analytics
+  - Project ID: `t26s11c8vq`
+  - Script integration in `index.html`
+  - Created `ClarityTracking` service at `src/services/clarityTracking.js`
+- **Tracking Implementation**:
+  - Complete booking funnel tracking from trip details to confirmation
+  - Custom events for all major user interactions
+  - Error tracking for validation and payment failures
+  - User identification using hashed email addresses (privacy-compliant)
+  - Session prioritization for high-value conversions
+  - Device type detection (mobile vs desktop)
+- **Components Updated**:
+  - BookingWizard: Step navigation and abandonment tracking
+  - TripDetailsLuxury: Address searches, airport detection, date/time selection
+  - VehicleSelectionLuxury: Vehicle views, selections, and pricing
+  - CustomerInfoLuxury: Form interactions and email verification flow
+  - ReviewBookingLuxury: Legal document clicks and terms agreement
+  - PaymentLuxury: Payment attempts, tip selection, and card saving
+  - ConfirmationLuxury: Booking conversion and user identification
+  - TipPayment: Tip selection and payment processing
+- **Benefits**:
+  - Session recordings for UX analysis
+  - Heatmaps for click pattern visualization
+  - Conversion funnel analytics
+  - Real-time behavioral insights
 
 ## Recent Updates (2025-08-19)
 

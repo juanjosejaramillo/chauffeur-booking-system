@@ -9,6 +9,7 @@ import {
 } from '@stripe/react-stripe-js';
 import api from '../config/api';
 import useSettings from '../hooks/useSettings';
+import { ClarityTracking } from '../services/clarityTracking';
 
 const TipPaymentForm = ({ booking, token }) => {
   const stripe = useStripe();
@@ -30,12 +31,29 @@ const TipPaymentForm = ({ booking, token }) => {
   const handleTipSelect = (amount) => {
     setSelectedTip(amount);
     setCustomAmount('');
+    
+    // Track tip selection with Clarity
+    const percentage = tipOptions.find(opt => parseFloat(opt.amount) === amount)?.percentage;
+    ClarityTracking.trackTipPayment('tip_selected', {
+      amount: amount,
+      percentage: percentage ? percentage.toString() : 'custom',
+      method: booking.has_saved_card ? 'saved_card' : 'new_card'
+    });
   };
 
   const handleCustomAmount = (value) => {
     const amount = parseFloat(value) || 0;
     setCustomAmount(value);
     setSelectedTip(amount);
+    
+    // Track custom tip selection with Clarity
+    if (amount > 0) {
+      ClarityTracking.trackTipPayment('tip_selected', {
+        amount: amount,
+        percentage: 'custom',
+        method: booking.has_saved_card ? 'saved_card' : 'new_card'
+      });
+    }
   };
 
   const formatPrice = (price) => {
@@ -52,11 +70,21 @@ const TipPaymentForm = ({ booking, token }) => {
 
     if (selectedTip <= 0) {
       setError('Please select a tip amount');
+      ClarityTracking.trackTipPayment('validation_error', {
+        error: 'No tip amount selected'
+      });
       return;
     }
 
     setProcessing(true);
     setError('');
+
+    // Track tip payment attempt
+    ClarityTracking.trackTipPayment('payment_attempted', {
+      amount: selectedTip,
+      method: booking.has_saved_card ? 'saved_card' : 'new_card',
+      save_card: saveCard
+    });
 
     try {
       let paymentMethodId = null;
@@ -88,6 +116,13 @@ const TipPaymentForm = ({ booking, token }) => {
       });
 
       if (response.data.success) {
+        // Track successful tip payment
+        ClarityTracking.trackTipPayment('payment_succeeded', {
+          amount: selectedTip,
+          method: booking.has_saved_card ? 'saved_card' : 'new_card',
+          booking_id: booking.id
+        });
+        
         // Immediately redirect to success page
         window.location.href = `/tip/${token}/success`;
       } else {
@@ -95,6 +130,13 @@ const TipPaymentForm = ({ booking, token }) => {
       }
     } catch (err) {
       setError(err.message || 'Payment failed. Please try again.');
+      
+      // Track tip payment failure
+      ClarityTracking.trackTipPayment('payment_failed', {
+        error: err.message,
+        amount: selectedTip
+      });
+      
       setProcessing(false);
     }
   };
@@ -313,6 +355,18 @@ const TipPaymentPage = () => {
   useEffect(() => {
     fetchBookingData();
   }, [token]);
+
+  // Track tip page access
+  useEffect(() => {
+    if (booking) {
+      ClarityTracking.trackTipPayment('page_accessed', {
+        booking_id: booking.id,
+        booking_number: booking.booking_number,
+        fare_paid: booking.fare_paid,
+        source: 'direct_link' // Could be enhanced to track source
+      });
+    }
+  }, [booking]);
 
   const fetchBookingData = async () => {
     try {

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import useBookingStore from '../../../store/bookingStore';
 import useSettings from '../../../hooks/useSettings';
 import { GoogleTracking } from '../../../services/googleTracking';
-import { HotjarTracking } from '../../../services/hotjarTracking';
+import { ClarityTracking } from '../../../services/clarityTracking';
 
 const ConfirmationLuxury = () => {
   const navigate = useNavigate();
@@ -16,23 +16,34 @@ const ConfirmationLuxury = () => {
     if (!hasTrackedPurchase.current) {
       if (booking?.id && selectedVehicle) {
         const baseFare = booking?.base_fare || selectedVehicle.estimated_fare || selectedVehicle.total_price || 0;
+        const totalAmount = baseFare + (gratuityAmount || 0);
         const vehicleName = selectedVehicle.display_name || selectedVehicle.name || 'Chauffeur Service';
         const vehicleDescription = selectedVehicle.description || 'Chauffeur Service';
         
         // Track with Google Ads
         GoogleTracking.trackPurchase(booking.id, baseFare, vehicleName, vehicleDescription);
         
-        // Track with Hotjar
-        HotjarTracking.trackBookingConversion({
+        // Track booking conversion with Clarity
+        ClarityTracking.trackConversion({
           id: booking.id,
-          amount: baseFare,
-          vehicleType: vehicleName
+          amount: totalAmount,
+          vehicleType: vehicleName,
+          bookingNumber: booking.booking_number
         });
+        
+        // Identify user if email available
+        if (customerInfo?.email) {
+          const emailHash = btoa(customerInfo.email.toLowerCase()).slice(0, 10);
+          ClarityTracking.identify(emailHash);
+        }
+        
+        // Upgrade session as successful conversion
+        ClarityTracking.upgrade('booking_conversion');
         
         hasTrackedPurchase.current = true;
       }
     }
-  }, [booking, selectedVehicle]);
+  }, [booking, selectedVehicle, gratuityAmount, customerInfo]);
 
   const handleNewBooking = () => {
     resetBooking();

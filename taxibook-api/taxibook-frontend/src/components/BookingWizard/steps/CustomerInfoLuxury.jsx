@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import useBookingStore from '../../../store/bookingStore';
 import VerificationModalLuxury from '../VerificationModalLuxury';
 import { useSettings } from '../../../hooks/useSettings';
+import { ClarityTracking } from '../../../services/clarityTracking';
 
 const CustomerInfoLuxury = () => {
   const {
@@ -63,21 +64,25 @@ const CustomerInfoLuxury = () => {
     const phoneRegex = /^[\d\s\-\+\(\)]+$/;
     if (!currentInfo.phone || !phoneRegex.test(currentInfo.phone)) {
       setLocalError('Please enter a valid phone number');
+      ClarityTracking.trackError('customer_info', 'validation', 'Invalid phone number');
       return;
     }
     
     if (!currentInfo.lastName) {
       setLocalError('Please enter your last name');
+      ClarityTracking.trackError('customer_info', 'validation', 'Missing last name');
       return;
     }
     
     // If email not verified, send verification code and show modal
     if (!emailVerified) {
       try {
+        ClarityTracking.trackEmailVerification('requested');
         await sendVerificationCode();
         setShowVerificationModal(true);
       } catch (error) {
         setLocalError('Failed to send verification code. Please try again.');
+        ClarityTracking.trackEmailVerification('failed');
       }
     } else {
       // Email already verified, proceed to next step
@@ -89,15 +94,25 @@ const CustomerInfoLuxury = () => {
     try {
       await verifyEmailCode(code);
       // If verification successful, close modal and go to next step
+      ClarityTracking.trackEmailVerification('verified');
+      
+      // Identify user with email hash for better tracking
+      if (customerInfo.email) {
+        const emailHash = btoa(customerInfo.email.toLowerCase()).slice(0, 10);
+        ClarityTracking.identify(emailHash);
+      }
+      
       setShowVerificationModal(false);
       nextStep();
     } catch (error) {
       // Error is handled in the store and displayed in the modal
+      ClarityTracking.trackEmailVerification('failed');
     }
   };
 
   const handleResendCode = async () => {
     try {
+      ClarityTracking.event('email_verification_resend');
       await resendVerificationCode();
     } catch (error) {
       // Error is handled in the store and displayed in the modal
@@ -105,6 +120,9 @@ const CustomerInfoLuxury = () => {
   };
 
   const handleChangeEmail = () => {
+    // Track wrong email clicks
+    ClarityTracking.event('email_change_requested');
+    
     // Close the verification modal to allow user to edit email
     setShowVerificationModal(false);
     // Clear any verification errors
@@ -122,6 +140,9 @@ const CustomerInfoLuxury = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setCustomerInfo({ [name]: value });
+    
+    // Track form field interactions
+    ClarityTracking.event(`customer_info_${name}_interaction`);
     
     // Reset email verification if email changes
     if (name === 'email' && emailVerified) {

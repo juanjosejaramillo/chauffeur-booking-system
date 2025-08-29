@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import useBookingStore from '../../../store/bookingStore';
 import { GoogleTracking } from '../../../services/googleTracking';
+import { ClarityTracking } from '../../../services/clarityTracking';
 
 const VehicleSelectionLuxury = () => {
   const {
@@ -30,17 +31,41 @@ const VehicleSelectionLuxury = () => {
     if (availableVehicles && availableVehicles.length > 0 && !loading && !hasTrackedView.current) {
       const lowestPrice = Math.min(...availableVehicles.map(v => v.estimated_fare || v.total_price || 0));
       GoogleTracking.trackViewItem(lowestPrice);
+      
+      // Track vehicle prices displayed with Clarity
+      ClarityTracking.event('vehicle_prices_displayed');
+      ClarityTracking.setTag('vehicle_count', availableVehicles.length.toString());
+      ClarityTracking.setTag('lowest_price', lowestPrice.toString());
+      
       hasTrackedView.current = true;
     }
   }, [availableVehicles, loading]);
 
+  // Track price calculation errors
+  useEffect(() => {
+    if (error && !loading) {
+      ClarityTracking.trackError('vehicle_selection', 'price_calculation', error);
+    }
+  }, [error, loading]);
+
   const handleSelectVehicle = (vehicle) => {
     setSelectedVehicle(vehicle);
+    
+    // Track vehicle selection with Clarity
+    ClarityTracking.trackVehicleSelection({
+      name: vehicle.display_name || vehicle.name,
+      price: vehicle.estimated_fare || vehicle.total_price,
+      category: vehicle.slug || vehicle.category,
+      vehicle_type_id: vehicle.vehicle_type_id
+    });
   };
 
   const handleContinue = () => {
     if (!selectedVehicle) {
       setLocalError('Please select a vehicle to continue');
+      
+      // Track validation error with Clarity
+      ClarityTracking.trackError('vehicle_selection', 'validation', 'No vehicle selected');
       return;
     }
     
@@ -49,6 +74,11 @@ const VehicleSelectionLuxury = () => {
     const vehicleName = selectedVehicle.display_name || selectedVehicle.name;
     const vehicleDescription = selectedVehicle.description || 'Chauffeur Service';
     GoogleTracking.trackAddToCart(vehicleName, fare, vehicleDescription);
+    
+    // Track successful vehicle selection and proceed with Clarity
+    ClarityTracking.event('vehicle_selection_completed');
+    ClarityTracking.setTag('final_vehicle', vehicleName);
+    ClarityTracking.setTag('final_price', fare.toString());
     
     nextStep();
   };

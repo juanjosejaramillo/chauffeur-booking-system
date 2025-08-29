@@ -11,6 +11,7 @@ import {
 import useBookingStore from '../../../store/bookingStore';
 import useSettings from '../../../hooks/useSettings';
 import { GoogleTracking } from '../../../services/googleTracking';
+import { ClarityTracking } from '../../../services/clarityTracking';
 
 const PaymentForm = () => {
   const stripe = useStripe();
@@ -46,6 +47,13 @@ const PaymentForm = () => {
       const vehicleName = selectedVehicle.display_name || selectedVehicle.name || 'Chauffeur Service';
       const vehicleDescription = selectedVehicle.description || 'Chauffeur Service';
       GoogleTracking.trackBeginCheckout(baseFare, vehicleName, vehicleDescription);
+      
+      // Track payment page view with Clarity (begin_checkout)
+      ClarityTracking.trackPayment('page_viewed', {
+        amount: totalAmount,
+        vehicle_name: vehicleName
+      });
+      
       hasTrackedCheckout.current = true;
     }
   }, []); // Only track once on mount
@@ -65,6 +73,13 @@ const PaymentForm = () => {
     setCustomTip('');
     const amount = calculateTip(percentage);
     setGratuity(percentage, amount);
+    
+    // Track tip selection with Clarity
+    ClarityTracking.trackPayment('tip_selected', {
+      gratuityPercent: percentage,
+      gratuityAmount: amount,
+      tipType: percentage === 0 ? 'no_tip' : 'percentage'
+    });
   };
 
   const handleCustomTip = (value) => {
@@ -72,6 +87,14 @@ const PaymentForm = () => {
     const amount = parseFloat(value) || 0;
     if (amount >= 0) {
       setGratuity('custom', amount);
+      
+      // Track custom tip selection with Clarity
+      if (amount > 0) {
+        ClarityTracking.trackPayment('tip_selected', {
+          gratuityAmount: amount,
+          tipType: 'custom'
+        });
+      }
     }
   };
 
@@ -84,6 +107,15 @@ const PaymentForm = () => {
 
     setProcessing(true);
     setLocalError('');
+
+    // Track payment submission and upgrade session
+    ClarityTracking.trackPayment('submitted', {
+      amount: totalAmount,
+      hasGratuity: gratuityAmount > 0,
+      gratuityAmount: gratuityAmount,
+      saveCard: savePaymentMethod
+    });
+    ClarityTracking.upgrade('payment_attempted');
 
     try {
       // Create payment method with Stripe using separate elements
@@ -100,6 +132,7 @@ const PaymentForm = () => {
 
       if (stripeError) {
         setLocalError(stripeError.message);
+        ClarityTracking.trackPayment('failed', { error: stripeError.message });
         setProcessing(false);
         return;
       }
@@ -107,11 +140,18 @@ const PaymentForm = () => {
       // Process payment for existing booking
       await processBookingPayment(paymentMethod.id);
       
+      // Track successful payment
+      ClarityTracking.trackPayment('succeeded', {
+        amount: totalAmount,
+        paymentMethodId: paymentMethod.id
+      });
+      
       // Move to confirmation step
       nextStep();
       
     } catch (error) {
       setLocalError(error.message || 'Payment failed. Please try again.');
+      ClarityTracking.trackPayment('failed', { error: error.message });
     } finally {
       setProcessing(false);
     }
@@ -301,7 +341,12 @@ const PaymentForm = () => {
                   type="checkbox"
                   id="save-card"
                   checked={savePaymentMethod}
-                  onChange={(e) => setSavePaymentMethod(e.target.checked)}
+                  onChange={(e) => {
+                    setSavePaymentMethod(e.target.checked);
+                    ClarityTracking.trackPayment('save_card_toggled', {
+                      saveCard: e.target.checked
+                    });
+                  }}
                   className="mt-1 h-4 w-4 text-luxury-gold focus:ring-luxury-gold border-luxury-gray/30 rounded"
                 />
                 <label htmlFor="save-card" className="ml-3 text-sm">
