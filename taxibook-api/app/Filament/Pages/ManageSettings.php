@@ -371,6 +371,12 @@ class ManageSettings extends Page
                                             ->default(5)
                                             ->suffix('minutes')
                                             ->helperText('Time increment for pickup time selection (e.g., 5 = times shown in 5-minute intervals)'),
+                                        
+                                        Toggle::make('require_email_verification')
+                                            ->label('Require Email Verification')
+                                            ->default(true)
+                                            ->helperText('When enabled, customers must verify their email with a code before payment. When disabled, they can proceed directly to payment.')
+                                            ->reactive(),
                                     ])
                                     ->columns(2),
                             ]),

@@ -17,6 +17,8 @@ const CustomerInfoLuxury = () => {
     sendVerificationCode,
     verifyEmailCode,
     resendVerificationCode,
+    requireEmailVerification,
+    createBooking,
   } = useBookingStore();
   
   const { settings } = useSettings();
@@ -74,26 +76,48 @@ const CustomerInfoLuxury = () => {
       return;
     }
     
-    // If email not verified, send verification code and show modal
-    if (!emailVerified) {
+    // Check if email verification is required
+    if (requireEmailVerification && !emailVerified) {
+      // If verification is required and email not verified, send code and show modal
       try {
         ClarityTracking.trackEmailVerification('requested');
         await sendVerificationCode();
-        setShowVerificationModal(true);
+        // Check if verification was bypassed (when disabled in settings)
+        if (!requireEmailVerification) {
+          // If verification was bypassed, proceed directly
+          nextStep();
+        } else {
+          setShowVerificationModal(true);
+        }
       } catch (error) {
         setLocalError('Failed to send verification code. Please try again.');
         ClarityTracking.trackEmailVerification('failed');
       }
     } else {
-      // Email already verified, proceed to next step
-      nextStep();
+      // Email verification not required or already verified, create booking and proceed
+      try {
+        // Track booking creation attempt
+        ClarityTracking.event('booking_creation_attempted');
+        
+        // Create booking without payment (this will trigger the pending notification)
+        await createBooking();
+        
+        // Track successful booking creation
+        ClarityTracking.event('booking_creation_success');
+        
+        // Move to review step
+        nextStep();
+      } catch (error) {
+        setLocalError('Failed to create booking. Please try again.');
+        ClarityTracking.trackError('customer_info', 'booking_creation', error.message || 'Unknown error');
+      }
     }
   };
 
   const handleVerifyCode = async (code) => {
     try {
       await verifyEmailCode(code);
-      // If verification successful, close modal and go to next step
+      // If verification successful, close modal
       ClarityTracking.trackEmailVerification('verified');
       
       // Identify user with email hash for better tracking
@@ -103,7 +127,24 @@ const CustomerInfoLuxury = () => {
       }
       
       setShowVerificationModal(false);
-      nextStep();
+      
+      // Create booking after successful verification
+      try {
+        // Track booking creation attempt
+        ClarityTracking.event('booking_creation_attempted');
+        
+        // Create booking without payment (this will trigger the pending notification)
+        await createBooking();
+        
+        // Track successful booking creation
+        ClarityTracking.event('booking_creation_success');
+        
+        // Move to review step
+        nextStep();
+      } catch (error) {
+        setLocalError('Failed to create booking. Please try again.');
+        ClarityTracking.trackError('customer_info', 'booking_creation', error.message || 'Unknown error');
+      }
     } catch (error) {
       // Error is handled in the store and displayed in the modal
       ClarityTracking.trackEmailVerification('failed');

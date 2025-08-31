@@ -655,6 +655,68 @@ php artisan route:clear   # Route cache
 - **Detection**: Automatically identifies venues, POIs, and businesses
 - **Benefits**: Drivers immediately recognize destinations, better UX for customers
 
+## Recent Updates (2025-08-31)
+
+### Email Verification Toggle Feature
+- **Admin Control**: New setting in Filament admin panel to enable/disable email verification
+- **Location**: Settings → Booking Settings → Require Email Verification
+- **Backend Implementation**:
+  - Added `require_email_verification` setting to database
+  - `BookingVerificationController` checks setting before sending codes
+  - When disabled, verification endpoints return success immediately
+- **Frontend Implementation**:
+  - Settings fetched on BookingWizard mount
+  - CustomerInfoLuxury component checks setting before showing verification modal
+  - When disabled, customers proceed directly to payment
+- **Migration**: `2025_08_30_220047_add_email_verification_toggle_setting.php`
+
+### Early Booking Notification
+- **Changed Behavior**: Admin notification now sent when customer completes info form (not at payment)
+- **Booking Creation Moved**: 
+  - Previously: Created when moving from Review to Payment step
+  - Now: Created when moving from Customer Info to Review step
+- **Benefits**:
+  - Admin gets notified earlier in the booking process
+  - Better tracking of abandoned bookings
+  - Improved conversion rate monitoring
+- **Implementation**:
+  - `CustomerInfoLuxury` now calls `createBooking()` after email verification
+  - `ReviewBookingLuxury` no longer creates booking (already exists)
+  - Booking store prevents duplicate bookings with existence check
+- **Email Template**: "New Booking Pending (Admin)" triggered by `booking.created` event
+
+### Vehicle Selection UI Improvements
+- **Compact Vehicle Cards**: Redesigned vehicle selection step for better mobile and desktop experience
+  - Horizontal layout with vehicle image, info, and price in single row
+  - Optimized padding (p-4 sm:p-5) to balance content and whitespace
+  - Large vehicle images for better visibility (144x96px mobile, 192x128px desktop)
+- **Cleaner Information Display**:
+  - Removed duplicate category text that was showing above vehicle names
+  - Vehicle name displayed as main title without redundant labels
+  - Backend description text shown below vehicle name (e.g., "Affordable rides for everyday travel")
+- **Enhanced Capacity Display**:
+  - Added text labels "passengers" and "bags" next to capacity icons
+  - Format: "4 passengers" and "2 bags" for clearer understanding
+  - Icons with flex-shrink-0 to prevent distortion
+- **Expandable Details**: Added collapsible sections for additional vehicle information
+  - Dropdown arrow button to show/hide additional features
+  - Clicking arrow also selects the vehicle automatically
+  - Smooth animation (fadeIn) when expanding/collapsing details
+  - Features displayed as tags when expanded
+- **Click-to-Select**: Entire vehicle card is now clickable for selection
+  - Visual feedback with gold ring border when selected
+  - Check badge appears on selected vehicle
+  - Hover effects for better interactivity (scale 1.01 on hover)
+- **Responsive Design**: Optimized for both mobile and desktop views
+  - Smaller fonts and spacing on mobile devices
+  - Touch-friendly expand buttons with proper hit areas
+  - Consistent spacing across breakpoints
+- **Component Updates**: `VehicleSelectionLuxury.jsx` refinements
+  - Removed unused `getVehicleIcon` function
+  - Added `expandedVehicle` state for managing collapsible sections
+  - `handleToggleExpand` function for arrow click handling
+  - Displays vehicle.description from backend API
+
 ## Contact & Support
 - **Company**: LuxRide SUV
 - **Admin Email**: admin@luxridesuv.com

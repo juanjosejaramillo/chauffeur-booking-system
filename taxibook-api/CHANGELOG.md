@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.0] - 2025-08-31
+
+### Changed
+- **Vehicle Selection UI Overhaul**
+  - Redesigned vehicle cards with horizontal compact layout
+  - Increased vehicle image sizes to 144x96px (mobile) and 192x128px (desktop)
+  - Removed duplicate category labels above vehicle names
+  - Added text labels "passengers" and "bags" for better clarity
+  - Backend description text now displays below vehicle name
+  - Optimized padding for better space utilization
+  - Added expandable sections for vehicle features
+  - Entire card is now clickable for selection
+  - Visual feedback with gold border and check badge on selection
+
+### Added
+- Collapsible vehicle details with smooth fadeIn animation
+- Touch-friendly expand/collapse arrows
+- Responsive design optimizations for mobile and desktop
+- Backend vehicle descriptions prominently displayed
+
+### Fixed
+- Duplicate category text appearing above vehicle names
+- Vehicle images too small to see properly
+- Missing text labels for capacity indicators
+- Excessive padding in vehicle cards
+
 ## [1.11.0] - 2025-08-22
 
 ### Added

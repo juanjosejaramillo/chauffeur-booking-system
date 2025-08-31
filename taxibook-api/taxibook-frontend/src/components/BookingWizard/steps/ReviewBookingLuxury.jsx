@@ -9,7 +9,6 @@ const ReviewBookingLuxury = () => {
     selectedVehicle,
     customerInfo,
     routeInfo,
-    createBooking,
     nextStep,
     prevStep,
     loading,
@@ -33,22 +32,12 @@ const ReviewBookingLuxury = () => {
       return;
     }
 
-    try {
-      // Track booking creation attempt
-      ClarityTracking.event('booking_creation_attempted');
-      
-      // Create booking without payment
-      await createBooking();
-      
-      // Track successful booking creation
-      ClarityTracking.event('booking_creation_success');
-      
-      // Move to payment step
-      nextStep();
-    } catch (error) {
-      // Track booking creation failure
-      ClarityTracking.trackError('review_booking', 'booking_creation', error.message || 'Unknown error');
-    }
+    // Booking is already created in CustomerInfo step
+    // Just track the review completion and move to payment
+    ClarityTracking.event('review_completed');
+    
+    // Move to payment step
+    nextStep();
   };
 
   const formatDateTime = (date, time) => {

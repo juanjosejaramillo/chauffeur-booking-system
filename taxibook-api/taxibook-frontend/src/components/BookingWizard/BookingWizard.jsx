@@ -10,7 +10,7 @@ import WizardProgressLuxury from './WizardProgressLuxury';
 import { ClarityTracking } from '../../services/clarityTracking';
 
 const BookingWizard = () => {
-  const { currentStep, resetBooking, setCurrentStep } = useBookingStore();
+  const { currentStep, resetBooking, setCurrentStep, fetchSettings } = useBookingStore();
   const [backPressCount, setBackPressCount] = useState(0);
   const backPressTimeoutRef = useRef(null);
   const previousStepRef = useRef(currentStep);
@@ -168,6 +168,11 @@ const BookingWizard = () => {
       };
     }
   }, [currentStep]);
+
+  // Fetch settings on component mount
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   // Only reset booking data on unmount if booking is completed
   useEffect(() => {

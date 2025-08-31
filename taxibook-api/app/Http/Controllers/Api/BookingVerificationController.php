@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Mail\VerificationCodeMail;
 use App\Models\User;
+use App\Models\Setting;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -14,6 +15,17 @@ class BookingVerificationController extends Controller
 {
     public function sendVerificationCode(Request $request)
     {
+        // Check if email verification is required
+        $requireEmailVerification = filter_var(Setting::get('require_email_verification', true), FILTER_VALIDATE_BOOLEAN);
+        
+        if (!$requireEmailVerification) {
+            // If verification is disabled, immediately return success
+            return response()->json([
+                'message' => 'Email verification is not required',
+                'verification_bypassed' => true
+            ]);
+        }
+        
         $validated = $request->validate([
             'email' => 'required|email',
             'customer_first_name' => 'required|string',
@@ -107,6 +119,18 @@ class BookingVerificationController extends Controller
 
     public function verifyCode(Request $request)
     {
+        // Check if email verification is required
+        $requireEmailVerification = filter_var(Setting::get('require_email_verification', true), FILTER_VALIDATE_BOOLEAN);
+        
+        if (!$requireEmailVerification) {
+            // If verification is disabled, immediately return success
+            return response()->json([
+                'message' => 'Email verification is not required',
+                'verified' => true,
+                'verification_bypassed' => true
+            ]);
+        }
+        
         $validated = $request->validate([
             'email' => 'required|email',
             'code' => 'required|string|size:6'

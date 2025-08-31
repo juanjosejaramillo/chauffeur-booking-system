@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import api from '../config/api';
+import settingsService from '../services/settingsService';
 
 const useBookingStore = create(
   persist(
@@ -45,6 +46,7 @@ const useBookingStore = create(
   emailVerified: false,
   verificationSent: false,
   verificationError: null,
+  requireEmailVerification: true, // Default to true, will be updated from settings
   
   routeInfo: null,
   booking: null,
@@ -203,7 +205,14 @@ const useBookingStore = create(
   createBooking: async () => {
     set({ loading: true, error: null });
     try {
-      const { tripDetails, selectedVehicle, customerInfo } = get();
+      const { tripDetails, selectedVehicle, customerInfo, booking } = get();
+      
+      // Check if booking already exists (avoid duplicates)
+      if (booking && booking.booking_number) {
+        console.log('Booking already exists, skipping creation');
+        return { booking };
+      }
+      
       const response = await api.post('/bookings', {
         vehicle_type_id: selectedVehicle.vehicle_type_id,
         customer_first_name: customerInfo.firstName,
@@ -312,7 +321,13 @@ const useBookingStore = create(
       
       const response = await api.post('/bookings/send-verification', payload);
       
-      set({ verificationSent: true });
+      // Check if verification was bypassed (when disabled in settings)
+      if (response.data.verification_bypassed) {
+        set({ emailVerified: true, verificationSent: false });
+      } else {
+        set({ verificationSent: true });
+      }
+      
       return response.data;
     } catch (error) {
       const errorMessage = error.response?.data?.error || 'Failed to send verification code';
@@ -361,6 +376,19 @@ const useBookingStore = create(
       throw error;
     } finally {
       set({ loading: false });
+    }
+  },
+  
+  // Fetch and update settings
+  fetchSettings: async () => {
+    try {
+      const settings = await settingsService.getPublicSettings();
+      if (settings && settings.booking) {
+        set({ requireEmailVerification: settings.booking.require_email_verification });
+      }
+    } catch (error) {
+      console.error('Failed to fetch settings:', error);
+      // Keep default value if fetch fails
     }
   },
   

@@ -19,6 +19,7 @@ class SettingsController extends Controller
         $maximumBookingDays = (int) Setting::get('maximum_booking_days', 90);
         $allowSameDayBooking = filter_var(Setting::get('allow_same_day_booking', true), FILTER_VALIDATE_BOOLEAN);
         $bookingTimeIncrement = (int) Setting::get('booking_time_increment', 5);
+        $requireEmailVerification = filter_var(Setting::get('require_email_verification', true), FILTER_VALIDATE_BOOLEAN);
         
         // Stripe settings
         $stripeEnabled = filter_var(Setting::get('stripe_enabled', true), FILTER_VALIDATE_BOOLEAN);
@@ -74,6 +75,7 @@ class SettingsController extends Controller
                 'maximum_days' => $maximumBookingDays,
                 'allow_same_day' => $allowSameDayBooking,
                 'time_increment' => $bookingTimeIncrement,
+                'require_email_verification' => $requireEmailVerification,
             ],
             'stripe' => [
                 'enabled' => $stripeEnabled,
