@@ -685,11 +685,32 @@ php artisan route:clear   # Route cache
   - Booking store prevents duplicate bookings with existence check
 - **Email Template**: "New Booking Pending (Admin)" triggered by `booking.created` event
 
-### Vehicle Selection UI Improvements
+### Vehicle Selection UI Improvements (Session 2)
+- **Layout Overflow Fixes**: Resolved issues with content appearing outside container boundaries
+  - Added `overflow-hidden rounded-lg` to prevent content overflow
+  - Moved vehicle title and description inside the container (top section)
+  - Adjusted selected badge position from negative to positive positioning (top-3 right-3)
+  - Ensured all content stays within white card boundaries
+- **Optimized Container Width**: Reduced maximum width for better visual proportion on large screens
+  - Changed from `max-w-6xl` to `max-w-4xl` (896px max width)
+  - Prevents cards from being too wide on desktop displays
+  - Better visual balance and readability
+- **Improved Content Structure**:
+  - Reorganized layout: Title → Description → Main content row
+  - Vehicle name and description now appear at top of card
+  - Below that: horizontal layout with image, capacity info, and price
+  - Added flex spacer to push price section to the right
+- **Reduced White Space**: Eliminated excessive gaps in center of cards
+  - Removed `flex-1` from capacity info section
+  - Capacity info positioned closer to vehicle image
+  - Reduced gap between capacity items (gap-3 instead of gap-4)
+  - Added `whitespace-nowrap` to prevent text wrapping
+
+### Vehicle Selection UI Improvements (Session 1)
 - **Compact Vehicle Cards**: Redesigned vehicle selection step for better mobile and desktop experience
   - Horizontal layout with vehicle image, info, and price in single row
   - Optimized padding (p-4 sm:p-5) to balance content and whitespace
-  - Large vehicle images for better visibility (144x96px mobile, 192x128px desktop)
+  - Large vehicle images for better visibility (128x80px mobile, 144x96px desktop)
 - **Cleaner Information Display**:
   - Removed duplicate category text that was showing above vehicle names
   - Vehicle name displayed as main title without redundant labels

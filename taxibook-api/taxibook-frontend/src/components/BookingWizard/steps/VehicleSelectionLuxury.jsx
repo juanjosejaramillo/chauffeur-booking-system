@@ -115,7 +115,7 @@ const VehicleSelectionLuxury = () => {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="text-center mb-8 sm:mb-12">
         <h2 className="font-display text-2xl sm:text-3xl text-luxury-black mb-3 sm:mb-4">
@@ -150,7 +150,7 @@ const VehicleSelectionLuxury = () => {
             <div
               key={vehicle.vehicle_type_id}
               onClick={() => handleSelectVehicle(vehicle)}
-              className={`relative bg-luxury-white cursor-pointer transition-all duration-300 hover:shadow-luxury-lg group ${
+              className={`relative bg-luxury-white cursor-pointer transition-all duration-300 hover:shadow-luxury-lg group overflow-hidden rounded-lg ${
                 isSelected
                   ? 'ring-2 ring-luxury-gold shadow-luxury-lg'
                   : 'shadow-luxury hover:scale-[1.01]'
@@ -158,67 +158,64 @@ const VehicleSelectionLuxury = () => {
             >
               {/* Selected Badge */}
               {isSelected && (
-                <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 bg-luxury-gold text-luxury-white rounded-full p-1.5 sm:p-2 shadow-lg z-10">
+                <div className="absolute top-3 right-3 bg-luxury-gold text-luxury-white rounded-full p-1.5 sm:p-2 shadow-lg z-10">
                   <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 </div>
               )}
 
-              {/* Compact Vehicle Info */}
+              {/* Vehicle Card Content */}
               <div className="p-4 sm:p-5">
-                <div className="flex items-center justify-between">
-                  {/* Left: Vehicle Image and Basic Info */}
-                  <div className="flex items-center gap-3 sm:gap-4 flex-1">
-                    {/* Vehicle Image - Much larger */}
-                    {vehicle.image_url && (
-                      <div className="w-36 h-24 sm:w-48 sm:h-32 flex-shrink-0">
-                        <img
-                          src={vehicle.image_url}
-                          alt={vehicle.display_name}
-                          className="w-full h-full object-contain"
-                          onError={(e) => {
-                            e.target.style.display = 'none';
-                          }}
-                        />
-                      </div>
-                    )}
-                    
-                    {/* Vehicle Details */}
-                    <div className="flex-1 min-w-0">
-                      {/* Vehicle Name and Description */}
-                      <div className="mb-2">
-                        <h3 className="font-display text-base sm:text-xl text-luxury-black">
-                          {vehicle.display_name || vehicle.name}
-                        </h3>
-                        {/* Description from backend */}
-                        {vehicle.description && (
-                          <p className="text-xs sm:text-sm text-luxury-gray/60 mt-1">
-                            {vehicle.description}
-                          </p>
-                        )}
-                      </div>
-                      
-                      {/* Capacity Icons with text labels */}
-                      <div className="flex items-center gap-4 sm:gap-6">
-                        <span className="flex items-center gap-1.5 text-xs sm:text-sm text-luxury-gray/60">
-                          <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                          </svg>
-                          <span>{vehicle.max_passengers} passengers</span>
-                        </span>
-                        <span className="flex items-center gap-1.5 text-xs sm:text-sm text-luxury-gray/60">
-                          <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                          </svg>
-                          <span>{vehicle.max_luggage} bags</span>
-                        </span>
-                      </div>
+                {/* Title and Description at Top */}
+                <div className="mb-3">
+                  <h3 className="font-display text-lg sm:text-xl text-luxury-black">
+                    {vehicle.display_name || vehicle.name}
+                  </h3>
+                  {vehicle.description && (
+                    <p className="text-xs sm:text-sm text-luxury-gray/60 mt-1">
+                      {vehicle.description}
+                    </p>
+                  )}
+                </div>
+
+                {/* Main Content Row */}
+                <div className="flex items-center gap-3 sm:gap-4">
+                  {/* Left: Vehicle Image */}
+                  {vehicle.image_url && (
+                    <div className="w-32 h-20 sm:w-36 sm:h-24 flex-shrink-0">
+                      <img
+                        src={vehicle.image_url}
+                        alt={vehicle.display_name}
+                        className="w-full h-full object-contain"
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                        }}
+                      />
                     </div>
+                  )}
+                  
+                  {/* Center: Capacity Info - Compact */}
+                  <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+                    <span className="flex items-center gap-1.5 text-xs sm:text-sm text-luxury-gray/60">
+                      <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      <span className="whitespace-nowrap">{vehicle.max_passengers} passengers</span>
+                    </span>
+                    <span className="flex items-center gap-1.5 text-xs sm:text-sm text-luxury-gray/60">
+                      <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                      <span className="whitespace-nowrap">{vehicle.max_luggage} bags</span>
+                    </span>
                   </div>
 
+                  {/* Spacer to push price to the right */}
+                  <div className="flex-1"></div>
+
                   {/* Right: Price and Expand Arrow */}
-                  <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                     {/* Price */}
                     <div className="text-right">
                       <p className="text-lg sm:text-xl font-light text-luxury-black">
