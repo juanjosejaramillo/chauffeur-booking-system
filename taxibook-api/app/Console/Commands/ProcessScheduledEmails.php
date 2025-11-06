@@ -79,9 +79,9 @@ class ProcessScheduledEmails extends Command
     {
         $emailsSent = 0;
         $minutesThreshold = $template->getTimingInMinutes();
-        
+
         // Get bookings that match the timing criteria
-        $query = Booking::where('status', '!=', 'cancelled');
+        $query = Booking::where('status', 'confirmed');
         
         if ($template->send_timing_type === 'before_pickup') {
             // Find bookings where pickup is X minutes in the future
@@ -122,11 +122,11 @@ class ProcessScheduledEmails extends Command
     {
         $emailsSent = 0;
         $minutesThreshold = $template->getTimingInMinutes();
-        
+
         // Find bookings created X minutes ago
         $targetTime = now()->subMinutes($minutesThreshold);
-        
-        $bookings = Booking::where('status', '!=', 'cancelled')
+
+        $bookings = Booking::where('status', 'confirmed')
             ->whereBetween('created_at', [
                 $targetTime->copy()->subMinutes(15),
                 $targetTime->copy()->addMinutes(15)

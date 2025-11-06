@@ -50,13 +50,13 @@ class StripeWebhookController extends Controller
     private function handlePaymentIntentSucceeded($paymentIntent)
     {
         $booking = Booking::where('stripe_payment_intent_id', $paymentIntent->id)->first();
-        
+
         if ($booking) {
             // Update booking status if payment was captured
             if ($paymentIntent->status === 'succeeded' && $paymentIntent->amount_received > 0) {
                 $booking->update([
                     'payment_status' => 'captured',
-                    'status' => 'completed',
+                    'status' => 'confirmed',
                 ]);
                 
                 // Update transaction record

@@ -67,7 +67,7 @@ class EditBooking extends EditRecord
                 ->label('Cancel Authorization')
                 ->icon('heroicon-o-x-circle')
                 ->color('warning')
-                ->visible(fn () => in_array($this->record->payment_status, ['pending', 'authorized']))
+                ->visible(fn () => $this->record->payment_status === 'authorized')
                 ->action(function () {
                     try {
                         $stripeService = app(StripeService::class);

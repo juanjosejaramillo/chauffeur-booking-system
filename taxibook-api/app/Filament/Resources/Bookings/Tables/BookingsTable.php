@@ -169,7 +169,7 @@ class BookingsTable
                         ->label('Cancel Authorization')
                         ->icon('heroicon-o-x-circle')
                         ->color('warning')
-                        ->visible(fn ($record) => in_array($record->payment_status, ['pending', 'authorized']))
+                        ->visible(fn ($record) => $record->payment_status === 'authorized')
                         ->action(function ($record) {
                             try {
                                 $stripeService = app(StripeService::class);
