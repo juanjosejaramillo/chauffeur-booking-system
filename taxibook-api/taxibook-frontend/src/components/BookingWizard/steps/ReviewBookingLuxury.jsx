@@ -97,18 +97,44 @@ const ReviewBookingLuxury = () => {
                 </div>
               </div>
 
-              <div className="flex items-start gap-4">
-                <div className="w-8 h-8 rounded-full bg-luxury-black/10 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-4 h-4 text-luxury-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
+              {/* Destination - Only for One Way */}
+              {tripDetails.bookingType === 'one_way' && tripDetails.dropoffAddress && (
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-luxury-black/10 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-luxury-black" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs text-luxury-gray/50 uppercase tracking-wide mb-1">Destination</p>
+                    <p className="text-luxury-black font-medium">{tripDetails.dropoffAddress}</p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-xs text-luxury-gray/50 uppercase tracking-wide mb-1">Destination</p>
-                  <p className="text-luxury-black font-medium">{tripDetails.dropoffAddress}</p>
+              )}
+
+              {/* Duration - Only for Hourly */}
+              {tripDetails.bookingType === 'hourly' && tripDetails.durationHours && (
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-luxury-gold/10 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-luxury-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs text-luxury-gray/50 uppercase tracking-wide mb-1">Duration</p>
+                    <p className="text-luxury-black font-medium">
+                      {tripDetails.durationHours} hour{tripDetails.durationHours !== 1 ? 's' : ''} rental
+                    </p>
+                    {selectedVehicle?.miles_included_per_hour && (
+                      <p className="text-xs text-luxury-gray/60 mt-1">
+                        Includes {tripDetails.durationHours * selectedVehicle.miles_included_per_hour} miles
+                        ({selectedVehicle.miles_included_per_hour} miles/hour)
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="flex items-start gap-4">
                 <div className="w-8 h-8 rounded-full bg-luxury-light-gray flex items-center justify-center flex-shrink-0">
@@ -124,19 +150,22 @@ const ReviewBookingLuxury = () => {
                 </div>
               </div>
 
-              <div className="flex items-start gap-4">
-                <div className="w-8 h-8 rounded-full bg-luxury-light-gray flex items-center justify-center flex-shrink-0">
-                  <svg className="w-4 h-4 text-luxury-gray" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+              {/* Distance/Duration - Only for One Way */}
+              {tripDetails.bookingType === 'one_way' && routeInfo && (
+                <div className="flex items-start gap-4">
+                  <div className="w-8 h-8 rounded-full bg-luxury-light-gray flex items-center justify-center flex-shrink-0">
+                    <svg className="w-4 h-4 text-luxury-gray" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-xs text-luxury-gray/50 uppercase tracking-wide mb-1">Estimated Duration</p>
+                    <p className="text-luxury-black font-medium">
+                      {Math.round(routeInfo.duration / 60)} minutes ({routeInfo.distance.toFixed(1)} miles)
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1">
-                  <p className="text-xs text-luxury-gray/50 uppercase tracking-wide mb-1">Estimated Duration</p>
-                  <p className="text-luxury-black font-medium">
-                    {Math.round(routeInfo.duration / 60)} minutes ({routeInfo.distance.toFixed(1)} miles)
-                  </p>
-                </div>
-              </div>
+              )}
             </div>
           </div>
 

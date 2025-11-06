@@ -118,6 +118,57 @@ class VehicleTypeForm
                             ->helperText('Charge per minute of travel time'),
                     ]),
 
+                Section::make('Hourly Booking Settings')
+                    ->description('Configure hourly booking options for this vehicle')
+                    ->schema([
+                        Toggle::make('hourly_enabled')
+                            ->label('Enable Hourly Bookings')
+                            ->reactive()
+                            ->helperText('Allow customers to book this vehicle by the hour')
+                            ->columnSpanFull(),
+                        TextInput::make('hourly_rate')
+                            ->label('Hourly Rate ($)')
+                            ->numeric()
+                            ->prefix('$')
+                            ->minValue(0)
+                            ->visible(fn ($get) => $get('hourly_enabled'))
+                            ->required(fn ($get) => $get('hourly_enabled'))
+                            ->helperText('Price per hour for hourly bookings'),
+                        TextInput::make('minimum_hours')
+                            ->label('Minimum Hours')
+                            ->numeric()
+                            ->default(2)
+                            ->minValue(1)
+                            ->visible(fn ($get) => $get('hourly_enabled'))
+                            ->required(fn ($get) => $get('hourly_enabled'))
+                            ->helperText('Minimum number of hours required'),
+                        TextInput::make('maximum_hours')
+                            ->label('Maximum Hours')
+                            ->numeric()
+                            ->default(12)
+                            ->minValue(fn ($get) => ($get('minimum_hours') ?? 1) + 1)
+                            ->visible(fn ($get) => $get('hourly_enabled'))
+                            ->required(fn ($get) => $get('hourly_enabled'))
+                            ->helperText('Maximum number of hours allowed'),
+                        TextInput::make('miles_included_per_hour')
+                            ->label('Miles Included per Hour')
+                            ->numeric()
+                            ->default(20)
+                            ->minValue(1)
+                            ->visible(fn ($get) => $get('hourly_enabled'))
+                            ->required(fn ($get) => $get('hourly_enabled'))
+                            ->helperText('Number of miles included per hour'),
+                        TextInput::make('excess_mile_rate')
+                            ->label('Excess Mile Rate ($)')
+                            ->numeric()
+                            ->prefix('$')
+                            ->minValue(0)
+                            ->visible(fn ($get) => $get('hourly_enabled'))
+                            ->required(fn ($get) => $get('hourly_enabled'))
+                            ->helperText('Charge per mile over included miles'),
+                    ])
+                    ->columns(3),
+
                 Section::make('Taxes & Fees')
                     ->description('Configure optional taxes and fees')
                     ->schema([

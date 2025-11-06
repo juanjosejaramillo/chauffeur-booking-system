@@ -13,6 +13,7 @@ class Booking extends Model
 
     protected $fillable = [
         'booking_number',
+        'booking_type',
         'user_id',
         'vehicle_type_id',
         'customer_first_name',
@@ -30,6 +31,7 @@ class Booking extends Model
         'dropoff_latitude',
         'dropoff_longitude',
         'pickup_date',
+        'duration_hours',
         'estimated_distance',
         'estimated_duration',
         'estimated_fare',
@@ -65,6 +67,7 @@ class Booking extends Model
             'dropoff_latitude' => 'decimal:8',
             'dropoff_longitude' => 'decimal:8',
             'pickup_date' => 'datetime',
+            'duration_hours' => 'integer',
             'estimated_distance' => 'decimal:2',
             'estimated_fare' => 'decimal:2',
             'final_fare' => 'decimal:2',

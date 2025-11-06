@@ -355,6 +355,11 @@ class EmailTemplate extends Model
             'has_special_instructions' => 'Boolean flag if special instructions exist',
             'has_flight_number' => 'Boolean flag if flight number exists',
             'has_additional_fields' => 'Boolean flag if dynamic fields exist',
+            'booking_type' => 'Booking type (one_way or hourly)',
+            'duration_hours' => 'Duration in hours (for hourly bookings, null for one-way)',
+            'is_hourly_booking' => 'Boolean flag - true if hourly booking, false if one-way',
+            'estimated_distance' => 'Estimated distance in miles (formatted, e.g., "12.5")',
+            'estimated_duration' => 'Estimated duration in minutes (e.g., "45")',
         ];
 
         // Add dynamic field variables

@@ -96,24 +96,50 @@ class BookingController extends Controller
     public function calculatePrices(Request $request)
     {
         $validated = $request->validate([
+            'booking_type' => 'nullable|string|in:one_way,hourly',
             'pickup_lat' => 'required|numeric|between:-90,90',
             'pickup_lng' => 'required|numeric|between:-180,180',
-            'dropoff_lat' => 'required|numeric|between:-90,90',
-            'dropoff_lng' => 'required|numeric|between:-180,180',
+            'dropoff_lat' => 'nullable|numeric|between:-90,90',
+            'dropoff_lng' => 'nullable|numeric|between:-180,180',
             'pickup_date' => 'nullable|date',
             'pickup_time' => 'nullable|string',
+            'duration_hours' => 'nullable|integer|min:1|max:24',
         ]);
 
-        // Combine pickup date and time if provided
-        $pickupDateTime = null;
-        if (isset($validated['pickup_date'])) {
-            $pickupDateTime = $validated['pickup_date'];
-            if (isset($validated['pickup_time'])) {
-                $pickupDateTime .= ' ' . $validated['pickup_time'];
-            }
-        }
+        $bookingType = $validated['booking_type'] ?? 'one_way';
 
         try {
+            // Handle hourly bookings
+            if ($bookingType === 'hourly') {
+                if (!isset($validated['duration_hours'])) {
+                    return response()->json([
+                        'error' => 'Duration in hours is required for hourly bookings.',
+                    ], 422);
+                }
+
+                $prices = $this->pricingService->calculateHourlyPrices(
+                    $validated['duration_hours']
+                );
+
+                return response()->json($prices);
+            }
+
+            // Handle one-way bookings (original logic)
+            if (!isset($validated['dropoff_lat']) || !isset($validated['dropoff_lng'])) {
+                return response()->json([
+                    'error' => 'Dropoff location is required for one-way bookings.',
+                ], 422);
+            }
+
+            // Combine pickup date and time if provided
+            $pickupDateTime = null;
+            if (isset($validated['pickup_date'])) {
+                $pickupDateTime = $validated['pickup_date'];
+                if (isset($validated['pickup_time'])) {
+                    $pickupDateTime .= ' ' . $validated['pickup_time'];
+                }
+            }
+
             $prices = $this->pricingService->calculatePrices(
                 $validated['pickup_lat'],
                 $validated['pickup_lng'],
@@ -133,6 +159,7 @@ class BookingController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'booking_type' => 'nullable|string|in:one_way,hourly',
             'vehicle_type_id' => 'required|exists:vehicle_types,id',
             'customer_first_name' => 'required|string|max:255',
             'customer_last_name' => 'required|string|max:255',
@@ -141,10 +168,11 @@ class BookingController extends Controller
             'pickup_address' => 'required|string',
             'pickup_lat' => 'required|numeric|between:-90,90',
             'pickup_lng' => 'required|numeric|between:-180,180',
-            'dropoff_address' => 'required|string',
-            'dropoff_lat' => 'required|numeric|between:-90,90',
-            'dropoff_lng' => 'required|numeric|between:-180,180',
+            'dropoff_address' => 'nullable|string',
+            'dropoff_lat' => 'nullable|numeric|between:-90,90',
+            'dropoff_lng' => 'nullable|numeric|between:-180,180',
             'pickup_date' => 'required|date|after:now',
+            'duration_hours' => 'nullable|integer|min:1|max:24',
             'special_instructions' => 'nullable|string|max:500',
             'flight_number' => 'nullable|string|max:50',
             'is_airport_pickup' => 'boolean',
@@ -155,8 +183,9 @@ class BookingController extends Controller
             'save_payment_method' => 'boolean', // Save card for future use
         ]);
 
+        $bookingType = $validated['booking_type'] ?? 'one_way';
         $pickupDate = Carbon::parse($validated['pickup_date']);
-        
+
         // Check 2-hour advance booking requirement
         if ($pickupDate->isBefore(now()->addHours(2))) {
             return response()->json([
@@ -164,22 +193,58 @@ class BookingController extends Controller
             ], 422);
         }
 
-        // Calculate route and pricing
-        $route = $this->mapsService->getRoute(
-            $validated['pickup_lat'],
-            $validated['pickup_lng'],
-            $validated['dropoff_lat'],
-            $validated['dropoff_lng']
-        );
-
-        if (!$route) {
-            return response()->json([
-                'error' => 'Unable to calculate route. Please try again.',
-            ], 422);
-        }
-
         $vehicleType = VehicleType::findOrFail($validated['vehicle_type_id']);
-        $estimatedFare = $vehicleType->calculateFare($route['distance'], $route['duration']);
+        $route = null;
+        $estimatedFare = 0;
+
+        // Handle booking type specific logic
+        if ($bookingType === 'hourly') {
+            // Validate hourly booking requirements
+            if (!isset($validated['duration_hours'])) {
+                return response()->json([
+                    'error' => 'Duration in hours is required for hourly bookings.',
+                ], 422);
+            }
+
+            if (!$vehicleType->hourly_enabled) {
+                return response()->json([
+                    'error' => 'This vehicle type does not support hourly bookings.',
+                ], 422);
+            }
+
+            $hours = $validated['duration_hours'];
+            if ($hours < $vehicleType->minimum_hours || $hours > $vehicleType->maximum_hours) {
+                return response()->json([
+                    'error' => sprintf('Hourly booking must be between %d and %d hours for this vehicle.',
+                        $vehicleType->minimum_hours, $vehicleType->maximum_hours),
+                ], 422);
+            }
+
+            $estimatedFare = $vehicleType->calculateHourlyFare($hours);
+        } else {
+            // One-way booking - validate dropoff location
+            if (!isset($validated['dropoff_lat']) || !isset($validated['dropoff_lng'])) {
+                return response()->json([
+                    'error' => 'Dropoff location is required for one-way bookings.',
+                ], 422);
+            }
+
+            // Calculate route and pricing
+            $route = $this->mapsService->getRoute(
+                $validated['pickup_lat'],
+                $validated['pickup_lng'],
+                $validated['dropoff_lat'],
+                $validated['dropoff_lng']
+            );
+
+            if (!$route) {
+                return response()->json([
+                    'error' => 'Unable to calculate route. Please try again.',
+                ], 422);
+            }
+
+            $estimatedFare = $vehicleType->calculateFare($route['distance'], $route['duration']);
+        }
 
         DB::beginTransaction();
 
@@ -194,6 +259,7 @@ class BookingController extends Controller
             
             // Create booking
             $booking = Booking::create([
+                'booking_type' => $bookingType,
                 'user_id' => $user ? $user->id : null,
                 'vehicle_type_id' => $validated['vehicle_type_id'],
                 'customer_first_name' => $validated['customer_first_name'],
@@ -203,12 +269,13 @@ class BookingController extends Controller
                 'pickup_address' => $validated['pickup_address'],
                 'pickup_latitude' => $validated['pickup_lat'],
                 'pickup_longitude' => $validated['pickup_lng'],
-                'dropoff_address' => $validated['dropoff_address'],
-                'dropoff_latitude' => $validated['dropoff_lat'],
-                'dropoff_longitude' => $validated['dropoff_lng'],
+                'dropoff_address' => $validated['dropoff_address'] ?? null,
+                'dropoff_latitude' => $validated['dropoff_lat'] ?? null,
+                'dropoff_longitude' => $validated['dropoff_lng'] ?? null,
                 'pickup_date' => $pickupDate,
-                'estimated_distance' => $route['distance'],
-                'estimated_duration' => $route['duration'],
+                'duration_hours' => $bookingType === 'hourly' ? $validated['duration_hours'] : null,
+                'estimated_distance' => $route ? $route['distance'] : null,
+                'estimated_duration' => $route ? $route['duration'] : null,
                 'estimated_fare' => $estimatedFare,
                 'final_fare' => $estimatedFare,
                 'gratuity_amount' => $tipAmount,
@@ -267,9 +334,15 @@ class BookingController extends Controller
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            
+
+            \Log::error('Booking creation failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'validated' => $validated ?? []
+            ]);
+
             return response()->json([
-                'error' => 'Failed to create booking. Please try again.',
+                'error' => 'Failed to create booking: ' . $e->getMessage(),
             ], 500);
         }
     }

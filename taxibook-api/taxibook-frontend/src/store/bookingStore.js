@@ -12,6 +12,7 @@ const useBookingStore = create(
   
   // Booking data
   tripDetails: {
+    bookingType: 'one_way', // 'one_way' or 'hourly'
     pickupAddress: '',
     pickupLat: null,
     pickupLng: null,
@@ -20,6 +21,7 @@ const useBookingStore = create(
     dropoffLng: null,
     pickupDate: '',
     pickupTime: '',
+    durationHours: null, // For hourly bookings
     isAirportPickup: false,
     isAirportDropoff: false,
   },
@@ -180,18 +182,27 @@ const useBookingStore = create(
     set({ loading: true, error: null });
     try {
       const { tripDetails } = get();
-      const response = await api.post('/bookings/calculate-prices', {
+      const payload = {
+        booking_type: tripDetails.bookingType || 'one_way',
         pickup_lat: tripDetails.pickupLat,
         pickup_lng: tripDetails.pickupLng,
-        dropoff_lat: tripDetails.dropoffLat,
-        dropoff_lng: tripDetails.dropoffLng,
         pickup_date: tripDetails.pickupDate,
         pickup_time: tripDetails.pickupTime,
-      });
-      
-      set({ 
+      };
+
+      // Add conditional fields based on booking type
+      if (tripDetails.bookingType === 'hourly') {
+        payload.duration_hours = tripDetails.durationHours;
+      } else {
+        payload.dropoff_lat = tripDetails.dropoffLat;
+        payload.dropoff_lng = tripDetails.dropoffLng;
+      }
+
+      const response = await api.post('/bookings/calculate-prices', payload);
+
+      set({
         availableVehicles: response.data.vehicles,
-        routeInfo: response.data.route 
+        routeInfo: response.data.route || null
       });
       return response.data;
     } catch (error) {
@@ -213,7 +224,8 @@ const useBookingStore = create(
         return { booking };
       }
       
-      const response = await api.post('/bookings', {
+      const payload = {
+        booking_type: tripDetails.bookingType || 'one_way',
         vehicle_type_id: selectedVehicle.vehicle_type_id,
         customer_first_name: customerInfo.firstName,
         customer_last_name: customerInfo.lastName,
@@ -222,17 +234,24 @@ const useBookingStore = create(
         pickup_address: tripDetails.pickupAddress,
         pickup_lat: tripDetails.pickupLat,
         pickup_lng: tripDetails.pickupLng,
-        dropoff_address: tripDetails.dropoffAddress,
-        dropoff_lat: tripDetails.dropoffLat,
-        dropoff_lng: tripDetails.dropoffLng,
         pickup_date: `${tripDetails.pickupDate} ${tripDetails.pickupTime}`,
         special_instructions: customerInfo.specialInstructions,
         flight_number: customerInfo.flightNumber || null,
         is_airport_pickup: tripDetails.isAirportPickup || false,
         is_airport_dropoff: tripDetails.isAirportDropoff || false,
         additional_fields: customerInfo.additionalFields || {},
-        // No payment_method_id - will be processed separately
-      });
+      };
+
+      // Add conditional fields based on booking type
+      if (tripDetails.bookingType === 'hourly') {
+        payload.duration_hours = tripDetails.durationHours;
+      } else {
+        payload.dropoff_address = tripDetails.dropoffAddress;
+        payload.dropoff_lat = tripDetails.dropoffLat;
+        payload.dropoff_lng = tripDetails.dropoffLng;
+      }
+
+      const response = await api.post('/bookings', payload);
       
       set({ booking: response.data.booking });
       return response.data;
@@ -395,6 +414,7 @@ const useBookingStore = create(
   resetBooking: () => set({
     currentStep: 1,
     tripDetails: {
+      bookingType: 'one_way',
       pickupAddress: '',
       pickupLat: null,
       pickupLng: null,
@@ -403,6 +423,9 @@ const useBookingStore = create(
       dropoffLng: null,
       pickupDate: '',
       pickupTime: '',
+      durationHours: null,
+      isAirportPickup: false,
+      isAirportDropoff: false,
     },
     selectedVehicle: null,
     availableVehicles: [],

@@ -224,6 +224,8 @@ class NotificationService
                 'pickup_time' => $booking->pickup_date->format('g:i A'),
                 'vehicle_type' => $booking->vehicleType?->display_name ?? 'N/A',
                 'estimated_fare' => '$' . number_format($booking->estimated_fare, 2),
+                'estimated_distance' => $booking->estimated_distance ? number_format($booking->estimated_distance, 1) : null,
+                'estimated_duration' => $booking->estimated_duration ? round($booking->estimated_duration / 60) : null,
                 'final_fare' => $booking->final_fare ? '$' . number_format($booking->final_fare, 2) : '$' . number_format($booking->estimated_fare, 2),
                 'total_refunded' => $booking->total_refunded > 0 ? '$' . number_format($booking->total_refunded, 2) : null,
                 'net_amount' => '$' . number_format($booking->net_amount, 2),
@@ -261,6 +263,11 @@ class NotificationService
             $variables['has_special_instructions'] = !empty($booking->special_instructions);
             $variables['has_additional_fields'] = !empty($booking->additional_data);
             $variables['is_airport_transfer'] = $booking->is_airport_pickup || $booking->is_airport_dropoff;
+
+            // Add booking type variables for hourly vs one-way bookings
+            $variables['booking_type'] = $booking->booking_type;
+            $variables['duration_hours'] = $booking->duration_hours;
+            $variables['is_hourly_booking'] = $booking->booking_type === 'hourly';
         }
 
         return $variables;

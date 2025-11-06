@@ -473,47 +473,79 @@ const TripDetailsLuxury = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLocalError('');
-    
-    if (!tripDetails.pickupAddress || !tripDetails.dropoffAddress) {
-      setLocalError('Please select both pickup and destination locations');
-      return;
-    }
-    
-    if (!tripDetails.pickupDate || !tripDetails.pickupTime) {
-      setLocalError('Please select your preferred travel date and time');
-      return;
-    }
-    
-    if (!tripDetails.pickupLat || !tripDetails.dropoffLat) {
-      setLocalError('Please select valid locations from the suggestions');
-      return;
-    }
-    
-    try {
-      await validateRoute();
-      drawRoute(); // Draw the route after successful validation
-      
-      // Track successful trip details completion
-      ClarityTracking.event('trip_details_completed');
-      
-      // Set trip type tags
-      const tripType = tripDetails.isAirportPickup || tripDetails.isAirportDropoff ? 'airport_transfer' : 'point_to_point';
-      ClarityTracking.setTag('trip_type', tripType);
-      
-      // Track if same-day booking
-      const today = new Date().toDateString();
-      const pickupDay = new Date(tripDetails.pickupDate).toDateString();
-      if (today === pickupDay) {
-        ClarityTracking.setTag('booking_type', 'same_day');
-      } else {
-        ClarityTracking.setTag('booking_type', 'advance');
+
+    // Validation based on booking type
+    if (tripDetails.bookingType === 'hourly') {
+      // Hourly booking validation
+      if (!tripDetails.pickupAddress) {
+        setLocalError('Please select a pickup location');
+        return;
       }
-      
+
+      if (!tripDetails.pickupLat) {
+        setLocalError('Please select a valid location from the suggestions');
+        return;
+      }
+
+      if (!tripDetails.durationHours) {
+        setLocalError('Please select the duration in hours');
+        return;
+      }
+
+      if (!tripDetails.pickupDate || !tripDetails.pickupTime) {
+        setLocalError('Please select your preferred travel date and time');
+        return;
+      }
+
+      // For hourly bookings, skip route validation and proceed directly
+      ClarityTracking.event('trip_details_completed');
+      ClarityTracking.setTag('trip_type', 'hourly');
+      ClarityTracking.setTag('duration_hours', tripDetails.durationHours.toString());
+
       nextStep();
-    } catch (error) {
-      // Error handled by store
-      // Track route validation error
-      ClarityTracking.trackError('trip_details', 'route_validation_failed', error?.message || 'Unknown error');
+    } else {
+      // One-way booking validation
+      if (!tripDetails.pickupAddress || !tripDetails.dropoffAddress) {
+        setLocalError('Please select both pickup and destination locations');
+        return;
+      }
+
+      if (!tripDetails.pickupDate || !tripDetails.pickupTime) {
+        setLocalError('Please select your preferred travel date and time');
+        return;
+      }
+
+      if (!tripDetails.pickupLat || !tripDetails.dropoffLat) {
+        setLocalError('Please select valid locations from the suggestions');
+        return;
+      }
+
+      try {
+        await validateRoute();
+        drawRoute(); // Draw the route after successful validation
+
+        // Track successful trip details completion
+        ClarityTracking.event('trip_details_completed');
+
+        // Set trip type tags
+        const tripType = tripDetails.isAirportPickup || tripDetails.isAirportDropoff ? 'airport_transfer' : 'point_to_point';
+        ClarityTracking.setTag('trip_type', tripType);
+
+        // Track if same-day booking
+        const today = new Date().toDateString();
+        const pickupDay = new Date(tripDetails.pickupDate).toDateString();
+        if (today === pickupDay) {
+          ClarityTracking.setTag('booking_type', 'same_day');
+        } else {
+          ClarityTracking.setTag('booking_type', 'advance');
+        }
+
+        nextStep();
+      } catch (error) {
+        // Error handled by store
+        // Track route validation error
+        ClarityTracking.trackError('trip_details', 'route_validation_failed', error?.message || 'Unknown error');
+      }
     }
   };
 
@@ -617,6 +649,49 @@ const TripDetailsLuxury = () => {
           {/* Form Section */}
           <div className="lg:col-span-2 space-y-6">
             <form onSubmit={handleSubmit} className="bg-luxury-white p-8 shadow-luxury space-y-8">
+              {/* Booking Type Selector */}
+              <div className="animate-slide-up">
+                <label className="block text-xs font-medium text-luxury-gold uppercase tracking-luxury mb-3">
+                  Booking Type
+                </label>
+                <div className="grid grid-cols-2 gap-4">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTripDetails({ bookingType: 'one_way', durationHours: null });
+                      setLocalError('');
+                    }}
+                    className={`py-4 px-6 border-2 transition-all duration-200 ${
+                      tripDetails.bookingType === 'one_way'
+                        ? 'border-luxury-gold bg-luxury-gold/10 text-luxury-black'
+                        : 'border-luxury-gray/20 bg-white text-luxury-gray hover:border-luxury-gold/50'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="font-medium">One Way</div>
+                      <div className="text-xs mt-1 opacity-70">Point to point travel</div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setTripDetails({ bookingType: 'hourly', dropoffAddress: '', dropoffLat: null, dropoffLng: null });
+                      setLocalError('');
+                    }}
+                    className={`py-4 px-6 border-2 transition-all duration-200 ${
+                      tripDetails.bookingType === 'hourly'
+                        ? 'border-luxury-gold bg-luxury-gold/10 text-luxury-black'
+                        : 'border-luxury-gray/20 bg-white text-luxury-gray hover:border-luxury-gold/50'
+                    }`}
+                  >
+                    <div className="text-center">
+                      <div className="font-medium">Hourly</div>
+                      <div className="text-xs mt-1 opacity-70">Book by the hour</div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
               {/* Pickup Location */}
               <div className="relative animate-slide-up" ref={pickupRef}>
                 <label className="block text-xs font-medium text-luxury-gold uppercase tracking-luxury mb-3">
@@ -705,20 +780,21 @@ const TripDetailsLuxury = () => {
                 )}
               </div>
 
-              {/* Dropoff Location */}
-              <div className="relative animate-slide-up" style={{ animationDelay: '0.1s' }} ref={dropoffRef}>
-                <label className="block text-xs font-medium text-luxury-gold uppercase tracking-luxury mb-3">
-                  Destination
-                </label>
-                <input
-                  type="text"
-                  value={tripDetails.dropoffAddress}
-                  onChange={(e) => handleAddressChange(e.target.value, 'dropoff')}
-                  onFocus={() => tripDetails.dropoffAddress.length >= 2 && setShowDropoffSuggestions(true)}
-                  className="w-full px-4 py-3 bg-white border border-luxury-gray/20 text-luxury-black placeholder-luxury-gray/50 focus:outline-none focus:ring-2 focus:ring-luxury-gold focus:border-transparent transition-all duration-200 text-lg"
-                  placeholder="Your destination"
-                  required
-                />
+              {/* Dropoff Location - Only for One Way */}
+              {tripDetails.bookingType === 'one_way' && (
+                <div className="relative animate-slide-up" style={{ animationDelay: '0.1s' }} ref={dropoffRef}>
+                  <label className="block text-xs font-medium text-luxury-gold uppercase tracking-luxury mb-3">
+                    Destination
+                  </label>
+                  <input
+                    type="text"
+                    value={tripDetails.dropoffAddress}
+                    onChange={(e) => handleAddressChange(e.target.value, 'dropoff')}
+                    onFocus={() => tripDetails.dropoffAddress.length >= 2 && setShowDropoffSuggestions(true)}
+                    className="w-full px-4 py-3 bg-white border border-luxury-gray/20 text-luxury-black placeholder-luxury-gray/50 focus:outline-none focus:ring-2 focus:ring-luxury-gold focus:border-transparent transition-all duration-200 text-lg"
+                    placeholder="Your destination"
+                    required
+                  />
                 
                 {isLoadingDropoff && (
                   <div className="absolute right-4 top-12">
@@ -791,7 +867,36 @@ const TripDetailsLuxury = () => {
                     ))}
                   </div>
                 )}
-              </div>
+                </div>
+              )}
+
+              {/* Duration Selector - Only for Hourly */}
+              {tripDetails.bookingType === 'hourly' && (
+                <div className="animate-slide-up" style={{ animationDelay: '0.1s' }}>
+                  <label className="block text-xs font-medium text-luxury-gold uppercase tracking-luxury mb-3">
+                    Duration (Hours)
+                  </label>
+                  <select
+                    value={tripDetails.durationHours || ''}
+                    onChange={(e) => setTripDetails({ durationHours: parseInt(e.target.value) })}
+                    className="w-full px-4 py-3 bg-white border border-luxury-gray/20 text-luxury-black focus:outline-none focus:ring-2 focus:ring-luxury-gold focus:border-transparent transition-all duration-200 text-lg"
+                    required
+                  >
+                    <option value="">Select duration...</option>
+                    {[...Array(11)].map((_, i) => {
+                      const hours = i + 2; // Start from 2 hours
+                      return (
+                        <option key={hours} value={hours}>
+                          {hours} {hours === 1 ? 'hour' : 'hours'}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <p className="mt-2 text-sm text-luxury-gray/70">
+                    Select how many hours you need the vehicle
+                  </p>
+                </div>
+              )}
 
               {/* Date & Time Row */}
               <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>

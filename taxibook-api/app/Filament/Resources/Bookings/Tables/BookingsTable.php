@@ -26,6 +26,22 @@ class BookingsTable
                     ->sortable()
                     ->copyable()
                     ->weight('bold'),
+                TextColumn::make('booking_type')
+                    ->label('Type')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'one_way' => 'primary',
+                        'hourly' => 'success',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'one_way' => 'One Way',
+                        'hourly' => 'Hourly',
+                        default => $state,
+                    })
+                    ->description(fn ($record) => $record->booking_type === 'hourly' && $record->duration_hours
+                        ? "{$record->duration_hours} hours"
+                        : null),
                 TextColumn::make('status')
                     ->label('Status')
                     ->badge()
@@ -54,7 +70,9 @@ class BookingsTable
                     ->label('Destination')
                     ->searchable()
                     ->limit(40)
-                    ->tooltip(fn ($record) => $record->dropoff_address),
+                    ->tooltip(fn ($record) => $record->dropoff_address)
+                    ->default('N/A (Hourly)')
+                    ->placeholder('N/A (Hourly)'),
                 TextColumn::make('vehicleType.display_name')
                     ->label('Vehicle')
                     ->searchable()

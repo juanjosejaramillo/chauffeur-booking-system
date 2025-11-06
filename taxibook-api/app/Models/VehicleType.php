@@ -26,6 +26,12 @@ class VehicleType extends Model
         'sort_order',
         'features',
         'image_url',
+        'hourly_enabled',
+        'hourly_rate',
+        'minimum_hours',
+        'maximum_hours',
+        'miles_included_per_hour',
+        'excess_mile_rate',
     ];
 
     // Handle features as comma-separated list for the form
@@ -55,6 +61,12 @@ class VehicleType extends Model
             'tax_enabled' => 'boolean',
             'is_active' => 'boolean',
             'features' => 'array',
+            'hourly_enabled' => 'boolean',
+            'hourly_rate' => 'decimal:2',
+            'minimum_hours' => 'integer',
+            'maximum_hours' => 'integer',
+            'miles_included_per_hour' => 'integer',
+            'excess_mile_rate' => 'decimal:2',
         ];
     }
 
@@ -159,7 +171,24 @@ class VehicleType extends Model
         
         // Ensure minimum fare
         $total = max($total, $this->minimum_fare);
-        
+
+        return round($total, 2);
+    }
+
+    /**
+     * Calculate fare for hourly bookings
+     *
+     * @param int $hours Number of hours
+     * @return float Total fare
+     */
+    public function calculateHourlyFare($hours)
+    {
+        // Simple calculation: hours × hourly_rate
+        $total = $hours * $this->hourly_rate;
+
+        // Note: Tax/service fees not applied per user requirements
+        // Future enhancement: Apply excess mile charges if actual miles exceed included miles
+
         return round($total, 2);
     }
 }

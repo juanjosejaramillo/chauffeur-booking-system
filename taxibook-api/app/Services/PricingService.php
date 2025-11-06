@@ -187,4 +187,101 @@ class PricingService
 
         return $breakdown;
     }
+
+    /**
+     * Calculate prices for hourly bookings
+     *
+     * @param int $hours Number of hours
+     * @return array Array of vehicle prices with hourly information
+     */
+    public function calculateHourlyPrices(int $hours): array
+    {
+        // Get all active vehicle types that have hourly booking enabled
+        $vehicleTypes = VehicleType::active()
+            ->where('hourly_enabled', true)
+            ->where('hourly_rate', '>', 0)
+            ->ordered()
+            ->get();
+
+        $prices = [];
+
+        foreach ($vehicleTypes as $vehicleType) {
+            // Validate hours against vehicle constraints
+            if ($hours < $vehicleType->minimum_hours || $hours > $vehicleType->maximum_hours) {
+                continue; // Skip this vehicle if hours don't meet requirements
+            }
+
+            $fare = $vehicleType->calculateHourlyFare($hours);
+
+            $prices[] = [
+                'vehicle_type_id' => $vehicleType->id,
+                'display_name' => $vehicleType->display_name,
+                'slug' => $vehicleType->slug,
+                'description' => $vehicleType->description,
+                'max_passengers' => $vehicleType->max_passengers,
+                'max_luggage' => $vehicleType->max_luggage,
+                'features' => $vehicleType->features ?? [],
+                'image_url' => $vehicleType->full_image_url,
+                'estimated_fare' => $fare,
+                'hourly_rate' => $vehicleType->hourly_rate,
+                'hours' => $hours,
+                'miles_included_per_hour' => $vehicleType->miles_included_per_hour,
+                'total_miles_included' => $hours * $vehicleType->miles_included_per_hour,
+                'excess_mile_rate' => $vehicleType->excess_mile_rate,
+                'minimum_hours' => $vehicleType->minimum_hours,
+                'maximum_hours' => $vehicleType->maximum_hours,
+                'fare_breakdown' => $this->getHourlyFareBreakdown($vehicleType, $hours, $fare),
+            ];
+        }
+
+        return [
+            'vehicles' => $prices,
+            'gratuity_options' => [
+                ['percentage' => 0, 'label' => 'No tip'],
+                ['percentage' => 15, 'label' => '15%'],
+                ['percentage' => 20, 'label' => '20%'],
+                ['percentage' => 25, 'label' => '25%'],
+            ],
+            'payment_note' => 'Fare will be charged at booking. You can optionally add a tip now or after your trip.',
+        ];
+    }
+
+    /**
+     * Get fare breakdown for hourly bookings
+     */
+    private function getHourlyFareBreakdown(VehicleType $vehicleType, int $hours, float $totalFare): array
+    {
+        $breakdown = [];
+
+        // Hourly rate calculation
+        $breakdown['hourly_rate'] = [
+            'label' => sprintf('%d hours × $%.2f per hour', $hours, $vehicleType->hourly_rate),
+            'amount' => $totalFare,
+        ];
+
+        // Miles included info
+        $totalMilesIncluded = $hours * $vehicleType->miles_included_per_hour;
+        $breakdown['miles_included'] = [
+            'label' => sprintf('Includes %d miles (%d miles per hour)', $totalMilesIncluded, $vehicleType->miles_included_per_hour),
+            'amount' => 0,
+            'is_info' => true,
+        ];
+
+        // Excess mile rate info
+        if ($vehicleType->excess_mile_rate > 0) {
+            $breakdown['excess_miles'] = [
+                'label' => sprintf('Extra miles charged at $%.2f per mile', $vehicleType->excess_mile_rate),
+                'amount' => 0,
+                'is_info' => true,
+            ];
+        }
+
+        // Total
+        $breakdown['total'] = [
+            'label' => 'Total',
+            'amount' => $totalFare,
+        ];
+
+        return $breakdown;
+    }
 }

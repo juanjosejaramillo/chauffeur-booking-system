@@ -11,7 +11,7 @@
 </div>
 
 <div style="text-align: center; margin-bottom: 20px;">
-    <span style="display: inline-block; padding: 5px 15px; border-radius: 20px; font-weight: bold; text-transform: uppercase; font-size: 12px; 
+    <span style="display: inline-block; padding: 5px 15px; border-radius: 20px; font-weight: bold; text-transform: uppercase; font-size: 12px;
         @if($booking->status == 'confirmed')
             background-color: #d4edda; color: #155724;
         @elseif($booking->status == 'pending')
@@ -20,6 +20,14 @@
             background-color: #f8f9fa; color: #666;
         @endif">
         {{ ucfirst($booking->status) }}
+    </span>
+    <span style="display: inline-block; padding: 5px 15px; border-radius: 20px; font-weight: bold; text-transform: uppercase; font-size: 12px; margin-left: 10px;
+        @if($booking->booking_type == 'hourly')
+            background-color: #e7f5ff; color: #1971c2;
+        @else
+            background-color: #f3f4f6; color: #6b7280;
+        @endif">
+        {{ $booking->booking_type == 'hourly' ? 'Hourly' : 'One Way' }}
     </span>
 </div>
 
@@ -37,6 +45,22 @@
         <div class="info-label">Vehicle Type</div>
         <div class="info-value">{{ $booking->vehicleType->display_name }}</div>
     </div>
+    @if($booking->booking_type == 'hourly')
+    <div class="info-row">
+        <div class="info-label">Duration</div>
+        <div class="info-value">{{ $booking->duration_hours }} hour{{ $booking->duration_hours > 1 ? 's' : '' }}</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">Miles Included</div>
+        <div class="info-value">{{ $booking->duration_hours * $booking->vehicleType->miles_included_per_hour }} miles ({{ $booking->vehicleType->miles_included_per_hour }} miles per hour)</div>
+    </div>
+    @if($booking->vehicleType->excess_mile_rate > 0)
+    <div class="info-row">
+        <div class="info-label">Extra Miles</div>
+        <div class="info-value">${{ number_format($booking->vehicleType->excess_mile_rate, 2) }} per mile</div>
+    </div>
+    @endif
+    @else
     <div class="info-row">
         <div class="info-label">Estimated Duration</div>
         <div class="info-value">{{ round($booking->estimated_duration / 60) }} minutes</div>
@@ -45,6 +69,7 @@
         <div class="info-label">Estimated Distance</div>
         <div class="info-value">{{ number_format($booking->estimated_distance, 1) }} miles</div>
     </div>
+    @endif
 </div>
 
 <div class="info-box">
@@ -61,6 +86,7 @@
     @endif
 </div>
 
+@if($booking->booking_type == 'one_way' && $booking->dropoff_address)
 <div class="info-box">
     <div class="info-box-title">Dropoff Location</div>
     <div class="info-row">
@@ -68,6 +94,7 @@
         <div class="info-value">{{ $booking->dropoff_address }}</div>
     </div>
 </div>
+@endif
 
 <div class="info-box">
     <div class="info-box-title">Customer Information</div>

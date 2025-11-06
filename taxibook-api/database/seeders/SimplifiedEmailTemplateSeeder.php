@@ -419,63 +419,79 @@ Please monitor this booking for payment authorization.';
         <div class="info-label">Date & Time</div>
         <div class="info-value">{{pickup_date}} at {{pickup_time}}</div>
     </div>
+    {{#if is_hourly_booking}}
+    <div class="info-row">
+        <div class="info-label">Service Type</div>
+        <div class="info-value">Hourly - {{duration_hours}} hours</div>
+    </div>
+    {{/if}}
     <div class="info-row">
         <div class="info-label">Vehicle Type</div>
         <div class="info-value">{{vehicle_type}}</div>
     </div>
     <div class="info-row">
-        <div class="info-label">Estimated Fare</div>
-        <div class="info-value" style="font-weight: bold; color: #059669;">{{estimated_fare}}</div>
-    </div>
-    <div class="info-row">
-        <div class="info-label">Distance</div>
-        <div class="info-value">{{estimated_distance}}</div>
-    </div>
-    <div class="info-row">
-        <div class="info-label">Duration</div>
-        <div class="info-value">{{estimated_duration}}</div>
-    </div>
-</div>
-
-<div class="info-box">
-    <div class="info-box-title">Route Information</div>
-    <div class="info-row">
         <div class="info-label">Pickup Location</div>
         <div class="info-value">{{pickup_address}}</div>
     </div>
+    {{#if dropoff_address}}
     <div class="info-row">
         <div class="info-label">Dropoff Location</div>
         <div class="info-value">{{dropoff_address}}</div>
     </div>
-</div>
-
-<div class="info-box">
-    <div class="info-box-title">Additional Information</div>
+    {{/if}}
+    {{#if estimated_distance}}
     <div class="info-row">
-        <div class="info-label">Flight Number</div>
-        <div class="info-value">{{field_flight_number_display}}</div>
+        <div class="info-label">Estimated Distance</div>
+        <div class="info-value">{{estimated_distance}} miles</div>
     </div>
+    {{/if}}
+    {{#if estimated_duration}}
     <div class="info-row">
-        <div class="info-label">Number of Bags</div>
-        <div class="info-value">{{field_number_of_bags_display}}</div>
+        <div class="info-label">Estimated Duration</div>
+        <div class="info-value">{{estimated_duration}} minutes</div>
     </div>
+    {{/if}}
     <div class="info-row">
-        <div class="info-label">Child Seats Required</div>
-        <div class="info-value">{{field_child_seats_required_display}}</div>
+        <div class="info-label">Estimated Fare</div>
+        <div class="info-value" style="font-weight: bold; color: #059669;">{{estimated_fare}}</div>
     </div>
-    <div class="info-row">
-        <div class="info-label">Meet & Greet Service</div>
-        <div class="info-value">{{field_meet_and_greet_service_display}}</div>
-    </div>
-    <div class="info-row">
-        <div class="info-label">Special Occasion</div>
-        <div class="info-value">{{field_special_occasion_display}}</div>
-    </div>
+    {{#if special_instructions}}
     <div class="info-row">
         <div class="info-label">Special Instructions</div>
         <div class="info-value">{{special_instructions}}</div>
     </div>
+    {{/if}}
 </div>
+
+{{#if has_additional_fields}}
+<div class="info-box">
+    <div class="info-box-title">Additional Details</div>
+    {{#if field_flight_number}}
+    <div class="info-row">
+        <div class="info-label">Flight Number</div>
+        <div class="info-value">{{field_flight_number}}</div>
+    </div>
+    {{/if}}
+    {{#if field_number_of_bags}}
+    <div class="info-row">
+        <div class="info-label">Number of Bags</div>
+        <div class="info-value">{{field_number_of_bags}}</div>
+    </div>
+    {{/if}}
+    {{#if field_child_seats_display}}
+    <div class="info-row">
+        <div class="info-label">Child Seats</div>
+        <div class="info-value">{{field_child_seats_display}}</div>
+    </div>
+    {{/if}}
+    {{#if field_meet_and_greet}}
+    <div class="info-row">
+        <div class="info-label">Meet & Greet</div>
+        <div class="info-value">Yes, at baggage claim</div>
+    </div>
+    {{/if}}
+</div>
+{{/if}}
 
 <div class="alert-box warning" style="background: #fef3c7; border-left-color: #f59e0b;">
     <div class="alert-title" style="color: #92400e;">Action Required</div>
@@ -544,14 +560,26 @@ We look forward to serving you.
         <div class="info-label">Vehicle</div>
         <div class="info-value">{{vehicle_type}}</div>
     </div>
+    {{#if is_hourly_booking}}
+    <div class="info-row">
+        <div class="info-label">Service Type</div>
+        <div class="info-value">Hourly</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">Duration</div>
+        <div class="info-value">{{duration_hours}} hours</div>
+    </div>
+    {{/if}}
     <div class="info-row">
         <div class="info-label">Pickup</div>
         <div class="info-value">{{pickup_address}}</div>
     </div>
+    {{#if dropoff_address}}
     <div class="info-row">
         <div class="info-label">Dropoff</div>
         <div class="info-value">{{dropoff_address}}</div>
     </div>
+    {{/if}}
     <div class="info-row">
         <div class="info-label">Total Fare</div>
         <div class="info-value">{{estimated_fare}}</div>
@@ -596,8 +624,7 @@ We look forward to serving you.
 </div>
 
 <div class="button-container">
-    <a href="{{booking_url}}" class="button">View Booking</a>
-    <a href="{{receipt_url}}" class="button secondary">Download Receipt</a>
+    <a href="{{receipt_url}}" class="button">Download Receipt</a>
 </div>';
 
         return $this->getLuxeEmailWrapper('Booking Confirmed', 'Premium Transportation Service', $content);
@@ -635,14 +662,22 @@ See you tomorrow!
 
 <div class="info-box">
     <div class="info-box-title">Trip Details</div>
+    {{#if is_hourly_booking}}
+    <div class="info-row">
+        <div class="info-label">Service Type</div>
+        <div class="info-value">Hourly - {{duration_hours}} hours</div>
+    </div>
+    {{/if}}
     <div class="info-row">
         <div class="info-label">Pickup Location</div>
         <div class="info-value">{{pickup_address}}</div>
     </div>
+    {{#if dropoff_address}}
     <div class="info-row">
         <div class="info-label">Destination</div>
         <div class="info-value">{{dropoff_address}}</div>
     </div>
+    {{/if}}
     <div class="info-row">
         <div class="info-label">Vehicle Type</div>
         <div class="info-value">{{vehicle_type}}</div>
@@ -687,6 +722,12 @@ Your driver will arrive 5 minutes before pickup time.
 
 <div class="info-box">
     <div class="info-box-title">Quick Reminder</div>
+    {{#if is_hourly_booking}}
+    <div class="info-row">
+        <div class="info-label">Service Type</div>
+        <div class="info-value">Hourly - {{duration_hours}} hours</div>
+    </div>
+    {{/if}}
     <div class="info-row">
         <div class="info-label">Pickup Location</div>
         <div class="info-value">{{pickup_address}}</div>
@@ -928,18 +969,36 @@ Thank you for choosing us for your transportation needs.
     {
         return 'NEW BOOKING ALERT
 
-Booking: {{booking_number}}
-Customer: {{customer_name}}
+Booking Reference: {{booking_number}}
+
+CUSTOMER INFORMATION
+Name: {{customer_name}}
 Email: {{customer_email}}
 Phone: {{customer_phone}}
 
-Trip Details:
-Date: {{pickup_date}}
-Time: {{pickup_time}}
-From: {{pickup_address}}
-To: {{dropoff_address}}
-Vehicle: {{vehicle_type}}
-Fare: {{estimated_fare}}
+TRIP DETAILS
+Date & Time: {{pickup_date}} at {{pickup_time}}
+{{#if is_hourly_booking}}Service Type: Hourly - {{duration_hours}} hours
+{{/if}}Vehicle Type: {{vehicle_type}}
+Pickup Location: {{pickup_address}}
+{{#if dropoff_address}}Dropoff Location: {{dropoff_address}}
+{{/if}}{{#if estimated_distance}}Estimated Distance: {{estimated_distance}} miles
+{{/if}}{{#if estimated_duration}}Estimated Duration: {{estimated_duration}} minutes
+{{/if}}{{#if special_instructions}}Special Instructions: {{special_instructions}}
+{{/if}}
+PAYMENT INFORMATION
+Estimated Fare: {{estimated_fare}}
+Payment Status: {{payment_status}}
+Booking Status: {{status}}
+
+{{#if has_additional_fields}}ADDITIONAL DETAILS
+{{#if field_flight_number}}Flight Number: {{field_flight_number}}
+{{/if}}{{#if field_number_of_bags}}Number of Bags: {{field_number_of_bags}}
+{{/if}}{{#if field_child_seats_display}}Child Seats: {{field_child_seats_display}}
+{{/if}}{{#if field_meet_and_greet}}Meet & Greet: Yes, at baggage claim
+{{/if}}
+{{/if}}ACTION REQUIRED
+Please review this booking as soon as possible.
 
 View in admin: {{admin_url}}/bookings/{{booking_id}}';
     }
@@ -970,6 +1029,105 @@ View in admin: {{admin_url}}/bookings/{{booking_id}}';
     </div>
 </div>
 
+<div class="info-box">
+    <div class="info-box-title">Trip Details</div>
+    <div class="info-row">
+        <div class="info-label">Pickup Date & Time</div>
+        <div class="info-value">{{pickup_date}} at {{pickup_time}}</div>
+    </div>
+    {{#if is_hourly_booking}}
+    <div class="info-row">
+        <div class="info-label">Service Type</div>
+        <div class="info-value">Hourly - {{duration_hours}} hours</div>
+    </div>
+    {{/if}}
+    <div class="info-row">
+        <div class="info-label">Vehicle Type</div>
+        <div class="info-value">{{vehicle_type}}</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">Pickup Location</div>
+        <div class="info-value">{{pickup_address}}</div>
+    </div>
+    {{#if dropoff_address}}
+    <div class="info-row">
+        <div class="info-label">Dropoff Location</div>
+        <div class="info-value">{{dropoff_address}}</div>
+    </div>
+    {{/if}}
+    {{#if estimated_distance}}
+    <div class="info-row">
+        <div class="info-label">Estimated Distance</div>
+        <div class="info-value">{{estimated_distance}} miles</div>
+    </div>
+    {{/if}}
+    {{#if estimated_duration}}
+    <div class="info-row">
+        <div class="info-label">Estimated Duration</div>
+        <div class="info-value">{{estimated_duration}} minutes</div>
+    </div>
+    {{/if}}
+    {{#if special_instructions}}
+    <div class="info-row">
+        <div class="info-label">Special Instructions</div>
+        <div class="info-value">{{special_instructions}}</div>
+    </div>
+    {{/if}}
+</div>
+
+<div class="info-box">
+    <div class="info-box-title">Payment Information</div>
+    <div class="info-row">
+        <div class="info-label">Estimated Fare</div>
+        <div class="info-value" style="font-weight: bold; font-size: 16px;">{{estimated_fare}}</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">Payment Status</div>
+        <div class="info-value">{{payment_status}}</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">Booking Status</div>
+        <div class="info-value">{{status}}</div>
+    </div>
+</div>
+
+{{#if has_additional_fields}}
+<div class="info-box">
+    <div class="info-box-title">Additional Details</div>
+    {{#if field_flight_number}}
+    <div class="info-row">
+        <div class="info-label">Flight Number</div>
+        <div class="info-value">{{field_flight_number}}</div>
+    </div>
+    {{/if}}
+    {{#if field_number_of_bags}}
+    <div class="info-row">
+        <div class="info-label">Number of Bags</div>
+        <div class="info-value">{{field_number_of_bags}}</div>
+    </div>
+    {{/if}}
+    {{#if field_child_seats_display}}
+    <div class="info-row">
+        <div class="info-label">Child Seats</div>
+        <div class="info-value">{{field_child_seats_display}}</div>
+    </div>
+    {{/if}}
+    {{#if field_meet_and_greet}}
+    <div class="info-row">
+        <div class="info-label">Meet & Greet</div>
+        <div class="info-value">Yes, at baggage claim</div>
+    </div>
+    {{/if}}
+</div>
+{{/if}}
+
+<div class="alert-box info">
+    <div class="alert-title">Action Required</div>
+    <div class="alert-content">
+        Please review this booking as soon as possible. The customer has been notified of their booking confirmation.
+    </div>
+</div>
+
 <div class="button-container">
     <a href="{{admin_url}}/bookings/{{booking_id}}" class="button">View Full Details</a>
 </div>';
@@ -986,8 +1144,10 @@ Customer: {{customer_name}} ({{customer_phone}})
 
 Original Trip:
 Date: {{pickup_date}} at {{pickup_time}}
-Route: {{pickup_address}} to {{dropoff_address}}
-Fare: {{estimated_fare}}
+{{#if is_hourly_booking}}Service Type: Hourly - {{duration_hours}} hours
+{{/if}}From: {{pickup_address}}
+{{#if dropoff_address}}To: {{dropoff_address}}
+{{/if}}Fare: {{estimated_fare}}
 
 {{#if refund_amount}}
 Refund Required: {{refund_amount}}
@@ -1004,6 +1164,38 @@ View details: {{admin_url}}/bookings/{{booking_id}}';
 <div class="highlight-box" style="text-align: center; background: #ffebee; border-left-color: #ef4444;">
     <div class="highlight-label" style="color: #dc2626;">CANCELLED BOOKING</div>
     <div class="highlight-value" style="font-size: 28px; color: #dc2626;">{{booking_number}}</div>
+</div>
+
+<div class="info-box">
+    <div class="info-box-title">Cancelled Booking Details</div>
+    <div class="info-row">
+        <div class="info-label">Customer</div>
+        <div class="info-value">{{customer_name}} ({{customer_phone}})</div>
+    </div>
+    <div class="info-row">
+        <div class="info-label">Date & Time</div>
+        <div class="info-value">{{pickup_date}} at {{pickup_time}}</div>
+    </div>
+    {{#if is_hourly_booking}}
+    <div class="info-row">
+        <div class="info-label">Service Type</div>
+        <div class="info-value">Hourly - {{duration_hours}} hours</div>
+    </div>
+    {{/if}}
+    <div class="info-row">
+        <div class="info-label">Pickup</div>
+        <div class="info-value">{{pickup_address}}</div>
+    </div>
+    {{#if dropoff_address}}
+    <div class="info-row">
+        <div class="info-label">Dropoff</div>
+        <div class="info-value">{{dropoff_address}}</div>
+    </div>
+    {{/if}}
+    <div class="info-row">
+        <div class="info-label">Original Fare</div>
+        <div class="info-value">{{estimated_fare}}</div>
+    </div>
 </div>
 
 {{#if refund_amount}}

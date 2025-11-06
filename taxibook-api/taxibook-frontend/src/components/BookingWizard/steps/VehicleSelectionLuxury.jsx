@@ -8,6 +8,7 @@ const VehicleSelectionLuxury = () => {
     availableVehicles,
     selectedVehicle,
     setSelectedVehicle,
+    tripDetails,
     routeInfo,
     calculatePrices,
     nextStep,
@@ -121,7 +122,15 @@ const VehicleSelectionLuxury = () => {
         <h2 className="font-display text-2xl sm:text-3xl text-luxury-black mb-3 sm:mb-4">
           Select Your Vehicle
         </h2>
-        {routeInfo && (
+        {tripDetails.bookingType === 'hourly' && tripDetails.durationHours && (
+          <div className="flex items-center justify-center gap-2 text-sm text-luxury-gray/70">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>{tripDetails.durationHours} hour{tripDetails.durationHours !== 1 ? 's' : ''} rental</span>
+          </div>
+        )}
+        {tripDetails.bookingType === 'one_way' && routeInfo && (
           <div className="flex items-center justify-center gap-4 sm:gap-8 text-xs sm:text-sm text-luxury-gray/70">
             <span className="flex items-center gap-1 sm:gap-2">
               <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -218,12 +227,25 @@ const VehicleSelectionLuxury = () => {
                   <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
                     {/* Price */}
                     <div className="text-right">
-                      <p className="text-lg sm:text-xl font-light text-luxury-black">
-                        {formatPrice(vehicle.estimated_fare || vehicle.total_price)}
-                      </p>
-                      <p className="text-[10px] sm:text-xs text-luxury-gray/50">USD</p>
+                      {tripDetails.bookingType === 'hourly' ? (
+                        <>
+                          <p className="text-lg sm:text-xl font-light text-luxury-black">
+                            {formatPrice(vehicle.estimated_fare || vehicle.total_price)}
+                          </p>
+                          <p className="text-[10px] sm:text-xs text-luxury-gray/50">
+                            ${vehicle.hourly_rate}/hr
+                          </p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-lg sm:text-xl font-light text-luxury-black">
+                            {formatPrice(vehicle.estimated_fare || vehicle.total_price)}
+                          </p>
+                          <p className="text-[10px] sm:text-xs text-luxury-gray/50">USD</p>
+                        </>
+                      )}
                     </div>
-                    
+
                     {/* Expand Arrow */}
                     <button
                       type="button"
@@ -247,13 +269,44 @@ const VehicleSelectionLuxury = () => {
 
                 {/* Expandable Details */}
                 {isExpanded && (
-                  <div className="mt-4 pt-4 border-t border-luxury-gray/10 animate-fadeIn">
+                  <div className="mt-4 pt-4 border-t border-luxury-gray/10 animate-fadeIn space-y-3">
+                    {/* Hourly Booking Details */}
+                    {tripDetails.bookingType === 'hourly' && (
+                      <div className="bg-luxury-cream/30 p-3 rounded-lg">
+                        <h4 className="text-sm font-medium text-luxury-black mb-2">Hourly Rental Details</h4>
+                        <div className="space-y-1.5 text-xs text-luxury-gray/70">
+                          <div className="flex items-center gap-2">
+                            <svg className="w-4 h-4 text-luxury-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            <span>
+                              <strong>Includes {vehicle.total_miles_included || (vehicle.miles_included_per_hour * vehicle.hours)} miles</strong>
+                              {' '}({vehicle.miles_included_per_hour} miles per hour)
+                            </span>
+                          </div>
+                          {vehicle.excess_mile_rate > 0 && (
+                            <div className="flex items-center gap-2">
+                              <svg className="w-4 h-4 text-luxury-gray/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <span>Extra miles: ${vehicle.excess_mile_rate}/mile</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2 pt-1 border-t border-luxury-gray/10 mt-2">
+                            <span className="text-sm font-medium text-luxury-black">
+                              {vehicle.hours} hours × ${vehicle.hourly_rate}/hour = {formatPrice(vehicle.estimated_fare)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
                     {/* Features */}
                     {vehicle.features && vehicle.features.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 sm:gap-2">
                         {vehicle.features.map((feature, idx) => (
-                          <span 
-                            key={idx} 
+                          <span
+                            key={idx}
                             className="px-2 sm:px-3 py-0.5 sm:py-1 bg-luxury-light-gray text-[10px] sm:text-xs text-luxury-gray/70 uppercase tracking-wide"
                           >
                             {feature}
