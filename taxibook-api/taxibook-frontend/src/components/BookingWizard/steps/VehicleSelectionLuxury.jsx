@@ -188,23 +188,69 @@ const VehicleSelectionLuxury = () => {
                   )}
                 </div>
 
-                {/* Main Content Row */}
-                <div className="flex items-center gap-3 sm:gap-4">
-                  {/* Left: Vehicle Image */}
-                  {vehicle.image_url && (
-                    <div className="w-32 h-20 sm:w-36 sm:h-24 flex-shrink-0">
-                      <img
-                        src={vehicle.image_url}
-                        alt={vehicle.display_name}
-                        className="w-full h-full object-contain"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                        }}
-                      />
+                {/* Main Content - Restructured Layout */}
+                <div className="space-y-3">
+                  {/* Top Row: Image + Price/Arrow */}
+                  <div className="flex items-center justify-between gap-3">
+                    {/* Left: Vehicle Image */}
+                    {vehicle.image_url && (
+                      <div className="w-40 h-24 sm:w-48 sm:h-28 flex-shrink-0 flex items-center justify-center">
+                        <img
+                          src={vehicle.image_url}
+                          alt={vehicle.display_name}
+                          className="w-full h-full object-contain scale-110"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+
+                    {/* Right: Price and Expand Arrow */}
+                    <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                      {/* Price */}
+                      <div className="text-right">
+                        {tripDetails.bookingType === 'hourly' ? (
+                          <>
+                            <p className="text-lg sm:text-xl font-light text-luxury-black">
+                              {formatPrice(vehicle.estimated_fare || vehicle.total_price)}
+                            </p>
+                            <p className="text-[10px] sm:text-xs text-luxury-gray/50">
+                              ${vehicle.hourly_rate}/hr
+                            </p>
+                          </>
+                        ) : (
+                          <>
+                            <p className="text-lg sm:text-xl font-light text-luxury-black">
+                              {formatPrice(vehicle.estimated_fare || vehicle.total_price)}
+                            </p>
+                            <p className="text-[10px] sm:text-xs text-luxury-gray/50">USD</p>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Expand Arrow */}
+                      <button
+                        type="button"
+                        onClick={(e) => handleToggleExpand(e, vehicle.vehicle_type_id)}
+                        className="p-1.5 sm:p-2 hover:bg-luxury-light-gray rounded-full transition-colors"
+                        aria-label={isExpanded ? "Hide details" : "Show details"}
+                      >
+                        <svg
+                          className={`w-4 h-4 sm:w-5 sm:h-5 text-luxury-gray transition-transform duration-300 ${
+                            isExpanded ? 'rotate-180' : ''
+                          }`}
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
                     </div>
-                  )}
-                  
-                  {/* Center: Capacity Info - Compact */}
+                  </div>
+
+                  {/* Bottom Row: Capacity Info */}
                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                     <span className="flex items-center gap-1.5 text-xs sm:text-sm text-luxury-gray/60">
                       <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -218,52 +264,6 @@ const VehicleSelectionLuxury = () => {
                       </svg>
                       <span className="whitespace-nowrap">{vehicle.max_luggage} bags</span>
                     </span>
-                  </div>
-
-                  {/* Spacer to push price to the right */}
-                  <div className="flex-1"></div>
-
-                  {/* Right: Price and Expand Arrow */}
-                  <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                    {/* Price */}
-                    <div className="text-right">
-                      {tripDetails.bookingType === 'hourly' ? (
-                        <>
-                          <p className="text-lg sm:text-xl font-light text-luxury-black">
-                            {formatPrice(vehicle.estimated_fare || vehicle.total_price)}
-                          </p>
-                          <p className="text-[10px] sm:text-xs text-luxury-gray/50">
-                            ${vehicle.hourly_rate}/hr
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <p className="text-lg sm:text-xl font-light text-luxury-black">
-                            {formatPrice(vehicle.estimated_fare || vehicle.total_price)}
-                          </p>
-                          <p className="text-[10px] sm:text-xs text-luxury-gray/50">USD</p>
-                        </>
-                      )}
-                    </div>
-
-                    {/* Expand Arrow */}
-                    <button
-                      type="button"
-                      onClick={(e) => handleToggleExpand(e, vehicle.vehicle_type_id)}
-                      className="p-1.5 sm:p-2 hover:bg-luxury-light-gray rounded-full transition-colors"
-                      aria-label={isExpanded ? "Hide details" : "Show details"}
-                    >
-                      <svg 
-                        className={`w-4 h-4 sm:w-5 sm:h-5 text-luxury-gray transition-transform duration-300 ${
-                          isExpanded ? 'rotate-180' : ''
-                        }`} 
-                        fill="none" 
-                        stroke="currentColor" 
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
                   </div>
                 </div>
 
