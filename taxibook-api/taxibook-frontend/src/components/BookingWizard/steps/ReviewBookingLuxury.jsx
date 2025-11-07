@@ -124,7 +124,7 @@ const ReviewBookingLuxury = () => {
                   <div className="flex-1">
                     <p className="text-xs text-luxury-gray/50 uppercase tracking-wide mb-1">Duration</p>
                     <p className="text-luxury-black font-medium">
-                      {tripDetails.durationHours} hour{tripDetails.durationHours !== 1 ? 's' : ''} rental
+                      {tripDetails.durationHours} hour{tripDetails.durationHours !== 1 ? 's' : ''}
                     </p>
                     {selectedVehicle?.miles_included_per_hour && (
                       <p className="text-xs text-luxury-gray/60 mt-1">

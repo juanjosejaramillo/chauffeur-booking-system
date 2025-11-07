@@ -127,7 +127,7 @@ const VehicleSelectionLuxury = () => {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span>{tripDetails.durationHours} hour{tripDetails.durationHours !== 1 ? 's' : ''} rental</span>
+            <span>{tripDetails.durationHours} hour{tripDetails.durationHours !== 1 ? 's' : ''}</span>
           </div>
         )}
         {tripDetails.bookingType === 'one_way' && routeInfo && (
@@ -273,7 +273,7 @@ const VehicleSelectionLuxury = () => {
                     {/* Hourly Booking Details */}
                     {tripDetails.bookingType === 'hourly' && (
                       <div className="bg-luxury-cream/30 p-3 rounded-lg">
-                        <h4 className="text-sm font-medium text-luxury-black mb-2">Hourly Rental Details</h4>
+                        <h4 className="text-sm font-medium text-luxury-black mb-2">Hourly Service Details</h4>
                         <div className="space-y-1.5 text-xs text-luxury-gray/70">
                           <div className="flex items-center gap-2">
                             <svg className="w-4 h-4 text-luxury-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
