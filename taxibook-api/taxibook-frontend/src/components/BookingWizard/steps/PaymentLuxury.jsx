@@ -469,18 +469,14 @@ const PaymentForm = () => {
                   type="button"
                   onClick={prevStep}
                   disabled={processing || loading}
-                  className="w-full sm:flex-1 px-3 sm:px-6 py-3 sm:py-4 border-2 border-luxury-black text-luxury-black font-medium tracking-wide transition-all duration-300 ease-out hover:bg-luxury-black hover:text-luxury-white hover:shadow-luxury active:scale-[0.98] uppercase text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed order-2 sm:order-1"
+                  className="w-full sm:flex-1 px-4 py-3 border-2 border-luxury-black text-luxury-black font-medium tracking-wide transition-all duration-300 ease-out hover:bg-luxury-black hover:text-luxury-white hover:shadow-luxury active:scale-[0.98] uppercase text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed order-2 sm:order-1"
                 >
                   Back
                 </button>
                 <button
                   type="submit"
                   disabled={!stripe || processing || loading}
-                  className={`w-full sm:flex-1 px-3 sm:px-6 py-3 sm:py-4 font-medium tracking-wide transition-all duration-300 ease-out hover:shadow-luxury active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed uppercase text-xs sm:text-sm order-1 sm:order-2 ${
-                    isPostServiceMode
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'bg-luxury-gold text-luxury-white hover:bg-luxury-gold-dark'
-                  }`}
+                  className="w-full sm:flex-1 px-4 py-3 bg-luxury-gold text-luxury-white font-medium tracking-wide transition-all duration-300 ease-out hover:bg-luxury-gold-dark hover:shadow-luxury active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed uppercase text-xs sm:text-sm order-1 sm:order-2"
                 >
                   {processing || loading ? (
                     <span className="flex items-center justify-center gap-1">
