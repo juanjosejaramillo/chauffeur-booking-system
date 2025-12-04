@@ -649,6 +649,7 @@ class BookingController extends Controller
     {
         $validated = $request->validate([
             'setup_intent_id' => 'required|string',
+            'gratuity_amount' => 'nullable|numeric|min:0',
         ]);
 
         $booking = Booking::where('booking_number', $bookingNumber)->firstOrFail();
@@ -665,11 +666,19 @@ class BookingController extends Controller
                 throw new \Exception($result['error']);
             }
 
-            // Update booking status - card saved, awaiting service completion
-            $booking->update([
+            // Update gratuity if provided
+            $updateData = [
                 'status' => 'confirmed',
                 'payment_status' => 'pending', // Still pending - will charge after ride
-            ]);
+            ];
+
+            if (isset($validated['gratuity_amount'])) {
+                $updateData['gratuity_amount'] = $validated['gratuity_amount'];
+                $updateData['gratuity_added_at'] = $validated['gratuity_amount'] > 0 ? now() : null;
+            }
+
+            // Update booking status - card saved, awaiting service completion
+            $booking->update($updateData);
 
             DB::commit();
 

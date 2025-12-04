@@ -342,12 +342,13 @@ const useBookingStore = create(
   completeSetupIntent: async (setupIntentId) => {
     set({ loading: true, error: null });
     try {
-      const { booking } = get();
+      const { booking, gratuityAmount } = get();
       if (!booking || !booking.booking_number) {
         throw new Error('No booking found to complete setup');
       }
       const response = await api.post(`/bookings/${booking.booking_number}/complete-setup`, {
         setup_intent_id: setupIntentId,
+        gratuity_amount: gratuityAmount,
       });
 
       set({ booking: response.data.booking });
