@@ -898,52 +898,85 @@ const TripDetailsLuxury = () => {
                 </div>
               )}
 
-              {/* Date & Time Row */}
-              <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                <label className="block text-xs font-medium text-luxury-gold uppercase tracking-luxury mb-3">
-                  Pickup Date & Time
-                </label>
-                <DatePicker
-                  selected={selectedDateTime}
-                  onChange={(date) => setSelectedDateTime(date)}
-                  showTimeSelect
-                  timeFormat="h:mm aa"
-                  timeIntervals={bookingSettings.time_increment}
-                  timeCaption="Time"
-                  dateFormat="MMMM d, yyyy h:mm aa"
-                  minDate={minDateTime}
-                  maxDate={getMaxDateTime()}
-                  minTime={
-                    selectedDateTime && selectedDateTime.toDateString() === minDateTime.toDateString()
-                      ? minDateTime
-                      : new Date(new Date().setHours(0, 0, 0, 0))
-                  }
-                  maxTime={new Date(new Date().setHours(23, 59, 59, 999))}
-                  placeholderText="Select pickup date and time"
-                  className="w-full px-4 py-3 bg-white border border-luxury-gray/20 text-luxury-black placeholder-luxury-gray/50 focus:outline-none focus:ring-2 focus:ring-luxury-gold focus:border-transparent transition-all duration-200 text-sm"
-                  calendarClassName="luxury-calendar"
-                  wrapperClassName="w-full"
-                  required
-                  filterDate={(date) => {
-                    if (!bookingSettings.allow_same_day) {
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
-                      return date > today;
+              {/* Date & Time Row - Separate Fields */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                {/* Date Field */}
+                <div>
+                  <label className="block text-xs font-medium text-luxury-gold uppercase tracking-luxury mb-3">
+                    Pickup Date
+                  </label>
+                  <DatePicker
+                    selected={selectedDateTime}
+                    onChange={(date) => {
+                      // Preserve the time when changing the date
+                      const newDateTime = new Date(date);
+                      if (selectedDateTime) {
+                        newDateTime.setHours(selectedDateTime.getHours(), selectedDateTime.getMinutes(), 0, 0);
+                      }
+                      setSelectedDateTime(newDateTime);
+                    }}
+                    dateFormat="MMMM d, yyyy"
+                    minDate={minDateTime}
+                    maxDate={getMaxDateTime()}
+                    placeholderText="Select date"
+                    className="w-full px-4 py-3 bg-white border border-luxury-gray/20 text-luxury-black placeholder-luxury-gray/50 focus:outline-none focus:ring-2 focus:ring-luxury-gold focus:border-transparent transition-all duration-200 text-sm"
+                    calendarClassName="luxury-calendar"
+                    wrapperClassName="w-full"
+                    required
+                    filterDate={(date) => {
+                      if (!bookingSettings.allow_same_day) {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        return date > today;
+                      }
+                      return true;
+                    }}
+                  />
+                </div>
+
+                {/* Time Field */}
+                <div>
+                  <label className="block text-xs font-medium text-luxury-gold uppercase tracking-luxury mb-3">
+                    Pickup Time
+                  </label>
+                  <DatePicker
+                    selected={selectedDateTime}
+                    onChange={(time) => {
+                      // Preserve the date when changing the time
+                      const newDateTime = new Date(selectedDateTime || new Date());
+                      newDateTime.setHours(time.getHours(), time.getMinutes(), 0, 0);
+                      setSelectedDateTime(newDateTime);
+                    }}
+                    showTimeSelect
+                    showTimeSelectOnly
+                    timeFormat="h:mm aa"
+                    timeIntervals={bookingSettings.time_increment}
+                    timeCaption="Time"
+                    dateFormat="h:mm aa"
+                    minTime={
+                      selectedDateTime && selectedDateTime.toDateString() === minDateTime.toDateString()
+                        ? minDateTime
+                        : new Date(new Date().setHours(0, 0, 0, 0))
                     }
-                    return true;
-                  }}
-                  filterTime={(time) => {
-                    const currentDate = new Date();
-                    const selectedDate = new Date(selectedDateTime || currentDate);
-                    
-                    if (selectedDate.toDateString() === currentDate.toDateString()) {
-                      const minTime = new Date();
-                      minTime.setHours(minTime.getHours() + bookingSettings.minimum_hours);
-                      return time >= minTime;
-                    }
-                    return true;
-                  }}
-                />
+                    maxTime={new Date(new Date().setHours(23, 59, 59, 999))}
+                    placeholderText="Select time"
+                    className="w-full px-4 py-3 bg-white border border-luxury-gray/20 text-luxury-black placeholder-luxury-gray/50 focus:outline-none focus:ring-2 focus:ring-luxury-gold focus:border-transparent transition-all duration-200 text-sm"
+                    calendarClassName="luxury-calendar"
+                    wrapperClassName="w-full"
+                    required
+                    filterTime={(time) => {
+                      const currentDate = new Date();
+                      const selectedDate = new Date(selectedDateTime || currentDate);
+
+                      if (selectedDate.toDateString() === currentDate.toDateString()) {
+                        const minTime = new Date();
+                        minTime.setHours(minTime.getHours() + bookingSettings.minimum_hours);
+                        return time >= minTime;
+                      }
+                      return true;
+                    }}
+                  />
+                </div>
               </div>
 
               {/* Error Message */}
