@@ -1,6 +1,4 @@
-import { useState } from 'react';
 import useBookingStore from '../../../store/bookingStore';
-import useSettings from '../../../hooks/useSettings';
 import { ClarityTracking } from '../../../services/clarityTracking';
 
 const ReviewBookingLuxury = () => {
@@ -15,22 +13,8 @@ const ReviewBookingLuxury = () => {
     error,
   } = useBookingStore();
 
-  const { settings } = useSettings();
-  const [agreed, setAgreed] = useState(false);
-  const [localError, setLocalError] = useState('');
-  
-  // Get legal URLs from settings with fallbacks
-  const termsUrl = settings?.legal?.terms_url || 'https://luxridesuv.com/terms';
-  const cancellationPolicyUrl = settings?.legal?.cancellation_policy_url || 'https://luxridesuv.com/cancellation-policy';
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!agreed) {
-      setLocalError('Please agree to the terms and conditions');
-      ClarityTracking.trackError('review_booking', 'validation', 'Terms not agreed');
-      return;
-    }
 
     // Booking is already created in CustomerInfo step
     // Just track the review completion and move to payment
@@ -248,50 +232,13 @@ const ReviewBookingLuxury = () => {
               </div>
             </div>
           </div>
-
-          {/* Terms Agreement */}
-          <div className="bg-luxury-light-gray p-6">
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={agreed}
-                onChange={(e) => {
-                  setAgreed(e.target.checked);
-                  ClarityTracking.event(`terms_agreement_${e.target.checked ? 'checked' : 'unchecked'}`);
-                }}
-                className="mt-1 w-4 h-4 accent-luxury-gold"
-              />
-              <span className="text-xs text-luxury-gray/70 leading-relaxed">
-                I agree to the{' '}
-                <a 
-                  href={termsUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  onClick={() => ClarityTracking.trackLegalDocument('terms', 'clicked')}
-                  className="text-luxury-gold hover:text-luxury-gold-dark underline"
-                >
-                  terms and conditions
-                </a>{' '}
-                and{' '}
-                <a 
-                  href={cancellationPolicyUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={() => ClarityTracking.trackLegalDocument('cancellation_policy', 'clicked')}
-                  className="text-luxury-gold hover:text-luxury-gold-dark underline"
-                >
-                  cancellation policy
-                </a>
-              </span>
-            </label>
-          </div>
         </div>
       </div>
 
       {/* Error Message */}
-      {(localError || error) && (
+      {error && (
         <div className="mt-8 bg-red-50 border-l-4 border-red-500 p-4 animate-fade-in">
-          <p className="text-sm text-red-700">{localError || error}</p>
+          <p className="text-sm text-red-700">{error}</p>
         </div>
       )}
 
@@ -307,7 +254,7 @@ const ReviewBookingLuxury = () => {
         <button
           type="button"
           onClick={handleSubmit}
-          disabled={loading || !agreed}
+          disabled={loading}
           className="w-full sm:flex-1 px-4 py-3 bg-luxury-gold text-luxury-white font-medium tracking-wide transition-all duration-300 ease-out hover:bg-luxury-gold-dark hover:shadow-luxury active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 uppercase text-xs sm:text-sm order-1 sm:order-2"
         >
           {loading ? (

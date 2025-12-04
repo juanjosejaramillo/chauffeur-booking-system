@@ -37,7 +37,18 @@ const PaymentForm = () => {
   // Get payment mode from settings (default to 'immediate' for backward compatibility)
   const paymentMode = settings?.stripe?.payment_mode || 'immediate';
   const isPostServiceMode = paymentMode === 'post_service';
-  const cancellationPolicyUrl = settings?.legal?.cancellation_policy_url || '#';
+  // Legal URLs from settings
+  const termsUrl = settings?.legal?.terms_url || '';
+  const cancellationPolicyUrl = settings?.legal?.cancellation_policy_url || '';
+  const privacyPolicyUrl = settings?.legal?.privacy_policy_url || '';
+  const refundPolicyUrl = settings?.legal?.refund_policy_url || '';
+
+  // Check which legal links are available
+  const hasTerms = termsUrl && termsUrl !== '#';
+  const hasCancellationPolicy = cancellationPolicyUrl && cancellationPolicyUrl !== '#';
+  const hasPrivacyPolicy = privacyPolicyUrl && privacyPolicyUrl !== '#';
+  const hasRefundPolicy = refundPolicyUrl && refundPolicyUrl !== '#';
+  const hasAnyLegalLinks = hasTerms || hasCancellationPolicy || hasPrivacyPolicy || hasRefundPolicy;
 
   const [localError, setLocalError] = useState('');
   const [processing, setProcessing] = useState(false);
@@ -264,21 +275,62 @@ const PaymentForm = () => {
               </svg>
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-luxury-black tracking-wide text-base sm:text-lg mb-2">Your card will NOT be charged now</h3>
+              <h3 className="font-bold text-luxury-black tracking-wide text-sm sm:text-base mb-2">Your card will not be charged now</h3>
               <p className="text-sm text-luxury-gray/80 leading-relaxed mb-3">
                 We securely save your payment method and only charge after your ride is completed.
                 Estimated fare: <span className="font-semibold text-luxury-gold">{formatPrice(baseFare)}</span>
               </p>
               <p className="text-xs text-luxury-gray/60 leading-relaxed">
-                By proceeding, you authorize us to charge your card after service is provided.{' '}
-                <a
-                  href={cancellationPolicyUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-luxury-gold hover:text-luxury-gold/80 underline underline-offset-2 font-medium transition-colors"
-                >
-                  View Cancellation Policy
-                </a>
+                By proceeding, you authorize us to charge your card after service is provided.
+                {hasAnyLegalLinks && (
+                  <>
+                    {' '}View our{' '}
+                    {hasTerms && (
+                      <a
+                        href={termsUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-luxury-gold hover:text-luxury-gold/80 underline underline-offset-2 font-medium transition-colors"
+                      >
+                        terms
+                      </a>
+                    )}
+                    {hasTerms && hasCancellationPolicy && ', '}
+                    {hasCancellationPolicy && (
+                      <a
+                        href={cancellationPolicyUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-luxury-gold hover:text-luxury-gold/80 underline underline-offset-2 font-medium transition-colors"
+                      >
+                        cancellation policy
+                      </a>
+                    )}
+                    {(hasTerms || hasCancellationPolicy) && hasPrivacyPolicy && ', '}
+                    {hasPrivacyPolicy && (
+                      <a
+                        href={privacyPolicyUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-luxury-gold hover:text-luxury-gold/80 underline underline-offset-2 font-medium transition-colors"
+                      >
+                        privacy policy
+                      </a>
+                    )}
+                    {(hasTerms || hasCancellationPolicy || hasPrivacyPolicy) && hasRefundPolicy && ', '}
+                    {hasRefundPolicy && (
+                      <a
+                        href={refundPolicyUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-luxury-gold hover:text-luxury-gold/80 underline underline-offset-2 font-medium transition-colors"
+                      >
+                        refund policy
+                      </a>
+                    )}
+                    .
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -451,7 +503,57 @@ const PaymentForm = () => {
                   <p className="text-xs text-luxury-gray/70 leading-relaxed">
                     Your card will be charged {formatPrice(totalAmount)} immediately upon booking confirmation.
                     {gratuityAmount > 0 && ` This includes a ${formatPrice(gratuityAmount)} gratuity.`}
-                    {' '}The charge is final and will be processed now.
+                    {hasAnyLegalLinks ? (
+                      <>
+                        {' '}By proceeding, you agree to our{' '}
+                        {hasTerms && (
+                          <a
+                            href={termsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-luxury-gold hover:text-luxury-gold/80 underline underline-offset-2 font-medium transition-colors"
+                          >
+                            terms
+                          </a>
+                        )}
+                        {hasTerms && hasCancellationPolicy && ', '}
+                        {hasCancellationPolicy && (
+                          <a
+                            href={cancellationPolicyUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-luxury-gold hover:text-luxury-gold/80 underline underline-offset-2 font-medium transition-colors"
+                          >
+                            cancellation policy
+                          </a>
+                        )}
+                        {(hasTerms || hasCancellationPolicy) && hasPrivacyPolicy && ', '}
+                        {hasPrivacyPolicy && (
+                          <a
+                            href={privacyPolicyUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-luxury-gold hover:text-luxury-gold/80 underline underline-offset-2 font-medium transition-colors"
+                          >
+                            privacy policy
+                          </a>
+                        )}
+                        {(hasTerms || hasCancellationPolicy || hasPrivacyPolicy) && hasRefundPolicy && ', '}
+                        {hasRefundPolicy && (
+                          <a
+                            href={refundPolicyUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-luxury-gold hover:text-luxury-gold/80 underline underline-offset-2 font-medium transition-colors"
+                          >
+                            refund policy
+                          </a>
+                        )}
+                        .
+                      </>
+                    ) : (
+                      ' The charge is final and will be processed now.'
+                    )}
                   </p>
                 </div>
               )}
