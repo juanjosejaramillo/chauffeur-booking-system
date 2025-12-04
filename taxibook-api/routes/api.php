@@ -22,11 +22,15 @@ Route::prefix('bookings')->group(function () {
     Route::post('/send-verification', [BookingVerificationController::class, 'sendVerificationCode']);
     Route::post('/verify-email', [BookingVerificationController::class, 'verifyCode']);
     Route::post('/resend-verification', [BookingVerificationController::class, 'resendCode']);
+    Route::get('/payment-mode', [BookingController::class, 'getPaymentMode']);
     Route::post('/', [BookingController::class, 'store']);
     Route::get('/{bookingNumber}', [BookingController::class, 'show']);
     Route::post('/{bookingNumber}/process-payment', [BookingController::class, 'processPayment']);
     Route::post('/{bookingNumber}/payment-intent', [BookingController::class, 'createPaymentIntent']);
     Route::post('/{bookingNumber}/confirm-payment', [BookingController::class, 'confirmPayment']);
+    // Setup Intent routes for save-card-charge-later flow
+    Route::post('/{bookingNumber}/setup-intent', [BookingController::class, 'createSetupIntent']);
+    Route::post('/{bookingNumber}/complete-setup', [BookingController::class, 'completeSetupIntent']);
 });
 
 // Stripe webhook endpoint (no CSRF protection)

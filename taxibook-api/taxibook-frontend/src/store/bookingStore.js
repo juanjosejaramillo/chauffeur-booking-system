@@ -310,11 +310,50 @@ const useBookingStore = create(
       const response = await api.post(`/bookings/${booking.booking_number}/confirm-payment`, {
         payment_intent_id: paymentIntentId,
       });
-      
+
       set({ booking: response.data.booking });
       return response.data;
     } catch (error) {
       set({ error: error.response?.data?.error || 'Failed to confirm payment' });
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  // Setup Intent methods for save-card-charge-later flow
+  createSetupIntent: async () => {
+    set({ loading: true, error: null });
+    try {
+      const { booking } = get();
+      if (!booking || !booking.booking_number) {
+        throw new Error('No booking found to create setup intent');
+      }
+      const response = await api.post(`/bookings/${booking.booking_number}/setup-intent`);
+      return response.data;
+    } catch (error) {
+      set({ error: error.response?.data?.error || 'Failed to create setup intent' });
+      throw error;
+    } finally {
+      set({ loading: false });
+    }
+  },
+
+  completeSetupIntent: async (setupIntentId) => {
+    set({ loading: true, error: null });
+    try {
+      const { booking } = get();
+      if (!booking || !booking.booking_number) {
+        throw new Error('No booking found to complete setup');
+      }
+      const response = await api.post(`/bookings/${booking.booking_number}/complete-setup`, {
+        setup_intent_id: setupIntentId,
+      });
+
+      set({ booking: response.data.booking });
+      return response.data;
+    } catch (error) {
+      set({ error: error.response?.data?.error || 'Failed to save payment method' });
       throw error;
     } finally {
       set({ loading: false });

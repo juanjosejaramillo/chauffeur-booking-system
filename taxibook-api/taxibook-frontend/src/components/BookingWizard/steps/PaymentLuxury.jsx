@@ -21,6 +21,8 @@ const PaymentForm = () => {
     booking,
     selectedVehicle,
     processBookingPayment,
+    createSetupIntent,
+    completeSetupIntent,
     prevStep,
     nextStep,
     loading,
@@ -31,6 +33,11 @@ const PaymentForm = () => {
     setGratuity,
     setSavePaymentMethod,
   } = useBookingStore();
+
+  // Get payment mode from settings (default to 'immediate' for backward compatibility)
+  const paymentMode = settings?.stripe?.payment_mode || 'immediate';
+  const isPostServiceMode = paymentMode === 'post_service';
+  const cancellationPolicyUrl = settings?.legal?.cancellation_policy_url || '#';
 
   const [localError, setLocalError] = useState('');
   const [processing, setProcessing] = useState(false);
@@ -113,44 +120,84 @@ const PaymentForm = () => {
       amount: totalAmount,
       hasGratuity: gratuityAmount > 0,
       gratuityAmount: gratuityAmount,
-      saveCard: savePaymentMethod
+      saveCard: savePaymentMethod,
+      paymentMode: paymentMode
     });
     ClarityTracking.upgrade('payment_attempted');
 
     try {
-      // Create payment method with Stripe using separate elements
-      const cardNumber = elements.getElement(CardNumberElement);
-      const { error: stripeError, paymentMethod } = await stripe.createPaymentMethod({
-        type: 'card',
-        card: cardNumber,
-        billing_details: {
-          address: {
-            postal_code: postalCode,
-          },
-        },
-      });
+      if (isPostServiceMode) {
+        // POST_SERVICE MODE: Save card without charging
+        // Step 1: Create Setup Intent from backend
+        const setupIntentData = await createSetupIntent();
 
-      if (stripeError) {
-        setLocalError(stripeError.message);
-        ClarityTracking.trackPayment('failed', { error: stripeError.message });
-        setProcessing(false);
-        return;
+        // Step 2: Confirm the Setup Intent with Stripe (validates and saves card)
+        const cardNumber = elements.getElement(CardNumberElement);
+        const { error: stripeError, setupIntent } = await stripe.confirmCardSetup(
+          setupIntentData.client_secret,
+          {
+            payment_method: {
+              card: cardNumber,
+              billing_details: {
+                address: {
+                  postal_code: postalCode,
+                },
+              },
+            },
+          }
+        );
+
+        if (stripeError) {
+          setLocalError(stripeError.message);
+          ClarityTracking.trackPayment('failed', { error: stripeError.message, mode: 'setup_intent' });
+          setProcessing(false);
+          return;
+        }
+
+        // Step 3: Complete the setup and save card to booking
+        await completeSetupIntent(setupIntent.id);
+
+        // Track successful card save
+        ClarityTracking.trackPayment('card_saved', {
+          amount: totalAmount,
+          setupIntentId: setupIntent.id
+        });
+
+      } else {
+        // IMMEDIATE MODE: Charge now (existing behavior)
+        const cardNumber = elements.getElement(CardNumberElement);
+        const { error: stripeError, paymentMethod } = await stripe.createPaymentMethod({
+          type: 'card',
+          card: cardNumber,
+          billing_details: {
+            address: {
+              postal_code: postalCode,
+            },
+          },
+        });
+
+        if (stripeError) {
+          setLocalError(stripeError.message);
+          ClarityTracking.trackPayment('failed', { error: stripeError.message });
+          setProcessing(false);
+          return;
+        }
+
+        // Process payment for existing booking
+        await processBookingPayment(paymentMethod.id);
+
+        // Track successful payment
+        ClarityTracking.trackPayment('succeeded', {
+          amount: totalAmount,
+          paymentMethodId: paymentMethod.id
+        });
       }
 
-      // Process payment for existing booking
-      await processBookingPayment(paymentMethod.id);
-      
-      // Track successful payment
-      ClarityTracking.trackPayment('succeeded', {
-        amount: totalAmount,
-        paymentMethodId: paymentMethod.id
-      });
-      
       // Move to confirmation step
       nextStep();
-      
+
     } catch (error) {
-      setLocalError(error.message || 'Payment failed. Please try again.');
+      setLocalError(error.message || (isPostServiceMode ? 'Failed to save card. Please try again.' : 'Payment failed. Please try again.'));
       ClarityTracking.trackPayment('failed', { error: error.message });
     } finally {
       setProcessing(false);
@@ -193,7 +240,7 @@ const PaymentForm = () => {
       {/* Header */}
       <div className="text-center mb-8 sm:mb-12">
         <h2 className="font-display text-2xl sm:text-3xl text-luxury-black mb-4">
-          Complete Your Payment
+          {isPostServiceMode ? 'Secure Your Booking' : 'Complete Your Payment'}
         </h2>
         {booking?.booking_number && (
           <p className="text-luxury-gold text-sm font-semibold mb-2">
@@ -201,9 +248,42 @@ const PaymentForm = () => {
           </p>
         )}
         <p className="text-luxury-gray/60 text-sm tracking-wide">
-          Enter your payment details to confirm your booking
+          {isPostServiceMode
+            ? 'Enter your card details to reserve your ride'
+            : 'Enter your payment details to confirm your booking'}
         </p>
       </div>
+
+      {/* Post-Service Mode Info Banner */}
+      {isPostServiceMode && (
+        <div className="mb-6 sm:mb-8 p-5 sm:p-6 bg-gradient-to-br from-amber-50/80 via-yellow-50/50 to-orange-50/30 border border-luxury-gold/20 shadow-luxury rounded-sm">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-luxury-gold/20 to-luxury-gold/5 flex items-center justify-center flex-shrink-0 border border-luxury-gold/20">
+              <svg className="w-6 h-6 sm:w-7 sm:h-7 text-luxury-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+              </svg>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-luxury-black tracking-wide text-base sm:text-lg mb-2">Your card will NOT be charged now</h3>
+              <p className="text-sm text-luxury-gray/80 leading-relaxed mb-3">
+                We securely save your payment method and only charge after your ride is completed.
+                Estimated fare: <span className="font-semibold text-luxury-gold">{formatPrice(baseFare)}</span>
+              </p>
+              <p className="text-xs text-luxury-gray/60 leading-relaxed">
+                By proceeding, you authorize us to charge your card after service is provided.{' '}
+                <a
+                  href={cancellationPolicyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-luxury-gold hover:text-luxury-gold/80 underline underline-offset-2 font-medium transition-colors"
+                >
+                  View Cancellation Policy
+                </a>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
         {/* Left Column - Payment Details */}
@@ -335,42 +415,46 @@ const PaymentForm = () => {
                 </div>
               </div>
 
-              {/* Save Card Option */}
-              <div className="mt-6 flex items-start">
-                <input
-                  type="checkbox"
-                  id="save-card"
-                  checked={savePaymentMethod}
-                  onChange={(e) => {
-                    setSavePaymentMethod(e.target.checked);
-                    ClarityTracking.trackPayment('save_card_toggled', {
-                      saveCard: e.target.checked
-                    });
-                  }}
-                  className="mt-1 h-4 w-4 text-luxury-gold focus:ring-luxury-gold border-luxury-gray/30 rounded"
-                />
-                <label htmlFor="save-card" className="ml-3 text-sm">
-                  <span className="font-medium text-luxury-black">Save payment method for future use</span>
-                  <p className="text-xs text-luxury-gray/60 mt-1">
-                    Save your card for faster future bookings and easy post-trip tipping
-                  </p>
-                  <p className="text-xs text-luxury-gray/50 mt-1">
-                    🔒 Secured by Stripe
-                  </p>
-                </label>
-              </div>
+              {/* Save Card Option - Only show for immediate payment mode (post-service automatically saves card) */}
+              {!isPostServiceMode && (
+                <div className="mt-6 flex items-start">
+                  <input
+                    type="checkbox"
+                    id="save-card"
+                    checked={savePaymentMethod}
+                    onChange={(e) => {
+                      setSavePaymentMethod(e.target.checked);
+                      ClarityTracking.trackPayment('save_card_toggled', {
+                        saveCard: e.target.checked
+                      });
+                    }}
+                    className="mt-1 h-4 w-4 text-luxury-gold focus:ring-luxury-gold border-luxury-gray/30 rounded"
+                  />
+                  <label htmlFor="save-card" className="ml-3 text-sm">
+                    <span className="font-medium text-luxury-black">Save payment method for future use</span>
+                    <p className="text-xs text-luxury-gray/60 mt-1">
+                      Save your card for faster future bookings and easy post-trip tipping
+                    </p>
+                    <p className="text-xs text-luxury-gray/50 mt-1">
+                      🔒 Secured by Stripe
+                    </p>
+                  </label>
+                </div>
+              )}
 
-              {/* Payment Notice */}
-              <div className="mt-6 p-6 bg-luxury-light-gray border-l-4 border-luxury-gold">
-                <h4 className="text-xs font-semibold text-luxury-black uppercase tracking-luxury mb-3">
-                  Immediate Payment
-                </h4>
-                <p className="text-xs text-luxury-gray/70 leading-relaxed">
-                  Your card will be charged {formatPrice(totalAmount)} immediately upon booking confirmation.
-                  {gratuityAmount > 0 && ` This includes a ${formatPrice(gratuityAmount)} gratuity.`}
-                  {' '}The charge is final and will be processed now.
-                </p>
-              </div>
+              {/* Payment Notice - Only show for immediate payment mode */}
+              {!isPostServiceMode && (
+                <div className="mt-6 p-6 bg-luxury-light-gray border-l-4 border-luxury-gold">
+                  <h4 className="text-xs font-semibold text-luxury-black uppercase tracking-luxury mb-3">
+                    Immediate Payment
+                  </h4>
+                  <p className="text-xs text-luxury-gray/70 leading-relaxed">
+                    Your card will be charged {formatPrice(totalAmount)} immediately upon booking confirmation.
+                    {gratuityAmount > 0 && ` This includes a ${formatPrice(gratuityAmount)} gratuity.`}
+                    {' '}The charge is final and will be processed now.
+                  </p>
+                </div>
+              )}
 
               {/* Error Message */}
               {(localError || error) && (
@@ -392,7 +476,11 @@ const PaymentForm = () => {
                 <button
                   type="submit"
                   disabled={!stripe || processing || loading}
-                  className="w-full sm:flex-1 px-3 sm:px-6 py-3 sm:py-4 bg-luxury-gold text-luxury-white font-medium tracking-wide transition-all duration-300 ease-out hover:bg-luxury-gold-dark hover:shadow-luxury active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed uppercase text-xs sm:text-sm order-1 sm:order-2"
+                  className={`w-full sm:flex-1 px-3 sm:px-6 py-3 sm:py-4 font-medium tracking-wide transition-all duration-300 ease-out hover:shadow-luxury active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed uppercase text-xs sm:text-sm order-1 sm:order-2 ${
+                    isPostServiceMode
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-luxury-gold text-luxury-white hover:bg-luxury-gold-dark'
+                  }`}
                 >
                   {processing || loading ? (
                     <span className="flex items-center justify-center gap-1">
@@ -400,8 +488,15 @@ const PaymentForm = () => {
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                       </svg>
-                      <span className="hidden sm:inline">Processing...</span>
-                      <span className="sm:hidden">Processing</span>
+                      <span className="hidden sm:inline">{isPostServiceMode ? 'Saving Card...' : 'Processing...'}</span>
+                      <span className="sm:hidden">{isPostServiceMode ? 'Saving...' : 'Processing'}</span>
+                    </span>
+                  ) : isPostServiceMode ? (
+                    <span className="flex items-center justify-center gap-1">
+                      <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                      </svg>
+                      <span>Reserve Booking</span>
                     </span>
                   ) : (
                     <span className="flex items-center justify-center gap-1">

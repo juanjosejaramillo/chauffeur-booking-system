@@ -168,6 +168,49 @@ class ManageSettings extends Page
                         Tab::make('Stripe Settings')
                             ->icon('heroicon-o-credit-card')
                             ->schema([
+                                Section::make('Payment Timing')
+                                    ->description('Choose when customers are charged for their bookings')
+                                    ->schema([
+                                        Select::make('payment_mode')
+                                            ->label('When to Charge Customers')
+                                            ->options([
+                                                'immediate' => 'Charge immediately at booking',
+                                                'post_service' => 'Save card, charge after ride completed',
+                                            ])
+                                            ->default('immediate')
+                                            ->required()
+                                            ->reactive()
+                                            ->helperText('This only affects new bookings. Existing bookings are not affected.'),
+
+                                        // Payment Mode Explanation
+                                        Placeholder::make('payment_mode_explanation')
+                                            ->label('')
+                                            ->content(fn (Get $get) =>
+                                                new HtmlString(
+                                                    $get('payment_mode') === 'post_service' ?
+                                                    '<div style="padding: 16px; border-radius: 8px; background-color: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3);">
+                                                        <p style="font-weight: 600; margin-bottom: 8px; color: #3b82f6;">💳 Save Card, Charge Later Mode</p>
+                                                        <ul style="font-size: 14px; color: #60a5fa; margin: 0; padding-left: 20px;">
+                                                            <li style="margin-bottom: 4px;">Customer\'s card is validated and saved at booking (not charged)</li>
+                                                            <li style="margin-bottom: 4px;">When you mark the ride as "Completed", the card is automatically charged</li>
+                                                            <li style="margin-bottom: 4px;">Allows flexibility for variable fares and manual no-show charges</li>
+                                                            <li>Customer sees: "Your card will be charged after your ride is completed"</li>
+                                                        </ul>
+                                                    </div>' :
+                                                    '<div style="padding: 16px; border-radius: 8px; background-color: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3);">
+                                                        <p style="font-weight: 600; margin-bottom: 8px; color: #22c55e;">✓ Charge Immediately Mode (Default)</p>
+                                                        <ul style="font-size: 14px; color: #4ade80; margin: 0; padding-left: 20px;">
+                                                            <li style="margin-bottom: 4px;">Customer pays the full fare when they complete booking</li>
+                                                            <li style="margin-bottom: 4px;">Immediate revenue - payment is captured right away</li>
+                                                            <li style="margin-bottom: 4px;">Simple workflow - no need to charge after ride</li>
+                                                            <li>Customer sees: "Pay Now: $XXX.XX"</li>
+                                                        </ul>
+                                                    </div>'
+                                                )
+                                            ),
+                                    ])
+                                    ->columns(1),
+
                                 Section::make('Stripe API Configuration')
                                     ->description('Configure your Stripe payment gateway')
                                     ->schema([
@@ -176,7 +219,7 @@ class ManageSettings extends Page
                                             ->default(true)
                                             ->reactive()
                                             ->helperText('Enable or disable Stripe payment processing'),
-                                        
+
                                         // Mode Status Indicator
                                         Placeholder::make('stripe_mode_status')
                                             ->label('')
@@ -584,6 +627,13 @@ class ManageSettings extends Page
             ],
             
             // Stripe Settings
+            'payment_mode' => [
+                'group' => 'stripe',
+                'display_name' => 'Payment Mode',
+                'type' => 'select',
+                'description' => 'When to charge customers: immediately or after service',
+                'order' => 0,
+            ],
             'stripe_enabled' => [
                 'group' => 'stripe',
                 'display_name' => 'Stripe Enabled',

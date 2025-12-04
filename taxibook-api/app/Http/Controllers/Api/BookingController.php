@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\VehicleType;
 use App\Models\Transaction;
@@ -597,5 +598,113 @@ class BookingController extends Controller
                 'error' => 'Failed to get place details'
             ], 500);
         }
+    }
+
+    /**
+     * Create a Setup Intent for saving card without charging.
+     * Used when payment_mode is 'post_service'.
+     */
+    public function createSetupIntent(Request $request, $bookingNumber)
+    {
+        $booking = Booking::where('booking_number', $bookingNumber)->firstOrFail();
+
+        // Check if booking is in valid state
+        if ($booking->payment_status !== 'pending') {
+            return response()->json([
+                'error' => 'This booking already has a payment method or has been paid.',
+            ], 422);
+        }
+
+        try {
+            $result = $this->stripeService->createSetupIntent($booking);
+
+            if (!$result['success']) {
+                return response()->json([
+                    'error' => $result['error'],
+                ], 500);
+            }
+
+            return response()->json([
+                'client_secret' => $result['client_secret'],
+                'setup_intent_id' => $result['setup_intent_id'],
+                'customer_id' => $result['customer_id'],
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Setup Intent creation failed', [
+                'booking_number' => $bookingNumber,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'error' => 'Failed to create setup intent.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Complete Setup Intent and save card after frontend confirmation.
+     * Used when payment_mode is 'post_service'.
+     */
+    public function completeSetupIntent(Request $request, $bookingNumber)
+    {
+        $validated = $request->validate([
+            'setup_intent_id' => 'required|string',
+        ]);
+
+        $booking = Booking::where('booking_number', $bookingNumber)->firstOrFail();
+
+        DB::beginTransaction();
+
+        try {
+            $result = $this->stripeService->completeSetupIntent(
+                $booking,
+                $validated['setup_intent_id']
+            );
+
+            if (!$result['success']) {
+                throw new \Exception($result['error']);
+            }
+
+            // Update booking status - card saved, awaiting service completion
+            $booking->update([
+                'status' => 'confirmed',
+                'payment_status' => 'pending', // Still pending - will charge after ride
+            ]);
+
+            DB::commit();
+
+            // Event will be triggered by BookingObserver when status changes
+
+            return response()->json([
+                'booking' => $booking->fresh()->load('vehicleType'),
+                'card' => $result['card'],
+                'message' => 'Card saved successfully. You will be charged after your ride is completed.',
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            \Log::error('Complete Setup Intent failed', [
+                'booking_number' => $bookingNumber,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'error' => $e->getMessage() ?: 'Failed to save payment method.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Get payment mode setting to determine if we charge immediately or save card.
+     */
+    public function getPaymentMode()
+    {
+        $paymentMode = Setting::get('payment_mode', 'immediate');
+        $cancellationPolicyUrl = Setting::get('cancellation_policy_url', 'https://luxridesuv.com/cancellation-policy');
+
+        return response()->json([
+            'payment_mode' => $paymentMode,
+            'cancellation_policy_url' => $cancellationPolicyUrl,
+        ]);
     }
 }

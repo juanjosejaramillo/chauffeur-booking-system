@@ -24,8 +24,9 @@ class SettingsController extends Controller
         // Stripe settings
         $stripeEnabled = filter_var(Setting::get('stripe_enabled', true), FILTER_VALIDATE_BOOLEAN);
         $stripeMode = Setting::get('stripe_mode', 'test');
+        $paymentMode = Setting::get('payment_mode', 'immediate'); // immediate or post_service
         $stripePublicKey = null;
-        
+
         if ($stripeEnabled) {
             // Get the appropriate public key based on mode
             if ($stripeMode === 'live') {
@@ -33,7 +34,7 @@ class SettingsController extends Controller
             } else {
                 $stripePublicKey = Setting::get('stripe_test_publishable_key');
             }
-            
+
             // Fallback to environment variable if not set in settings
             if (!$stripePublicKey) {
                 $stripePublicKey = env('STRIPE_PUBLIC_KEY');
@@ -81,6 +82,7 @@ class SettingsController extends Controller
                 'enabled' => $stripeEnabled,
                 'mode' => $stripeMode,
                 'public_key' => $stripePublicKey,
+                'payment_mode' => $paymentMode, // 'immediate' or 'post_service'
             ],
             'google_maps' => [
                 'api_key' => $googleMapsApiKey,
