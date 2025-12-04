@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Bookings\Pages;
 
 use App\Filament\Resources\BookingResource;
+use App\Models\Setting;
 use App\Services\StripeService;
 use App\Services\TipService;
 use Filament\Actions\Action;
@@ -14,11 +15,54 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
+use Illuminate\Validation\ValidationException;
 
 class EditBooking extends EditRecord
 {
     protected static string $resource = BookingResource::class;
 
+    /**
+     * Validate status changes before saving to prevent double-charging
+     */
+    protected function mutateFormDataBeforeSave(array $data): array
+    {
+        $originalStatus = $this->record->getOriginal('status');
+        $newStatus = $data['status'] ?? $this->record->status;
+        $paymentStatus = $this->record->payment_status;
+        $paymentMode = Setting::get('payment_mode', 'immediate');
+
+        // Prevent changing status to completed if payment was already captured (prevent double-charge)
+        if ($newStatus === 'completed' && $originalStatus !== 'completed') {
+            // In post_service mode, only allow completion if payment is pending (will be charged)
+            // or if payment was already captured (just status update, no new charge)
+            if ($paymentMode === 'post_service' && $paymentStatus === 'captured') {
+                // Payment already captured - this is safe, just updating status
+            } elseif ($paymentMode === 'post_service' && $paymentStatus !== 'pending' && $paymentStatus !== 'captured') {
+                // Payment status is not pending or captured (could be failed, cancelled, etc.)
+                throw ValidationException::withMessages([
+                    'status' => 'Cannot complete booking - payment status is "' . $paymentStatus . '". Please resolve payment issues first.',
+                ]);
+            }
+        }
+
+        // Prevent changing from completed back to pending if payment was captured (could cause re-charge on next completion)
+        if ($newStatus === 'pending' && $originalStatus === 'completed' && $paymentStatus === 'captured') {
+            throw ValidationException::withMessages([
+                'status' => 'Cannot change a completed booking with captured payment back to pending. This could result in the customer being charged again if marked as completed later.',
+            ]);
+        }
+
+        // Prevent changing from completed back to confirmed if payment was captured (similar protection)
+        if ($newStatus === 'confirmed' && $originalStatus === 'completed' && $paymentStatus === 'captured') {
+            throw ValidationException::withMessages([
+                'status' => 'Cannot change a completed booking with captured payment back to confirmed. This could result in the customer being charged again if marked as completed later.',
+            ]);
+        }
+
+        return $data;
+    }
+
+    
     protected function getHeaderActions(): array
     {
         return [

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Bookings\Schemas;
 
 use App\Models\VehicleType;
 use App\Models\BookingFormField;
+use App\Models\Setting;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -32,14 +33,57 @@ class BookingForm
                             ->columnSpan(1),
                         Select::make('status')
                             ->label('Booking Status')
-                            ->options([
-                                'pending' => 'Pending',
-                                'confirmed' => 'Confirmed',
-                                'completed' => 'Completed',
-                                'cancelled' => 'Cancelled',
-                            ])
+                            ->options(function ($record) {
+                                $options = [
+                                    'pending' => 'Pending',
+                                    'confirmed' => 'Confirmed',
+                                    'completed' => 'Completed',
+                                    'cancelled' => 'Cancelled',
+                                ];
+
+                                // If payment was already captured and status is completed, disable going back
+                                if ($record && $record->status === 'completed' && $record->payment_status === 'captured') {
+                                    // Mark pending and confirmed as unavailable
+                                    $options['pending'] = 'Pending (Not Available)';
+                                    $options['confirmed'] = 'Confirmed (Not Available)';
+                                }
+
+                                return $options;
+                            })
+                            ->disableOptionWhen(function (string $value, $record) {
+                                // Disable going back to pending/confirmed if payment is captured and status is completed
+                                if ($record && $record->status === 'completed' && $record->payment_status === 'captured') {
+                                    return in_array($value, ['pending', 'confirmed']);
+                                }
+                                return false;
+                            })
                             ->native(false)
                             ->required()
+                            ->helperText(function ($record, Get $get) {
+                                $currentSelection = $get('status');
+                                $paymentMode = Setting::get('payment_mode', 'immediate');
+
+                                if (!$record) return null;
+
+                                // Warning when selecting completed with saved card in post_service mode
+                                if ($currentSelection === 'completed'
+                                    && $record->status !== 'completed'
+                                    && $paymentMode === 'post_service'
+                                    && $record->payment_status === 'pending'
+                                    && $record->hasSavedPaymentMethod()
+                                ) {
+                                    $amount = $record->final_fare ?? $record->estimated_fare;
+                                    return new HtmlString('<span class="text-amber-600 dark:text-amber-400 font-semibold">⚠️ Card will be charged $' . number_format($amount, 2) . ' when saved</span>');
+                                }
+
+                                // Warning about status restrictions when payment is captured
+                                if ($record->status === 'completed' && $record->payment_status === 'captured') {
+                                    return new HtmlString('<span class="text-gray-500 dark:text-gray-400">Status cannot be changed back - payment has been processed</span>');
+                                }
+
+                                return null;
+                            })
+                            ->reactive()
                             ->columnSpan(1),
                         Select::make('payment_status')
                             ->label('Payment Status')
@@ -77,27 +121,7 @@ class BookingForm
                             })
                             ->visible(fn ($record) => $record && in_array($record->payment_status, ['captured', 'refunded']))
                             ->columnSpan(1),
-                        Placeholder::make('saved_card_indicator')
-                            ->label('Saved Payment Method')
-                            ->content(function ($record) {
-                                if (!$record) return new HtmlString('<span class="text-gray-500">No booking data</span>');
-                                if ($record->hasSavedPaymentMethod()) {
-                                    return new HtmlString('
-                                        <div class="flex items-center gap-3">
-                                            <span class="text-green-600 font-semibold">Yes</span>
-                                            <span class="text-sm text-gray-600">Customer can be charged for tips without re-entering card details</span>
-                                        </div>
-                                    ');
-                                }
-                                return new HtmlString('
-                                    <div class="flex items-center gap-3">
-                                        <span class="text-red-600 font-semibold">No</span>
-                                        <span class="text-sm text-gray-600">Customer must use tip link or QR code to add gratuity</span>
-                                    </div>
-                                ');
-                            })
-                            ->columnSpanFull(),
-                    ])
+                        ])
                     ->columns(2),
 
                 Section::make('Customer Details')
@@ -149,7 +173,14 @@ class BookingForm
                     ->columns(2),
 
                 Section::make('Pricing & Distance')
-                    ->description('Fare calculation and trip metrics')
+                    ->description(function ($record) {
+                        if (!$record) return 'Fare calculation and trip metrics';
+                        $paymentMode = Setting::get('payment_mode', 'immediate');
+                        if ($paymentMode === 'post_service' && $record->payment_status === 'pending' && $record->hasSavedPaymentMethod()) {
+                            return 'Set the final fare and tip before marking as completed';
+                        }
+                        return 'Fare calculation and trip metrics';
+                    })
                     ->schema([
                         TextInput::make('estimated_fare')
                             ->label('Estimated Fare')
@@ -158,22 +189,67 @@ class BookingForm
                             ->required()
                             ->columnSpan(1),
                         TextInput::make('final_fare')
-                            ->label('Final Fare')
+                            ->label(function ($record) {
+                                if (!$record) return 'Final Fare';
+                                $paymentMode = Setting::get('payment_mode', 'immediate');
+                                if ($paymentMode === 'post_service' && $record->payment_status === 'pending') {
+                                    return 'Final Fare (Amount to Charge)';
+                                }
+                                return 'Final Fare';
+                            })
                             ->prefix('$')
                             ->numeric()
-                            ->visible(fn ($record) => $record && $record->payment_status === 'captured')
+                            ->placeholder(fn ($record) => $record ? number_format($record->estimated_fare, 2) : '0.00')
+                            ->helperText(function ($record) {
+                                if (!$record) return null;
+                                $paymentMode = Setting::get('payment_mode', 'immediate');
+                                if ($paymentMode === 'post_service' && $record->payment_status === 'pending' && $record->hasSavedPaymentMethod()) {
+                                    return 'Leave empty to charge the estimated fare, or enter a different amount';
+                                }
+                                return null;
+                            })
+                            ->visible(fn ($record) => $record && (
+                                $record->payment_status === 'captured' ||
+                                (Setting::get('payment_mode', 'immediate') === 'post_service' && $record->payment_status === 'pending')
+                            ))
+                            ->live(onBlur: true)
                             ->columnSpan(1),
                         TextInput::make('gratuity_amount')
-                            ->label('Gratuity')
+                            ->label('Gratuity / Tip')
                             ->prefix('$')
                             ->numeric()
-                            ->disabled()
-                            ->dehydrated(false)
+                            ->default(0)
                             ->placeholder('0.00')
+                            ->helperText(function ($record) {
+                                if (!$record) return null;
+                                $paymentMode = Setting::get('payment_mode', 'immediate');
+                                if ($paymentMode === 'post_service' && $record->payment_status === 'pending' && $record->hasSavedPaymentMethod()) {
+                                    return 'Add tip to be included in the charge';
+                                }
+                                if ($record->payment_status === 'captured') {
+                                    return 'Use "Capture with Tip" action to add tip';
+                                }
+                                return null;
+                            })
+                            ->disabled(fn ($record) => !$record || $record->payment_status === 'captured')
+                            ->dehydrated()
+                            ->live(onBlur: true)
                             ->columnSpan(1),
-                        Placeholder::make('total_amount')
-                            ->label('Total (Fare + Tip)')
-                            ->content(fn ($record) => $record ? '$' . number_format(($record->final_fare ?? $record->estimated_fare) + $record->gratuity_amount, 2) : '$0.00')
+                        Placeholder::make('total_to_charge')
+                            ->label('Total to Charge')
+                            ->content(function ($record, Get $get) {
+                                if (!$record) return '$0.00';
+                                $fare = $get('final_fare') ?: ($record->final_fare ?? $record->estimated_fare);
+                                $tip = $get('gratuity_amount') ?: $record->gratuity_amount ?? 0;
+                                $total = floatval($fare) + floatval($tip);
+                                return new HtmlString('<span class="text-lg font-bold text-amber-400">$' . number_format($total, 2) . '</span>');
+                            })
+                            ->visible(fn ($record) => $record && Setting::get('payment_mode', 'immediate') === 'post_service' && $record->payment_status === 'pending' && $record->hasSavedPaymentMethod())
+                            ->columnSpan(1),
+                        Placeholder::make('total_charged')
+                            ->label('Total Charged')
+                            ->content(fn ($record) => $record ? new HtmlString('<span class="text-lg font-bold text-green-400">$' . number_format(($record->final_fare ?? $record->estimated_fare) + ($record->gratuity_amount ?? 0), 2) . '</span>') : '$0.00')
+                            ->visible(fn ($record) => $record && $record->payment_status === 'captured')
                             ->columnSpan(1),
                         TextInput::make('total_refunded')
                             ->label('Total Refunded')
@@ -205,41 +281,130 @@ class BookingForm
                     ->columns(3),
 
                 Section::make('Payment Information')
-                    ->description('Stripe payment details and saved card status')
+                    ->description(function ($record) {
+                        if (!$record) return 'Stripe payment details';
+                        $paymentMode = Setting::get('payment_mode', 'immediate');
+                        if ($record->hasSavedPaymentMethod()) {
+                            if ($record->payment_status === 'captured') {
+                                return 'Payment captured - Card saved for tips';
+                            } elseif ($paymentMode === 'post_service' && $record->payment_status === 'pending') {
+                                return 'Card saved - Will charge on completion';
+                            }
+                            return 'Card saved on file';
+                        }
+                        return 'No card on file';
+                    })
+                    ->icon(function ($record) {
+                        if (!$record) return 'heroicon-o-credit-card';
+                        if ($record->hasSavedPaymentMethod()) {
+                            if ($record->payment_status === 'captured') {
+                                return 'heroicon-o-check-circle';
+                            }
+                            return 'heroicon-o-credit-card';
+                        }
+                        return 'heroicon-o-x-circle';
+                    })
+                    ->iconColor(function ($record) {
+                        if (!$record) return 'gray';
+                        if ($record->hasSavedPaymentMethod()) {
+                            if ($record->payment_status === 'captured') {
+                                return 'success';
+                            }
+                            $paymentMode = Setting::get('payment_mode', 'immediate');
+                            if ($paymentMode === 'post_service' && $record->payment_status === 'pending') {
+                                return 'warning';
+                            }
+                            return 'info';
+                        }
+                        return 'danger';
+                    })
                     ->schema([
-                        Placeholder::make('saved_card_status')
-                            ->label('Card Status')
+                        // Payment Status Summary Banner
+                        Placeholder::make('payment_summary')
+                            ->label('')
                             ->content(function ($record) {
-                                if (!$record) return new HtmlString('<span class="text-gray-500">-</span>');
-                                if ($record->hasSavedPaymentMethod()) {
-                                    return new HtmlString('<span class="text-green-600 font-semibold">Card on File</span>');
+                                if (!$record) return new HtmlString('');
+
+                                $paymentMode = Setting::get('payment_mode', 'immediate');
+                                $hasCard = $record->hasSavedPaymentMethod();
+                                $paymentStatus = $record->payment_status;
+                                $amount = $record->final_fare ?? $record->estimated_fare;
+
+                                // Calculate total with tip
+                                $tip = $record->gratuity_amount ?? 0;
+                                $totalAmount = $amount + $tip;
+
+                                // Build status display
+                                if ($paymentStatus === 'captured') {
+                                    $icon = '✅';
+                                    $statusText = 'Payment Captured';
+                                    $statusClass = 'text-green-400';
+                                    $message = $hasCard ? 'Card saved for tips' : 'Payment processed';
+                                    $amountText = '$' . number_format($totalAmount, 2) . ' charged';
+                                    $amountClass = 'text-green-400';
+                                } elseif ($paymentStatus === 'pending' && $hasCard && $paymentMode === 'post_service') {
+                                    $icon = '⚠️';
+                                    $statusText = 'Pay After Service';
+                                    $statusClass = 'text-amber-400';
+                                    $message = $tip > 0 ? 'Fare + tip will be charged' : 'Card will be charged when completed';
+                                    $amountText = '$' . number_format($totalAmount, 2) . ' to charge';
+                                    $amountClass = 'text-amber-400';
+                                } elseif ($paymentStatus === 'authorized') {
+                                    $icon = '💳';
+                                    $statusText = 'Authorized';
+                                    $statusClass = 'text-blue-400';
+                                    $message = 'Ready to capture';
+                                    $amountText = '$' . number_format($amount, 2) . ' authorized';
+                                    $amountClass = 'text-blue-400';
+                                } elseif ($hasCard) {
+                                    $icon = '💳';
+                                    $statusText = 'Card on File';
+                                    $statusClass = 'text-blue-400';
+                                    $message = 'Saved for future charges';
+                                    $amountText = '$' . number_format($amount, 2) . ' estimated';
+                                    $amountClass = 'text-gray-400';
+                                } else {
+                                    $icon = '❌';
+                                    $statusText = 'No Card';
+                                    $statusClass = 'text-gray-500';
+                                    $message = 'No payment method';
+                                    $amountText = '$' . number_format($amount, 2) . ' estimated';
+                                    $amountClass = 'text-gray-500';
                                 }
-                                return new HtmlString('<span class="text-red-600 font-semibold">No Card Saved</span>');
+
+                                return new HtmlString('
+                                    <div class="flex items-center justify-between gap-4 py-1">
+                                        <div class="flex items-center gap-2">
+                                            <span>' . $icon . '</span>
+                                            <span class="font-medium ' . $statusClass . '">' . $statusText . '</span>
+                                            <span class="text-gray-500">·</span>
+                                            <span class="text-sm text-gray-400">' . $message . '</span>
+                                        </div>
+                                        <span class="font-semibold ' . $amountClass . '">' . $amountText . '</span>
+                                    </div>
+                                ');
                             })
-                            ->columnSpan(['lg' => 2, 'md' => 2, 'sm' => 2]),
+                            ->columnSpanFull(),
                         TextInput::make('stripe_payment_intent_id')
-                            ->label('Stripe Payment Intent ID')
+                            ->label('Payment Intent ID')
                             ->disabled()
                             ->dehydrated()
                             ->placeholder('Not yet created')
-                            ->helperText('View in Stripe Dashboard')
-                            ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
+                            ->columnSpan(1),
                         TextInput::make('stripe_payment_method_id')
-                            ->label('Stripe Payment Method ID')
+                            ->label('Payment Method ID')
                             ->disabled()
                             ->dehydrated()
                             ->placeholder('Not yet created')
-                            ->helperText('Customer payment method')
-                            ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
+                            ->columnSpan(1),
                         TextInput::make('stripe_customer_id')
-                            ->label('Stripe Customer ID')
+                            ->label('Customer ID')
                             ->disabled()
                             ->dehydrated()
                             ->placeholder('Not yet created')
-                            ->helperText('Customer profile in Stripe')
-                            ->columnSpan(['lg' => 1, 'md' => 1, 'sm' => 2]),
+                            ->columnSpan(1),
                     ])
-                    ->columns(['lg' => 2, 'md' => 2, 'sm' => 2])
+                    ->columns(3)
                     ->collapsible(),
 
                 Section::make('Additional Information')

@@ -169,10 +169,25 @@ class BookingObserver
             return;
         }
 
-        // Check if payment is still pending
+        // CRITICAL: Check if payment is still pending (prevent double-charge)
         if ($booking->payment_status !== 'pending') {
             \Log::info('Auto-charge skipped: Payment already processed', [
                 'booking_id' => $booking->id,
+                'payment_status' => $booking->payment_status,
+            ]);
+            return;
+        }
+
+        // Additional safeguard: Check for existing successful payment transactions
+        $hasSuccessfulPayment = $booking->transactions()
+            ->whereIn('type', ['payment', 'capture'])
+            ->where('status', 'succeeded')
+            ->exists();
+
+        if ($hasSuccessfulPayment) {
+            \Log::warning('Auto-charge BLOCKED: Previous successful payment exists', [
+                'booking_id' => $booking->id,
+                'booking_number' => $booking->booking_number,
                 'payment_status' => $booking->payment_status,
             ]);
             return;
