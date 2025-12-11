@@ -1,4 +1,5 @@
 import useBookingStore from '../../../store/bookingStore';
+import useSettings from '../../../hooks/useSettings';
 import { ClarityTracking } from '../../../services/clarityTracking';
 
 const ReviewBookingLuxury = () => {
@@ -12,6 +13,11 @@ const ReviewBookingLuxury = () => {
     loading,
     error,
   } = useBookingStore();
+
+  // Get payment mode from settings
+  const { settings } = useSettings();
+  const paymentMode = settings?.stripe?.payment_mode || 'immediate';
+  const isPostServiceMode = paymentMode === 'post_service';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,7 +60,9 @@ const ReviewBookingLuxury = () => {
           Review Your Booking
         </h2>
         <p className="text-luxury-gray/60 text-sm tracking-wide">
-          Please review your booking details before proceeding to payment
+          {isPostServiceMode
+            ? 'Please review your booking details before confirming your reservation'
+            : 'Please review your booking details before proceeding to payment'}
         </p>
       </div>
 
@@ -264,7 +272,7 @@ const ReviewBookingLuxury = () => {
               <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span className="truncate">Proceed to Payment</span>
+              <span className="truncate">{isPostServiceMode ? 'Continue' : 'Proceed to Payment'}</span>
             </>
           )}
         </button>
