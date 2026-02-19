@@ -128,6 +128,76 @@ GET /settings/public
 }
 ```
 
+### Address Search
+
+#### Search Addresses (Google Places Autocomplete)
+```http
+POST /bookings/search-addresses
+```
+
+**Request Body:**
+```json
+{
+  "query": "Orlando Airport"
+}
+```
+
+**Response (200):**
+```json
+{
+  "predictions": [
+    {
+      "place_id": "ChIJ...",
+      "description": "Orlando International Airport - 1 Jeff Fuqua Blvd, Orlando, FL 32827",
+      "structured_formatting": {
+        "main_text": "Orlando International Airport",
+        "secondary_text": "1 Jeff Fuqua Blvd, Orlando, FL 32827"
+      }
+    }
+  ]
+}
+```
+
+#### Get Place Details
+```http
+POST /bookings/place-details
+```
+
+**Request Body:**
+```json
+{
+  "place_id": "ChIJ..."
+}
+```
+
+**Response (200):**
+```json
+{
+  "place": {
+    "name": "Orlando International Airport",
+    "formatted_address": "1 Jeff Fuqua Blvd, Orlando, FL 32827",
+    "latitude": 28.4312,
+    "longitude": -81.3081
+  }
+}
+```
+
+### Payment Mode
+
+#### Get Payment Mode
+```http
+GET /bookings/payment-mode
+```
+
+**Response (200):**
+```json
+{
+  "payment_mode": "immediate"
+}
+```
+
+Values: `"immediate"` (charge at booking) or `"save-card"` (save card, charge after service)
+
 ### Bookings
 
 #### Validate Route
@@ -379,6 +449,70 @@ POST /bookings/{bookingNumber}/confirm-payment
 {
   "payment_intent_id": "pi_1234567890",
   "payment_method_id": "pm_1234567890"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "booking": {
+    "booking_number": "BK20241225001",
+    "status": "confirmed",
+    "payment_status": "paid"
+  }
+}
+```
+
+#### Create Setup Intent (Save Card Mode)
+```http
+POST /bookings/{bookingNumber}/setup-intent
+```
+
+**Response (200):**
+```json
+{
+  "client_secret": "seti_1234_secret_5678",
+  "stripe_publishable_key": "pk_test_..."
+}
+```
+
+#### Complete Setup Intent
+```http
+POST /bookings/{bookingNumber}/complete-setup
+```
+
+**Request Body:**
+```json
+{
+  "setup_intent_id": "seti_1234567890",
+  "payment_method_id": "pm_1234567890"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "booking": {
+    "booking_number": "BK20241225001",
+    "status": "confirmed",
+    "payment_status": "authorized"
+  }
+}
+```
+
+#### Process Payment
+```http
+POST /bookings/{bookingNumber}/process-payment
+```
+
+**Request Body:**
+```json
+{
+  "payment_method_id": "pm_1234567890",
+  "save_payment_method": false,
+  "gratuity_amount": 10.00
 }
 ```
 

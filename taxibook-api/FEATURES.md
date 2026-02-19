@@ -1,8 +1,8 @@
 # Features Documentation
 
-## Latest Configuration (v1.10.0 - 2025-08-21)
+## Latest Configuration (v1.17.0 - 2026-02-17)
 - **Email System**: Simplified to 8 essential triggers with PDF attachment controls
-- **Admin Email**: admin@luxridesuv.com  
+- **Admin Email**: admin@luxridesuv.com
 - **Business Phone**: +1-813-333-8680
 - **Minimum Booking**: 12 hours advance
 - **Seeders**: 5 active seeders for complete system setup
@@ -10,6 +10,10 @@
 - **PDF Design**: Luxe template styling matching email design
 - **Dynamic Settings**: PDFs use business settings from database
 - **Legal URLs**: Configurable Terms and Cancellation Policy links
+- **Payment Modes**: Immediate charge or save-card (post-service billing)
+- **Hourly Booking**: Support for hourly-based pricing
+- **Expense Tracking**: Per-booking expense management with net profit dashboard
+- **Analytics Dashboard**: Revenue trends, booking charts, date filtering, Next Up widget
 
 ## Core Features
 
@@ -362,21 +366,54 @@ Total = Base Fare
 - **Rate Limiting**: Request throttling
 - **Session Security**: Database storage
 
-### 10. Reporting & Analytics
+### 10. Analytics Dashboard & Reporting
 
-#### Booking Reports
-- Daily/weekly/monthly summaries
-- Revenue tracking
-- Popular routes
-- Vehicle utilization
-- Customer demographics
+#### Dashboard Widgets
+- **Stats Overview**: 7 cards showing bookings, revenue, net profit, pending revenue, expenses, cancelled, completion rate
+- **Revenue Trend Chart**: Multi-line chart showing fares (green), tips (amber), expenses (red dashed)
+- **Booking Trend Chart**: Booking volume trends with automatic time grouping
+- **Next Up Widget**: Confirmed bookings within 7-day window with color-coded time badges
+- **Upcoming Bookings**: List of all upcoming bookings
+
+#### Date Range Filtering
+- Presets: Today, Yesterday, This Week, Last Week, This Month, Last Month, This Year
+- Custom date range picker
+- Automatic grouping: hourly/daily/weekly/monthly based on selected period
+
+#### Expense Tracking
+- Per-booking expense management (driver pay, tolls, fuel, etc.)
+- CRUD interface via `ExpensesRelationManager` in booking detail view
+- Net profit calculation: Revenue (fares + tips) - Expenses
+- Expense trends in revenue chart
 
 #### Financial Reports
-- Payment summaries
+- Payment summaries with net profit
 - Refund tracking
 - Gratuity reports
 - Tax calculations
 - Stripe fee tracking
+
+### 11. Hourly Booking Support
+
+#### Booking Types
+- **Distance-Based**: Traditional point-to-point pricing
+- **Hourly**: Per-hour pricing for extended services
+
+#### Configuration
+- Per-hour rate configurable per vehicle type
+- Minimum hours setting in admin
+- Duration selection in booking flow
+
+### 12. Payment Mode System
+
+#### Two Payment Modes
+- **Immediate Payment**: Card charged at booking via Stripe Payment Intent
+- **Save Card (Post-Service)**: Card saved via Stripe Setup Intent, charged after service
+
+#### Admin Configuration
+- Payment mode setting in admin panel
+- Admin safeguards for saved card processing
+- Dynamic UI adapts button text and confirmation based on mode
 
 ### 11. Mobile Responsiveness
 
@@ -431,17 +468,22 @@ if (feature('new-feature')) {
 
 ### Completed ✅
 - Core booking system
-- Payment processing
-- Email templates
-- Admin panel
+- Payment processing (immediate + save-card modes)
+- Email templates with PDF attachments
+- Admin panel with analytics dashboard
 - Dynamic form fields
 - Gratuity system
 - Airport detection
+- Hourly booking support
+- Expense tracking & net profit dashboard
+- Google Maps integration (traffic-aware routing)
+- Microsoft Clarity analytics
+- Configurable legal document URLs
+- Revenue trend charts & date filtering
 
 ### In Progress 🚧
-- Analytics dashboard
-- Advanced reporting
 - Customer portal
+- Advanced reporting
 
 ### Planned 📋
 - SMS notifications

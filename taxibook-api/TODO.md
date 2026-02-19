@@ -18,8 +18,9 @@
 - [ ] Configurable SMS preferences
 
 ### Analytics Dashboard
-- [ ] Revenue analytics
-- [ ] Booking trends graphs
+- [x] Revenue analytics (DashboardStatsOverview widget)
+- [x] Booking trends graphs (BookingTrendChart widget)
+- [x] Revenue trend charts (RevenueTrendChart widget)
 - [ ] Popular routes heatmap
 - [ ] Customer retention metrics
 - [ ] Driver performance metrics
@@ -141,20 +142,31 @@
 ## Completed ✅
 
 - [x] Core booking system
-- [x] Payment processing (Stripe)
-- [x] Email template system
-- [x] Admin panel (Filament)
+- [x] Payment processing (Stripe - immediate + save-card modes)
+- [x] Email template system with PDF attachments
+- [x] Admin panel (Filament) with analytics dashboard
 - [x] Dynamic form fields
 - [x] Gratuity/tips system
 - [x] Airport detection
-- [x] Email verification
+- [x] Email verification (with toggle)
 - [x] Guest booking support
 - [x] Booking modifications
-- [x] Refund processing
+- [x] Refund processing (full and partial)
 - [x] QR code generation
 - [x] Responsive design
 - [x] Settings management
 - [x] Luxe email templates
+- [x] Google Maps integration (traffic-aware routing)
+- [x] Microsoft Clarity analytics
+- [x] Hourly booking support
+- [x] Expense tracking per booking
+- [x] Net profit dashboard
+- [x] Revenue trend charts with date filtering
+- [x] Next Up widget (confirmed bookings in 7-day window)
+- [x] Configurable legal document URLs
+- [x] Payment mode system (immediate/save-card)
+- [x] Separate date/time pickers
+- [x] Setup Intent flow for post-service billing
 
 ## Notes
 
@@ -164,10 +176,10 @@
 - 🟢 **Low**: Nice to have features
 
 ### Timeline
-- **Q1 2025**: Driver system, SMS notifications, Analytics
-- **Q2 2025**: Customer portal, Advanced pricing
-- **Q3 2025**: Mobile apps, Multi-language
-- **Q4 2025**: AI features, Advanced integrations
+- **Q1 2026**: Customer portal, Advanced pricing, Driver system
+- **Q2 2026**: SMS notifications, Mobile apps
+- **Q3 2026**: Multi-language support, Advanced integrations
+- **Q4 2026**: AI features, Subscription plans
 
 ### Dependencies
 - Driver system requires real-time infrastructure

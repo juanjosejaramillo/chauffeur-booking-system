@@ -13,6 +13,8 @@ bookings ◄──────── transactions
     │
     ├──► vehicle_types ──► vehicle_pricing_tiers
     │
+    ├──► booking_expenses
+    │
     └──► email_logs ◄──── email_templates
 
 booking_form_fields (standalone)
@@ -272,7 +274,23 @@ Payment transaction records.
 - INDEX: `status`
 - INDEX: `stripe_transaction_id`
 
-### 9. **settings**
+### 9. **booking_expenses**
+Expense tracking per booking.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | bigint | Primary key |
+| booking_id | bigint | Foreign key to bookings |
+| description | varchar(255) | Expense description (e.g., driver pay, tolls, fuel) |
+| amount | decimal(10,2) | Expense amount |
+| created_at | timestamp | Creation date |
+| updated_at | timestamp | Last update |
+
+**Indexes:**
+- PRIMARY: `id`
+- INDEX: `booking_id`
+
+### 10. **settings**
 Key-value configuration store.
 
 | Column | Type | Description |
@@ -291,7 +309,7 @@ Key-value configuration store.
 - UNIQUE: `key`
 - INDEX: `group`
 
-### 10. **personal_access_tokens**
+### 11. **personal_access_tokens**
 Sanctum API tokens.
 
 | Column | Type | Description |
@@ -312,7 +330,7 @@ Sanctum API tokens.
 - UNIQUE: `token`
 - INDEX: `tokenable_type`, `tokenable_id`
 
-### 11. **sessions**
+### 12. **sessions**
 User session storage.
 
 | Column | Type | Description |
@@ -336,6 +354,7 @@ User session storage.
 - `vehicle_types` → `bookings` (A vehicle type can have many bookings)
 - `vehicle_types` → `vehicle_pricing_tiers` (A vehicle can have multiple pricing tiers)
 - `bookings` → `transactions` (A booking can have multiple transactions)
+- `bookings` → `booking_expenses` (A booking can have multiple expenses)
 - `bookings` → `email_logs` (A booking can have multiple email logs)
 - `email_templates` → `email_logs` (A template can be used for many emails)
 
@@ -343,6 +362,7 @@ User session storage.
 - `bookings` → `users` (optional - guest bookings allowed)
 - `bookings` → `vehicle_types`
 - `transactions` → `bookings`
+- `booking_expenses` → `bookings`
 - `email_logs` → `bookings`
 - `email_logs` → `users`
 
@@ -415,6 +435,12 @@ User session storage.
 10. Create booking_form_fields table
 11. Add dynamic fields to bookings
 12. Enhance email templates
+13. Migrate to Google Maps settings
+14. Add email verification toggle setting
+15. Add hourly booking fields and settings
+16. Add payment mode setting
+17. Add booking reserved email template
+18. Create booking_expenses table
 
 ## Database Optimization
 

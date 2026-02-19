@@ -7,6 +7,89 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.17.0] - 2026-02-17
+
+### Added
+- **Booking Expense Tracking System**
+  - New `BookingExpense` model for tracking per-booking costs
+  - `ExpensesRelationManager` in Filament for CRUD on booking expenses
+  - Fields: description (driver pay, tolls, fuel, etc.) and amount
+  - Migration: `2026_02_17_000001_create_booking_expenses_table`
+- **Net Profit Dashboard**
+  - Net Profit stat card: Revenue (fares + tips) minus Expenses
+  - Total Expenses stat card with category descriptions
+  - Revenue vs Expenses comparison in trend charts
+- **Next Up Widget**
+  - Shows confirmed bookings within 7-day window
+  - Time-until pickup badges with color coding (green/amber/red)
+  - Filtered to confirmed status only
+
+### Changed
+- Filtered Next Up widget to show only confirmed bookings in 7-day window
+- Revenue trend chart now shows expenses as red dashed line alongside fares and tips
+
+## [1.16.0] - 2026-02-15
+
+### Added
+- **Admin Dashboard Revamp**
+  - `DashboardStatsOverview` widget: 7 statistics cards (bookings, revenue, net profit, pending, expenses, cancelled, completion rate)
+  - `RevenueTrendChart` widget: Multi-line chart with fares, tips, and expenses
+  - `BookingTrendChart` widget: Booking volume trends
+  - `NextBookingsWidget`: Upcoming confirmed bookings
+  - `UpcomingBookingsWidget`: All upcoming bookings
+  - `HasDateRangeFilter` concern for shared date filtering logic
+- **Date Range Filtering**
+  - Presets: Today, Yesterday, This Week, Last Week, This Month, Last Month, This Year, Custom
+  - Automatic time grouping: hourly/daily/weekly/monthly based on period
+  - Applied across all dashboard widgets
+
+## [1.15.0] - 2025-12-03
+
+### Added
+- **Payment Mode System**
+  - Two payment modes: immediate charge or save card for post-service billing
+  - Stripe Setup Intent support for save-card flow
+  - New endpoints: `setup-intent` and `complete-setup`
+  - `GET /api/bookings/payment-mode` endpoint for frontend
+  - Admin safeguards for saved card payments
+  - Dynamic button text based on payment mode (Review and Payment steps)
+  - Confirmation page payment summary adapts to payment mode
+- Migration: `add_payment_mode_setting`
+- Migration: `add_booking_reserved_email_template`
+
+### Changed
+- Legal policy links moved from Review step to Payment step
+- Payment button text changes from "Pay Now" to "Confirm Booking" based on mode
+- Save-card mode preserves gratuity selection
+
+## [1.14.0] - 2025-11-06
+
+### Added
+- **Hourly Booking Support**
+  - Booking type selection: distance-based or hourly
+  - Per-hour pricing configurable per vehicle type
+  - Duration selection with minimum hours setting
+  - Migrations for hourly booking fields and settings
+- **Separate Date/Time Pickers**: Split into individual fields for better UX
+
+### Changed
+- Removed 'rental' terminology from UI, replaced with 'service'
+
+### Fixed
+- Vehicle card layout issues on mobile (cropping, visibility)
+- Vehicle card layout optimization for large screens
+- Booking notification and payment status handling improvements
+
+## [1.13.0] - 2025-08-31
+
+### Added
+- **Email Verification Toggle**: Admin setting to enable/disable email verification
+- **Early Booking Notification**: Admin notified at customer info step (not at payment)
+
+### Changed
+- Booking creation moved from Review→Payment to CustomerInfo→Review step
+- Updated vehicle selection UI with overflow fixes and better proportions
+
 ## [1.12.0] - 2025-08-31
 
 ### Changed

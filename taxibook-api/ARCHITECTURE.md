@@ -42,9 +42,9 @@ Core business logic encapsulated in service classes:
 
 ```php
 NotificationService     # Email notifications, template rendering
-StripeService          # Payment processing, intents, refunds
+StripeService          # Payment processing, intents, setup intents, refunds
 GoogleMapsService      # Geocoding, route calculation, traffic-aware routing
-PricingService         # Fare calculation with traffic-adjusted time, pricing tiers
+PricingService         # Fare calculation (distance + hourly), pricing tiers
 TipService            # Gratuity processing (hardcoded email)
 EmailComponentsService # Email template components
 ```
@@ -62,10 +62,20 @@ EmailComponentsService # Email template components
 
 - **Database Seeders** (`database/seeders/`)
   - `DatabaseSeeder`: Main orchestrator
-  - `SettingsSeeder`: 25 system settings
-  - `SimplifiedEmailTemplateSeeder`: 13 email templates
+  - `SettingsSeeder`: System settings (25+ settings)
+  - `SimplifiedEmailTemplateSeeder`: Email templates
   - `BookingFormFieldSeeder`: Dynamic form fields
   - `BookingSeeder`: Sample booking data
+
+- **Filament Widgets** (`app/Filament/Widgets/`)
+  - `DashboardStatsOverview`: 7 stat cards (bookings, revenue, net profit, expenses, etc.)
+  - `RevenueTrendChart`: Fares vs tips vs expenses over time
+  - `BookingTrendChart`: Booking volume trends
+  - `NextBookingsWidget`: Confirmed bookings in 7-day window
+  - `UpcomingBookingsWidget`: All upcoming bookings
+
+- **Filament Concerns** (`app/Filament/Concerns/`)
+  - `HasDateRangeFilter`: Shared date range filtering trait for widgets
 
 #### 4. **Infrastructure Layer**
 - **Providers** (`app/Providers/`)
@@ -165,6 +175,7 @@ bookings
   ├── belongs_to → users (optional)
   ├── belongs_to → vehicle_types
   ├── has_many → transactions
+  ├── has_many → booking_expenses
   └── has_many → email_logs
 
 vehicle_types
@@ -211,6 +222,8 @@ Response ← Transformer ← Resource ← Controller
 ## Integration Architecture
 
 ### Stripe Integration
+
+#### Immediate Payment Mode
 ```
 Booking Creation
     ↓
@@ -221,6 +234,19 @@ Confirm Payment (Client)
 Webhook Confirmation (Server)
     ↓
 Update Booking Status
+```
+
+#### Save Card (Post-Service) Mode
+```
+Booking Creation
+    ↓
+Create Setup Intent (Server)
+    ↓
+Confirm Setup Intent (Client)
+    ↓
+Card Saved for Future Use
+    ↓
+Admin Captures Payment After Service
 ```
 
 ### Google Maps Integration

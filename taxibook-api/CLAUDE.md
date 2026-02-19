@@ -17,11 +17,11 @@ LuxRide is a premium chauffeur booking system for luxury transportation services
 
 ### Frontend
 - **Framework**: React 19.x with Vite
-- **State Management**: Zustand
+- **State Management**: Zustand (with sessionStorage persistence)
 - **Routing**: React Router DOM v7
 - **Styling**: Tailwind CSS 3.x
 - **UI Components**: Headless UI, Heroicons
-- **Date Picker**: React Datepicker
+- **Date/Time Picker**: Separate date and time picker fields
 - **Build Tool**: Vite 7.x
 
 ### Third-Party Integrations
@@ -49,30 +49,43 @@ LuxRide is a premium chauffeur booking system for luxury transportation services
 ```
 /taxibook-api/                 # Laravel Backend
 ├── app/
-│   ├── Filament/             # Admin panel resources
+│   ├── Events/               # Event classes (8 events)
+│   ├── Filament/             # Admin panel
+│   │   ├── Concerns/        # Shared traits (HasDateRangeFilter)
+│   │   ├── Pages/            # Dashboard, ManageSettings
 │   │   ├── Resources/        # CRUD interfaces
-│   │   └── Pages/            # Custom pages (Settings)
+│   │   └── Widgets/          # Dashboard widgets
 │   ├── Http/
 │   │   └── Controllers/
-│   │       └── Api/          # API controllers
-│   ├── Models/               # Eloquent models
-│   ├── Services/             # Business logic services
+│   │       └── Api/          # API controllers (6 controllers)
+│   ├── Jobs/                 # Queue jobs
+│   ├── Listeners/            # Event listeners
+│   ├── Mail/                 # Mailable classes
+│   ├── Models/               # Eloquent models (10 models)
+│   ├── Observers/            # Model observers (BookingObserver)
+│   ├── Providers/            # Service providers
+│   ├── Services/             # Business logic services (6 services)
 │   └── Helpers/              # Helper functions
 ├── database/
 │   ├── migrations/           # Database schema
-│   └── seeders/              # Data seeders
+│   └── seeders/              # Data seeders (5 seeders)
 ├── routes/
 │   ├── api.php              # API routes
 │   └── web.php              # Web routes
 └── config/                   # Configuration files
 
-/taxibook-frontend/           # React Frontend
+/taxibook-frontend/           # React Frontend (inside taxibook-api)
 ├── src/
-│   ├── components/          # Reusable components
-│   ├── pages/              # Page components
-│   ├── services/           # API services
-│   ├── store/              # Zustand stores
-│   └── hooks/              # Custom React hooks
+│   ├── components/
+│   │   └── BookingWizard/   # 6-step booking wizard
+│   │       ├── BookingWizard.jsx
+│   │       ├── VerificationModalLuxury.jsx
+│   │       ├── WizardProgressLuxury.jsx
+│   │       └── steps/       # Step components
+│   ├── pages/               # TipPayment, TipSuccess, TipAlready
+│   ├── services/            # API services, ClarityTracking
+│   ├── store/               # Zustand stores
+│   └── hooks/               # Custom React hooks
 ```
 
 ## Key Models & Relationships
@@ -82,41 +95,53 @@ LuxRide is a premium chauffeur booking system for luxury transportation services
    - Has one User (optional)
    - Belongs to VehicleType
    - Has many Transactions
+   - Has many BookingExpenses
    - Stores dynamic form data in `additional_data` JSON field
+   - Supports hourly bookings (booking_type: 'distance' or 'hourly')
 
-2. **User** - Customer accounts
+2. **BookingExpense** - Expense tracking per booking
+   - Belongs to Booking
+   - Fields: description, amount
+   - Used for driver pay, tolls, fuel, etc.
+   - Aggregated for net profit calculations
+
+3. **User** - Customer accounts
    - Has many Bookings
    - Stores saved Stripe customer ID
 
-3. **VehicleType** - Vehicle categories
+4. **VehicleType** - Vehicle categories
    - Has many VehiclePricingTiers
    - Has many Bookings
    - Configurable pricing per distance
 
-4. **EmailTemplate** - Dynamic email templates
+5. **EmailTemplate** - Dynamic email templates
    - Supports HTML/WYSIWYG/Blade formats
    - Trigger-based sending
    - Variable replacement system
 
-5. **BookingFormField** - Dynamic form configuration
+6. **BookingFormField** - Dynamic form configuration
    - Defines custom booking form fields
    - Multiple field types (text, select, checkbox, etc.)
    - Conditional visibility rules
 
-6. **Setting** - System configuration
+7. **Setting** - System configuration
    - Key-value store for system settings
    - Managed via Filament admin panel
    - Overrides .env configurations
 
-7. **EmailLog** - Email audit trail
+8. **EmailLog** - Email audit trail
    - Tracks all sent emails
    - Links to bookings and users
    - Stores status and metadata
 
-8. **Transaction** - Payment records
+9. **Transaction** - Payment records
    - Belongs to Booking
    - Tracks Stripe transactions
    - Handles refunds
+
+10. **VehiclePricingTier** - Distance-based pricing tiers
+    - Belongs to VehicleType
+    - Min/max distance ranges with per-mile rates
 
 ## Key Features
 
@@ -134,12 +159,16 @@ LuxRide is a premium chauffeur booking system for luxury transportation services
 ### 2. Payment Processing
 - Dynamic Stripe key management - frontend fetches correct key from backend
 - Stripe integration with test/live mode switching controlled from admin panel
+- Two payment modes:
+  - **Immediate Payment**: Charges card at booking via Payment Intent
+  - **Save Card Mode**: Saves card via Setup Intent, charges after service
 - Separate card input fields (number, expiry, CVV, postal) for better mobile UX
-- Payment intents for secure processing
+- Payment intents and setup intents for secure processing
 - Saved cards functionality
 - Gratuity/tips system with QR codes and responsive tip buttons
-- Refund management
+- Refund management (full and partial)
 - Webhook support for payment confirmations
+- Admin safeguards for saved card payments
 
 ### 3. Email System
 - Template-based email system
@@ -150,13 +179,19 @@ LuxRide is a premium chauffeur booking system for luxury transportation services
 - Attachment support (receipts, booking details)
 
 ### 4. Admin Panel (Filament)
-- Complete booking management
-- Email template editor
+- Analytics dashboard with date range filtering (today, this week, this month, custom range)
+- Dashboard widgets:
+  - **DashboardStatsOverview**: Bookings, revenue, net profit, expenses, completion rate
+  - **RevenueTrendChart**: Fares vs tips vs expenses over time
+  - **BookingTrendChart**: Booking volume trends
+  - **NextBookingsWidget**: Confirmed bookings in 7-day window with time-until badges
+  - **UpcomingBookingsWidget**: Upcoming bookings list
+- Complete booking management with expense tracking (ExpensesRelationManager)
+- Email template editor with PDF attachment controls
 - Vehicle type configuration
 - Dynamic form field builder
-- Settings management
+- Settings management (Business, Stripe, Google Maps, Booking, Email, Legal)
 - Email logs viewer
-- Analytics dashboard (planned)
 
 ### 5. Customer Features
 - Guest booking (no registration required)
@@ -255,7 +290,7 @@ npm run dev
 
 ## Current Status
 - ✅ Core booking system complete
-- ✅ Payment processing functional
+- ✅ Payment processing functional (immediate + save-card modes)
 - ✅ Email system implemented
 - ✅ Admin panel operational
 - ✅ Dynamic form fields
@@ -263,18 +298,27 @@ npm run dev
 - ✅ Mobile responsive design optimized
 - ✅ Browser navigation handling
 - ✅ Session persistence for bookings
+- ✅ Analytics dashboard with date filtering
+- ✅ Revenue trend charts and booking trend charts
+- ✅ Net profit tracking with expense management
+- ✅ Hourly booking support
+- ✅ Google Maps integration (traffic-aware routing)
+- ✅ Microsoft Clarity analytics
+- ✅ Configurable legal document URLs
+- ✅ Email verification toggle
+- ✅ Separate date/time pickers
 - 🚧 Driver mobile app (planned)
 - 🚧 SMS notifications (planned)
-- 🚧 Analytics dashboard (in progress)
 
 ## Quick Reference
 
 ### Important Services
 - `NotificationService` - Email sending
-- `StripeService` - Payment processing
-- `GoogleMapsService` - Maps and geocoding
-- `PricingService` - Fare calculation
+- `StripeService` - Payment processing (intents, setup intents, refunds)
+- `GoogleMapsService` - Maps, geocoding, and traffic-aware routing
+- `PricingService` - Fare calculation (distance and hourly)
 - `TipService` - Gratuity handling
+- `EmailComponentsService` - Email template components
 - `ClarityTracking` - Microsoft Clarity analytics (Frontend)
 
 ### Key Admin Routes
@@ -288,8 +332,56 @@ npm run dev
 - `POST /api/bookings` - Create booking
 - `POST /api/bookings/calculate-prices` - Get pricing
 - `POST /api/bookings/validate-route` - Validate route
+- `POST /api/bookings/search-addresses` - Google Places autocomplete
+- `POST /api/bookings/place-details` - Google Place details
+- `POST /api/bookings/send-verification` - Send email verification
+- `POST /api/bookings/verify-email` - Verify email code
+- `GET /api/bookings/payment-mode` - Get payment mode setting
+- `POST /api/bookings/{bookingNumber}/setup-intent` - Create setup intent (save-card)
+- `POST /api/bookings/{bookingNumber}/complete-setup` - Complete setup intent
+- `POST /api/bookings/{bookingNumber}/payment-intent` - Create payment intent
+- `POST /api/bookings/{bookingNumber}/confirm-payment` - Confirm payment
 - `GET /api/settings/public` - Public settings
 - `POST /api/tip/{token}/process` - Process tip
+
+## Recent Updates (2026-02-17)
+
+### Admin Dashboard Revamp & Expense Tracking
+- **Analytics Dashboard**: Complete revamp with date range filtering (today, this week, this month, custom)
+- **Dashboard Widgets**:
+  - `DashboardStatsOverview`: 7 stat cards (bookings, revenue, net profit, pending revenue, expenses, cancelled, completion rate)
+  - `RevenueTrendChart`: Multi-line chart showing fares (green), tips (amber), expenses (red dashed)
+  - `BookingTrendChart`: Booking volume trends with automatic time grouping
+  - `NextBookingsWidget`: Confirmed bookings in 7-day window with time-until badges and color coding
+  - `UpcomingBookingsWidget`: Upcoming bookings list
+- **Date Range Filter**: `HasDateRangeFilter` concern shared across widgets with presets
+- **Expense Tracking System**:
+  - New `BookingExpense` model (description, amount per booking)
+  - `ExpensesRelationManager` in Filament for CRUD on booking expenses
+  - Migration: `2026_02_17_000001_create_booking_expenses_table`
+  - Net profit = Total Revenue (fares + tips) - Total Expenses
+  - Expenses cover: driver pay, tolls, fuel, etc.
+
+### Payment Mode System (2025-12-03)
+- **Two Payment Modes**: Configurable from admin settings
+  - **Immediate Payment**: Card charged at booking via Stripe Payment Intent
+  - **Save Card (Post-Service)**: Card saved via Stripe Setup Intent, charged after service
+- **Setup Intent Flow**: `createSetupIntent()` and `completeSetupIntent()` endpoints
+- **Dynamic UI**: Button text and confirmation page adapt based on payment mode
+- **Admin Safeguards**: Protection for saved card payment processing
+- **Legal Links Moved**: Terms/cancellation policy links moved from Review to Payment step
+- **Separate Date/Time Pickers**: Individual fields for date and time selection
+
+### Hourly Booking Support (2025-11)
+- **Booking Types**: Support for both distance-based and hourly bookings
+- **Hourly Pricing**: Per-hour rates configurable per vehicle type
+- **Duration Selection**: Minimum hours configurable in settings
+- **Migration**: Added hourly booking fields and settings
+
+### Vehicle Card Layout Improvements
+- **Mobile Fixes**: Fixed cropping and visibility issues on mobile devices
+- **Large Screen Optimization**: Better layout on large screens
+- **Removed 'Rental' Terminology**: All UI uses 'service' instead
 
 ## Recent Updates (2025-08-29)
 
