@@ -7,6 +7,7 @@ use App\Filament\Resources\Bookings\Pages\EditBooking;
 use App\Filament\Resources\Bookings\Pages\ListBookings;
 use App\Filament\Resources\Bookings\Schemas\BookingForm;
 use App\Filament\Resources\Bookings\Tables\BookingsTable;
+use App\Filament\Resources\Bookings\RelationManagers\ExpensesRelationManager;
 use App\Filament\Resources\Bookings\RelationManagers\TransactionsRelationManager;
 use App\Models\Booking;
 use BackedEnum;
@@ -36,6 +37,7 @@ class BookingResource extends Resource
     {
         return [
             TransactionsRelationManager::class,
+            ExpensesRelationManager::class,
         ];
     }
 

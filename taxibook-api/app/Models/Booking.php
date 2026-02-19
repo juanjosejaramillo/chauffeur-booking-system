@@ -127,6 +127,16 @@ class Booking extends Model
         return $this->hasMany(Transaction::class);
     }
 
+    public function expenses()
+    {
+        return $this->hasMany(BookingExpense::class);
+    }
+
+    public function getTotalExpensesAttribute(): float
+    {
+        return (float) $this->expenses()->sum('amount');
+    }
+
     public function scopePending($query)
     {
         return $query->where('status', 'pending');

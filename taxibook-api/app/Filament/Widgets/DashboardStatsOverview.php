@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Filament\Concerns\HasDateRangeFilter;
 use App\Models\Booking;
+use App\Models\BookingExpense;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -49,6 +50,14 @@ class DashboardStatsOverview extends StatsOverviewWidget
         // Total revenue = captured fares + gratuity
         $totalRevenue = $capturedFares + $gratuityTotal;
 
+        // Expenses - sum from booking_expenses joined through bookings in date range
+        $totalExpenses = (float) BookingExpense::whereHas('booking', function ($query) use ($start, $end) {
+            $query->whereBetween('pickup_date', [$start, $end]);
+        })->sum('amount');
+
+        // Net Profit
+        $netProfit = $totalRevenue - $totalExpenses;
+
         // Completion rate
         $nonCancelledTotal = $totalBookings - $cancelledCount;
         $completionRate = $nonCancelledTotal > 0
@@ -71,12 +80,24 @@ class DashboardStatsOverview extends StatsOverviewWidget
                 ->descriptionIcon('heroicon-m-currency-dollar')
                 ->color('success'),
 
+            Stat::make('Net Profit', '$' . number_format(abs($netProfit), 2))
+                ->description($netProfit >= 0
+                    ? 'Revenue minus expenses'
+                    : 'Expenses exceed revenue')
+                ->descriptionIcon($netProfit >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
+                ->color($netProfit >= 0 ? 'success' : 'danger'),
+
             Stat::make('Pending Revenue', '$' . number_format($authorizedFares, 2))
                 ->description($refundedTotal > 0
                     ? 'Authorized, not captured · $' . number_format($refundedTotal, 2) . ' refunded'
                     : 'Authorized, awaiting capture')
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color($authorizedFares > 0 ? 'warning' : 'gray'),
+
+            Stat::make('Total Expenses', '$' . number_format($totalExpenses, 2))
+                ->description('Driver pay, tolls, fuel, etc.')
+                ->descriptionIcon('heroicon-m-receipt-percent')
+                ->color('warning'),
 
             Stat::make('Cancelled', $cancelledCount)
                 ->description("{$cancellationRate}% cancellation rate")

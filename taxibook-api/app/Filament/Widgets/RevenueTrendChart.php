@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Filament\Concerns\HasDateRangeFilter;
 use App\Models\Booking;
+use App\Models\BookingExpense;
 use Carbon\CarbonPeriod;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
@@ -34,11 +35,13 @@ class RevenueTrendChart extends ChartWidget
         $labels = [];
         $fareData = [];
         $tipData = [];
+        $expenseData = [];
 
         if ($grouping === 'hour') {
             $labels = collect(range(0, 23))->map(fn ($h) => sprintf('%02d:00', $h))->toArray();
             $fareData = array_fill(0, 24, 0);
             $tipData = array_fill(0, 24, 0);
+            $expenseData = array_fill(0, 24, 0);
 
             $periodExpr = $driver === 'sqlite'
                 ? DB::raw("cast(strftime('%H', pickup_date) as integer) as period")
@@ -56,11 +59,24 @@ class RevenueTrendChart extends ChartWidget
                 ->groupBy('period')
                 ->pluck('total', 'period');
 
+            $expensePeriodExpr = $driver === 'sqlite'
+                ? DB::raw("cast(strftime('%H', bookings.pickup_date) as integer) as period")
+                : DB::raw('HOUR(bookings.pickup_date) as period');
+
+            $expenseRows = BookingExpense::join('bookings', 'booking_expenses.booking_id', '=', 'bookings.id')
+                ->whereBetween('bookings.pickup_date', [$start, $end])
+                ->select($expensePeriodExpr, DB::raw('COALESCE(SUM(booking_expenses.amount), 0) as total'))
+                ->groupBy('period')
+                ->pluck('total', 'period');
+
             foreach ($fareRows as $hour => $total) {
                 $fareData[$hour] = round((float) $total, 2);
             }
             foreach ($tipRows as $hour => $total) {
                 $tipData[$hour] = round((float) $total, 2);
+            }
+            foreach ($expenseRows as $hour => $total) {
+                $expenseData[$hour] = round((float) $total, 2);
             }
         } elseif ($grouping === 'day') {
             $period = CarbonPeriod::create($start, $end);
@@ -69,6 +85,7 @@ class RevenueTrendChart extends ChartWidget
             }
             $fareData = array_fill(0, count($labels), 0);
             $tipData = array_fill(0, count($labels), 0);
+            $expenseData = array_fill(0, count($labels), 0);
 
             $periodExpr = $driver === 'sqlite'
                 ? DB::raw("strftime('%Y-%m-%d', pickup_date) as period")
@@ -83,6 +100,16 @@ class RevenueTrendChart extends ChartWidget
             $tipRows = Booking::whereBetween('pickup_date', [$start, $end])
                 ->where('gratuity_amount', '>', 0)
                 ->select($periodExpr, DB::raw('COALESCE(SUM(gratuity_amount), 0) as total'))
+                ->groupBy('period')
+                ->pluck('total', 'period');
+
+            $expensePeriodExpr = $driver === 'sqlite'
+                ? DB::raw("strftime('%Y-%m-%d', bookings.pickup_date) as period")
+                : DB::raw('DATE(bookings.pickup_date) as period');
+
+            $expenseRows = BookingExpense::join('bookings', 'booking_expenses.booking_id', '=', 'bookings.id')
+                ->whereBetween('bookings.pickup_date', [$start, $end])
+                ->select($expensePeriodExpr, DB::raw('COALESCE(SUM(booking_expenses.amount), 0) as total'))
                 ->groupBy('period')
                 ->pluck('total', 'period');
 
@@ -101,6 +128,11 @@ class RevenueTrendChart extends ChartWidget
                     $tipData[$dateMap[$date]] = round((float) $total, 2);
                 }
             }
+            foreach ($expenseRows as $date => $total) {
+                if (isset($dateMap[$date])) {
+                    $expenseData[$dateMap[$date]] = round((float) $total, 2);
+                }
+            }
         } elseif ($grouping === 'week') {
             $current = $start->copy()->startOfWeek();
             $weekMap = [];
@@ -114,6 +146,7 @@ class RevenueTrendChart extends ChartWidget
             }
             $fareData = array_fill(0, count($labels), 0);
             $tipData = array_fill(0, count($labels), 0);
+            $expenseData = array_fill(0, count($labels), 0);
 
             $periodExpr = $driver === 'sqlite'
                 ? DB::raw("strftime('%Y-%W', pickup_date) as period")
@@ -131,6 +164,16 @@ class RevenueTrendChart extends ChartWidget
                 ->groupBy('period')
                 ->pluck('total', 'period');
 
+            $expensePeriodExpr = $driver === 'sqlite'
+                ? DB::raw("strftime('%Y-%W', bookings.pickup_date) as period")
+                : DB::raw("DATE_FORMAT(bookings.pickup_date, '%x-%v') as period");
+
+            $expenseRows = BookingExpense::join('bookings', 'booking_expenses.booking_id', '=', 'bookings.id')
+                ->whereBetween('bookings.pickup_date', [$start, $end])
+                ->select($expensePeriodExpr, DB::raw('COALESCE(SUM(booking_expenses.amount), 0) as total'))
+                ->groupBy('period')
+                ->pluck('total', 'period');
+
             foreach ($fareRows as $week => $total) {
                 if (isset($weekMap[$week])) {
                     $fareData[$weekMap[$week]] = round((float) $total, 2);
@@ -139,6 +182,11 @@ class RevenueTrendChart extends ChartWidget
             foreach ($tipRows as $week => $total) {
                 if (isset($weekMap[$week])) {
                     $tipData[$weekMap[$week]] = round((float) $total, 2);
+                }
+            }
+            foreach ($expenseRows as $week => $total) {
+                if (isset($weekMap[$week])) {
+                    $expenseData[$weekMap[$week]] = round((float) $total, 2);
                 }
             }
         } else {
@@ -155,6 +203,7 @@ class RevenueTrendChart extends ChartWidget
             }
             $fareData = array_fill(0, count($labels), 0);
             $tipData = array_fill(0, count($labels), 0);
+            $expenseData = array_fill(0, count($labels), 0);
 
             $periodExpr = $driver === 'sqlite'
                 ? DB::raw("strftime('%Y-%m', pickup_date) as period")
@@ -172,6 +221,16 @@ class RevenueTrendChart extends ChartWidget
                 ->groupBy('period')
                 ->pluck('total', 'period');
 
+            $expensePeriodExpr = $driver === 'sqlite'
+                ? DB::raw("strftime('%Y-%m', bookings.pickup_date) as period")
+                : DB::raw("DATE_FORMAT(bookings.pickup_date, '%Y-%m') as period");
+
+            $expenseRows = BookingExpense::join('bookings', 'booking_expenses.booking_id', '=', 'bookings.id')
+                ->whereBetween('bookings.pickup_date', [$start, $end])
+                ->select($expensePeriodExpr, DB::raw('COALESCE(SUM(booking_expenses.amount), 0) as total'))
+                ->groupBy('period')
+                ->pluck('total', 'period');
+
             foreach ($fareRows as $month => $total) {
                 if (isset($monthMap[$month])) {
                     $fareData[$monthMap[$month]] = round((float) $total, 2);
@@ -180,6 +239,11 @@ class RevenueTrendChart extends ChartWidget
             foreach ($tipRows as $month => $total) {
                 if (isset($monthMap[$month])) {
                     $tipData[$monthMap[$month]] = round((float) $total, 2);
+                }
+            }
+            foreach ($expenseRows as $month => $total) {
+                if (isset($monthMap[$month])) {
+                    $expenseData[$monthMap[$month]] = round((float) $total, 2);
                 }
             }
         }
@@ -199,6 +263,14 @@ class RevenueTrendChart extends ChartWidget
                     'borderColor' => '#f59e0b',
                     'backgroundColor' => 'rgba(245, 158, 11, 0.1)',
                     'fill' => true,
+                ],
+                [
+                    'label' => 'Expenses',
+                    'data' => array_values($expenseData),
+                    'borderColor' => '#ef4444',
+                    'backgroundColor' => 'rgba(239, 68, 68, 0.1)',
+                    'borderDash' => [5, 5],
+                    'fill' => false,
                 ],
             ],
             'labels' => $labels,
