@@ -20,11 +20,11 @@ class NextBookingsWidget extends BaseWidget
     protected function getTableHeading(): string
     {
         $count = Booking::where('pickup_date', '>=', Carbon::now())
-            ->where('pickup_date', '<=', Carbon::now()->addHours(24))
-            ->whereNotIn('status', ['cancelled', 'completed'])
+            ->where('pickup_date', '<=', Carbon::now()->addDays(7))
+            ->where('status', 'confirmed')
             ->count();
 
-        return "Next Up — {$count} booking" . ($count !== 1 ? 's' : '') . ' in the next 24 hours';
+        return "Next Up — {$count} booking" . ($count !== 1 ? 's' : '') . ' in the next 7 days';
     }
 
     public function table(Table $table): Table
@@ -33,8 +33,8 @@ class NextBookingsWidget extends BaseWidget
             ->query(
                 Booking::query()
                     ->where('pickup_date', '>=', Carbon::now())
-                    ->where('pickup_date', '<=', Carbon::now()->addHours(48))
-                    ->whereNotIn('status', ['cancelled', 'completed'])
+                    ->where('pickup_date', '<=', Carbon::now()->addDays(7))
+                    ->where('status', 'confirmed')
                     ->orderBy('pickup_date', 'asc')
             )
             ->columns([
