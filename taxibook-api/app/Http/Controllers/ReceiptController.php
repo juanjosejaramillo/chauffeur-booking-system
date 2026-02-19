@@ -94,7 +94,7 @@ class ReceiptController extends Controller
     private function getAuthorizedBooking($bookingNumber)
     {
         $booking = Booking::where('booking_number', $bookingNumber)
-            ->with('vehicleType')
+            ->with(['vehicleType', 'bookingExtras'])
             ->first();
         
         if (!$booking) {

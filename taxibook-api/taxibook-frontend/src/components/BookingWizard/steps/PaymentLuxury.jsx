@@ -29,10 +29,13 @@ const PaymentForm = () => {
     error,
     gratuityAmount,
     gratuityPercentage,
+    selectedExtras,
     savePaymentMethod,
     setGratuity,
     setSavePaymentMethod,
   } = useBookingStore();
+
+  const extrasTotal = Object.values(selectedExtras || {}).reduce((sum, e) => sum + e.price * e.quantity, 0);
 
   // Get payment mode from settings (default to 'immediate' for backward compatibility)
   const paymentMode = settings?.stripe?.payment_mode || 'immediate';
@@ -57,7 +60,7 @@ const PaymentForm = () => {
   const hasTrackedCheckout = useRef(false);
 
   const baseFare = selectedVehicle?.estimated_fare || selectedVehicle?.total_price || 0;
-  const totalAmount = baseFare + gratuityAmount;
+  const totalAmount = baseFare + extrasTotal + gratuityAmount;
 
   useEffect(() => {
     // Track begin_checkout when payment page loads (only once)
@@ -354,6 +357,18 @@ const PaymentForm = () => {
                 </span>
               </div>
 
+              {/* Extras Line Items */}
+              {Object.values(selectedExtras || {}).map((extra) => (
+                <div key={extra.id} className="flex justify-between items-center">
+                  <span className="text-luxury-gray/60 text-sm">
+                    {extra.name} {extra.quantity > 1 ? `x${extra.quantity}` : ''}
+                  </span>
+                  <span className="text-sm font-medium text-luxury-black">
+                    {formatPrice(extra.price * extra.quantity)}
+                  </span>
+                </div>
+              ))}
+
               {/* Gratuity Section */}
               <div className="pt-4 border-t border-luxury-gray/10">
                 <label className="block text-xs font-semibold text-luxury-gold uppercase tracking-luxury mb-4">
@@ -626,6 +641,12 @@ const PaymentForm = () => {
                 <p className="text-luxury-gray/60 text-xs">Trip Fare</p>
                 <p className="text-luxury-black font-medium">{formatPrice(baseFare)}</p>
               </div>
+              {Object.values(selectedExtras || {}).map((extra) => (
+                <div key={extra.id}>
+                  <p className="text-luxury-gray/60 text-xs">{extra.name} {extra.quantity > 1 ? `x${extra.quantity}` : ''}</p>
+                  <p className="text-luxury-black font-medium">{formatPrice(extra.price * extra.quantity)}</p>
+                </div>
+              ))}
               {gratuityAmount > 0 && (
                 <div>
                   <p className="text-luxury-gray/60 text-xs">Gratuity</p>

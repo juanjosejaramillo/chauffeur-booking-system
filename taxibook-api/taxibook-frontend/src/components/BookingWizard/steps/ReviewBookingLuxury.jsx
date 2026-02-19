@@ -6,6 +6,7 @@ const ReviewBookingLuxury = () => {
   const {
     tripDetails,
     selectedVehicle,
+    selectedExtras,
     customerInfo,
     routeInfo,
     nextStep,
@@ -13,6 +14,8 @@ const ReviewBookingLuxury = () => {
     loading,
     error,
   } = useBookingStore();
+
+  const extrasTotal = Object.values(selectedExtras || {}).reduce((sum, e) => sum + e.price * e.quantity, 0);
 
   // Get payment mode from settings
   const { settings } = useSettings();
@@ -231,11 +234,32 @@ const ReviewBookingLuxury = () => {
 
           {/* Total Amount */}
           <div className="bg-luxury-black text-luxury-white p-8">
-            <div className="space-y-4">
+            <div className="space-y-3">
               <div className="flex justify-between items-center">
-                <span className="text-xs uppercase tracking-luxury">Total Amount</span>
-                <span className="font-display text-3xl">
+                <span className="text-xs text-luxury-white/60 uppercase tracking-wide">Base Fare</span>
+                <span className="text-sm font-medium">
                   {formatPrice(selectedVehicle.estimated_fare || selectedVehicle.total_price)}
+                </span>
+              </div>
+              {Object.values(selectedExtras || {}).map((extra) => (
+                <div key={extra.id} className="flex justify-between items-center">
+                  <span className="text-xs text-luxury-white/60">
+                    {extra.name} x{extra.quantity}
+                  </span>
+                  <span className="text-sm font-medium">
+                    {formatPrice(extra.price * extra.quantity)}
+                  </span>
+                </div>
+              ))}
+              {extrasTotal > 0 && (
+                <div className="pt-3 border-t border-luxury-white/20" />
+              )}
+              <div className="flex justify-between items-center">
+                <span className="text-xs uppercase tracking-luxury">
+                  {extrasTotal > 0 ? 'Grand Total' : 'Total Amount'}
+                </span>
+                <span className="font-display text-3xl">
+                  {formatPrice((selectedVehicle.estimated_fare || selectedVehicle.total_price) + extrasTotal)}
                 </span>
               </div>
             </div>

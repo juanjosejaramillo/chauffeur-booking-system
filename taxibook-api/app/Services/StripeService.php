@@ -56,7 +56,7 @@ class StripeService
 
     public function createPaymentIntent(Booking $booking)
     {
-        $amountInCents = round($booking->estimated_fare * 100);
+        $amountInCents = round(($booking->estimated_fare + $booking->extras_total) * 100);
 
         $paymentIntentData = [
             'amount' => $amountInCents,

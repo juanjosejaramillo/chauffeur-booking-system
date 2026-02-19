@@ -35,6 +35,7 @@ class Booking extends Model
         'estimated_distance',
         'estimated_duration',
         'estimated_fare',
+        'extras_total',
         'final_fare',
         'fare_breakdown',
         'gratuity_amount',
@@ -70,6 +71,7 @@ class Booking extends Model
             'duration_hours' => 'integer',
             'estimated_distance' => 'decimal:2',
             'estimated_fare' => 'decimal:2',
+            'extras_total' => 'decimal:2',
             'final_fare' => 'decimal:2',
             'gratuity_amount' => 'decimal:2',
             'gratuity_added_at' => 'datetime',
@@ -130,6 +132,11 @@ class Booking extends Model
     public function expenses()
     {
         return $this->hasMany(BookingExpense::class);
+    }
+
+    public function bookingExtras()
+    {
+        return $this->hasMany(BookingExtra::class);
     }
 
     public function getTotalExpensesAttribute(): float

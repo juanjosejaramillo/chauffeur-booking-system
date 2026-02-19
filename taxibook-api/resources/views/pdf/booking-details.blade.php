@@ -398,6 +398,12 @@
                         <span class="fare-label">Base Fare:</span>
                         <span class="fare-value">${{ number_format($booking->subtotal ?? $booking->estimated_fare, 2) }}</span>
                     </div>
+                    @foreach($booking->bookingExtras as $bookingExtra)
+                    <div class="fare-row">
+                        <span class="fare-label">{{ $bookingExtra->name }}@if($bookingExtra->quantity > 1) (x{{ $bookingExtra->quantity }})@endif:</span>
+                        <span class="fare-value">${{ number_format($bookingExtra->total_price, 2) }}</span>
+                    </div>
+                    @endforeach
                     @if($booking->gratuity_amount > 0)
                     <div class="fare-row">
                         <span class="fare-label">Gratuity:</span>
@@ -412,7 +418,7 @@
                     @endif
                     <div class="fare-row fare-total">
                         <span class="fare-label">Total Estimated Fare:</span>
-                        <span class="fare-value">${{ number_format($booking->final_fare ?? $booking->estimated_fare, 2) }}</span>
+                        <span class="fare-value">${{ number_format(($booking->final_fare ?? $booking->estimated_fare) + $booking->extras_total, 2) }}</span>
                     </div>
                 </div>
             </div>

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Extra;
 use App\Models\VehicleType;
 
 class PricingService
@@ -45,7 +46,8 @@ class PricingService
 
         foreach ($vehicleTypes as $vehicleType) {
             $fare = $vehicleType->calculateFare($distance, $duration);
-            
+            $vehicleExtras = Extra::forVehicleType($vehicleType->id);
+
             $prices[] = [
                 'vehicle_type_id' => $vehicleType->id,
                 'display_name' => $vehicleType->display_name,
@@ -57,6 +59,13 @@ class PricingService
                 'image_url' => $vehicleType->full_image_url,
                 'estimated_fare' => $fare,
                 'fare_breakdown' => $this->getFareBreakdown($vehicleType, $distance, $duration, $fare),
+                'extras' => $vehicleExtras->map(fn ($e) => [
+                    'id' => $e->id,
+                    'name' => $e->name,
+                    'description' => $e->description,
+                    'price' => (float) $e->price,
+                    'max_quantity' => $e->max_quantity,
+                ])->values()->toArray(),
             ];
         }
 
@@ -212,6 +221,7 @@ class PricingService
             }
 
             $fare = $vehicleType->calculateHourlyFare($hours);
+            $vehicleExtras = Extra::forVehicleType($vehicleType->id);
 
             $prices[] = [
                 'vehicle_type_id' => $vehicleType->id,
@@ -231,6 +241,13 @@ class PricingService
                 'minimum_hours' => $vehicleType->minimum_hours,
                 'maximum_hours' => $vehicleType->maximum_hours,
                 'fare_breakdown' => $this->getHourlyFareBreakdown($vehicleType, $hours, $fare),
+                'extras' => $vehicleExtras->map(fn ($e) => [
+                    'id' => $e->id,
+                    'name' => $e->name,
+                    'description' => $e->description,
+                    'price' => (float) $e->price,
+                    'max_quantity' => $e->max_quantity,
+                ])->values()->toArray(),
             ];
         }
 

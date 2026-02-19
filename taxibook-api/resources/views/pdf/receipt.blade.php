@@ -447,6 +447,18 @@
                             <td class="amount">${{ number_format($booking->subtotal ?? $booking->estimated_fare, 2) }}</td>
                         </tr>
                         
+                        @foreach($booking->bookingExtras as $bookingExtra)
+                        <tr>
+                            <td>
+                                <strong>{{ $bookingExtra->name }}</strong>
+                                @if($bookingExtra->quantity > 1)
+                                <span style="color: #666; font-size: 9px;">({{ $bookingExtra->quantity }} x ${{ number_format($bookingExtra->unit_price, 2) }})</span>
+                                @endif
+                            </td>
+                            <td class="amount">${{ number_format($bookingExtra->total_price, 2) }}</td>
+                        </tr>
+                        @endforeach
+
                         @if($booking->gratuity_amount > 0)
                         <tr>
                             <td>
@@ -480,25 +492,32 @@
                     <div class="total-label">Service Total:</div>
                     <div class="total-value">${{ number_format($booking->subtotal ?? $booking->estimated_fare, 2) }}</div>
                 </div>
-                
+
+                @if($booking->extras_total > 0)
+                <div class="total-row">
+                    <div class="total-label">Extras:</div>
+                    <div class="total-value">${{ number_format($booking->extras_total, 2) }}</div>
+                </div>
+                @endif
+
                 @if($booking->gratuity_amount > 0)
                 <div class="total-row">
                     <div class="total-label">Gratuity:</div>
                     <div class="total-value">${{ number_format($booking->gratuity_amount, 2) }}</div>
                 </div>
                 @endif
-                
+
                 @if($booking->discount_amount > 0)
                 <div class="total-row">
                     <div class="total-label">Discount:</div>
                     <div class="total-value" style="color: #dc3545;">-${{ number_format($booking->discount_amount, 2) }}</div>
                 </div>
                 @endif
-                
+
                 <div class="total-row grand-total">
                     <div class="total-label">Total Charged</div>
                     @php
-                        $totalCharged = ($booking->final_fare ?? $booking->estimated_fare) + $booking->gratuity_amount;
+                        $totalCharged = ($booking->final_fare ?? $booking->estimated_fare) + $booking->extras_total + $booking->gratuity_amount;
                     @endphp
                     <div class="total-value">${{ number_format($totalCharged, 2) }}</div>
                 </div>

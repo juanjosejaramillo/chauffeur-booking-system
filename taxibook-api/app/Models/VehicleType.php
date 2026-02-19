@@ -88,6 +88,11 @@ class VehicleType extends Model
         return asset('storage/' . $value);
     }
 
+    public function extras()
+    {
+        return $this->belongsToMany(Extra::class, 'extra_vehicle_type');
+    }
+
     public function pricingTiers()
     {
         return $this->hasMany(VehiclePricingTier::class);

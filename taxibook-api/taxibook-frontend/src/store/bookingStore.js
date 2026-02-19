@@ -28,6 +28,7 @@ const useBookingStore = create(
   
   selectedVehicle: null,
   availableVehicles: [],
+  selectedExtras: {}, // keyed by extra ID: {id, name, price, quantity, maxQuantity}
   
   customerInfo: {
     firstName: '',
@@ -112,7 +113,23 @@ const useBookingStore = create(
     };
   }),
   
-  setSelectedVehicle: (vehicle) => set({ selectedVehicle: vehicle }),
+  setSelectedVehicle: (vehicle) => set({ selectedVehicle: vehicle, selectedExtras: {} }),
+
+  setExtraQuantity: (extra, quantity) => set((state) => {
+    const newExtras = { ...state.selectedExtras };
+    if (quantity <= 0) {
+      delete newExtras[extra.id];
+    } else {
+      newExtras[extra.id] = {
+        id: extra.id,
+        name: extra.name,
+        price: extra.price,
+        quantity: Math.min(quantity, extra.max_quantity),
+        maxQuantity: extra.max_quantity,
+      };
+    }
+    return { selectedExtras: newExtras };
+  }),
   
   setCustomerInfo: (info) => set((state) => ({
     customerInfo: { 
@@ -216,7 +233,7 @@ const useBookingStore = create(
   createBooking: async () => {
     set({ loading: true, error: null });
     try {
-      const { tripDetails, selectedVehicle, customerInfo, booking } = get();
+      const { tripDetails, selectedVehicle, customerInfo, booking, selectedExtras } = get();
       
       // Check if booking already exists (avoid duplicates)
       if (booking && booking.booking_number) {
@@ -240,6 +257,7 @@ const useBookingStore = create(
         is_airport_pickup: tripDetails.isAirportPickup || false,
         is_airport_dropoff: tripDetails.isAirportDropoff || false,
         additional_fields: customerInfo.additionalFields || {},
+        extras: Object.values(selectedExtras).map(e => ({ extra_id: e.id, quantity: e.quantity })),
       };
 
       // Add conditional fields based on booking type
@@ -469,6 +487,7 @@ const useBookingStore = create(
     },
     selectedVehicle: null,
     availableVehicles: [],
+    selectedExtras: {},
     customerInfo: {
       firstName: '',
       lastName: '',
@@ -496,6 +515,7 @@ const useBookingStore = create(
         currentStep: state.currentStep,
         tripDetails: state.tripDetails,
         selectedVehicle: state.selectedVehicle,
+        selectedExtras: state.selectedExtras,
         customerInfo: state.customerInfo,
         gratuityAmount: state.gratuityAmount,
         gratuityPercentage: state.gratuityPercentage,

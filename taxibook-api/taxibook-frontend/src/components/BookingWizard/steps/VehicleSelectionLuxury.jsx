@@ -8,6 +8,8 @@ const VehicleSelectionLuxury = () => {
     availableVehicles,
     selectedVehicle,
     setSelectedVehicle,
+    selectedExtras,
+    setExtraQuantity,
     tripDetails,
     routeInfo,
     calculatePrices,
@@ -321,6 +323,79 @@ const VehicleSelectionLuxury = () => {
           );
         })}
       </div>
+
+      {/* Extras Section */}
+      {selectedVehicle && selectedVehicle.extras && selectedVehicle.extras.length > 0 && (
+        <div className="mb-8 sm:mb-12">
+          <h3 className="text-xs font-semibold text-luxury-gold uppercase tracking-luxury mb-4 sm:mb-6">
+            Enhance Your Ride
+          </h3>
+          <div className="bg-luxury-white shadow-luxury rounded-lg overflow-hidden">
+            {selectedVehicle.extras.map((extra, idx) => {
+              const selected = selectedExtras[extra.id];
+              const quantity = selected ? selected.quantity : 0;
+              return (
+                <div
+                  key={extra.id}
+                  className={`flex items-center justify-between p-4 sm:p-5 ${
+                    idx < selectedVehicle.extras.length - 1 ? 'border-b border-luxury-gray/10' : ''
+                  }`}
+                >
+                  <div className="flex-1 min-w-0 mr-4">
+                    <p className="text-sm sm:text-base font-medium text-luxury-black">{extra.name}</p>
+                    {extra.description && (
+                      <p className="text-xs text-luxury-gray/60 mt-0.5">{extra.description}</p>
+                    )}
+                    <p className="text-xs sm:text-sm text-luxury-gold font-medium mt-1">
+                      {formatPrice(extra.price)} each
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExtraQuantity(extra, quantity - 1);
+                      }}
+                      disabled={quantity === 0}
+                      className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full border-2 border-luxury-gray/20 text-luxury-gray/60 transition-all hover:border-luxury-gold hover:text-luxury-gold disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-luxury-gray/20 disabled:hover:text-luxury-gray/60"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+                      </svg>
+                    </button>
+                    <span className="w-6 text-center text-sm font-medium text-luxury-black">{quantity}</span>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExtraQuantity(extra, quantity + 1);
+                      }}
+                      disabled={quantity >= extra.max_quantity}
+                      className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full border-2 border-luxury-gray/20 text-luxury-gray/60 transition-all hover:border-luxury-gold hover:text-luxury-gold disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-luxury-gray/20 disabled:hover:text-luxury-gray/60"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+            {/* Extras Subtotal */}
+            {Object.keys(selectedExtras).length > 0 && (
+              <div className="px-4 sm:px-5 py-3 bg-luxury-light-gray border-t border-luxury-gray/10">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs sm:text-sm text-luxury-gray/70">Extras Subtotal</span>
+                  <span className="text-sm sm:text-base font-medium text-luxury-black">
+                    {formatPrice(Object.values(selectedExtras).reduce((sum, e) => sum + e.price * e.quantity, 0))}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Error Message */}
       {(localError || error) && (

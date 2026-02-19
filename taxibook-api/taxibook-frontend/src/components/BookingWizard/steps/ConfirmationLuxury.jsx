@@ -8,7 +8,8 @@ import { ClarityTracking } from '../../../services/clarityTracking';
 const ConfirmationLuxury = () => {
   const navigate = useNavigate();
   const { settings } = useSettings();
-  const { booking, selectedVehicle, tripDetails, customerInfo, gratuityAmount, resetBooking } = useBookingStore();
+  const { booking, selectedVehicle, selectedExtras, tripDetails, customerInfo, gratuityAmount, resetBooking } = useBookingStore();
+  const extrasTotal = Object.values(selectedExtras || {}).reduce((sum, e) => sum + e.price * e.quantity, 0);
 
   // Get payment mode from settings
   const paymentMode = settings?.stripe?.payment_mode || 'immediate';
@@ -194,9 +195,14 @@ const ConfirmationLuxury = () => {
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-xs text-luxury-gray/60 uppercase tracking-wide">Estimated Fare</span>
                     <span className="text-xl font-display text-luxury-black">
-                      {formatPrice(selectedVehicle?.estimated_fare || selectedVehicle?.total_price)}
+                      {formatPrice((selectedVehicle?.estimated_fare || selectedVehicle?.total_price) + extrasTotal)}
                     </span>
                   </div>
+                  {extrasTotal > 0 && (
+                    <p className="text-xs text-luxury-gray/60 mb-1">
+                      Includes {formatPrice(extrasTotal)} in extras
+                    </p>
+                  )}
                   <p className="text-xs text-luxury-gray/60">
                     Your card will be charged after service is completed. You'll have the option to add a gratuity for your driver after your trip.
                   </p>
@@ -211,6 +217,14 @@ const ConfirmationLuxury = () => {
                         {formatPrice(selectedVehicle?.estimated_fare || selectedVehicle?.total_price)}
                       </span>
                     </div>
+                    {Object.values(selectedExtras || {}).map((extra) => (
+                      <div key={extra.id} className="flex justify-between items-center">
+                        <span className="text-sm text-luxury-gray/60">{extra.name}{extra.quantity > 1 ? ` x${extra.quantity}` : ''}:</span>
+                        <span className="text-sm font-medium text-luxury-black">
+                          {formatPrice(extra.price * extra.quantity)}
+                        </span>
+                      </div>
+                    ))}
                     {gratuityAmount > 0 && (
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-luxury-gray/60">Gratuity:</span>
@@ -222,7 +236,7 @@ const ConfirmationLuxury = () => {
                     <div className="flex justify-between items-center pt-2 border-t border-luxury-gray/10">
                       <span className="text-sm font-semibold text-luxury-black">Total Paid:</span>
                       <span className="text-xl font-display text-luxury-black">
-                        {formatPrice((selectedVehicle?.estimated_fare || selectedVehicle?.total_price) + gratuityAmount)}
+                        {formatPrice((selectedVehicle?.estimated_fare || selectedVehicle?.total_price) + extrasTotal + gratuityAmount)}
                       </span>
                     </div>
                   </div>

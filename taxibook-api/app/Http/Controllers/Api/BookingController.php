@@ -7,6 +7,8 @@ use App\Models\Booking;
 use App\Models\Setting;
 use App\Models\User;
 use App\Models\VehicleType;
+use App\Models\BookingExtra;
+use App\Models\Extra;
 use App\Models\Transaction;
 use App\Services\GoogleMapsService;
 use App\Services\PricingService;
@@ -182,6 +184,9 @@ class BookingController extends Controller
             'payment_method_id' => 'nullable|string', // Stripe payment method ID (optional for initial booking)
             'gratuity_amount' => 'nullable|numeric|min:0', // Optional tip at booking
             'save_payment_method' => 'boolean', // Save card for future use
+            'extras' => 'nullable|array',
+            'extras.*.extra_id' => 'required|exists:extras,id',
+            'extras.*.quantity' => 'required|integer|min:1',
         ]);
 
         $bookingType = $validated['booking_type'] ?? 'one_way';
@@ -253,11 +258,21 @@ class BookingController extends Controller
             // Find user by email (should exist from verification)
             $user = User::where('email', $validated['customer_email'])->first();
             
+            // Calculate extras total
+            $extrasTotal = 0;
+            $extrasData = $validated['extras'] ?? [];
+            if (!empty($extrasData)) {
+                foreach ($extrasData as $extraItem) {
+                    $extra = Extra::findOrFail($extraItem['extra_id']);
+                    $extrasTotal += $extra->price * $extraItem['quantity'];
+                }
+            }
+
             // Calculate total with optional tip
             $tipAmount = $validated['gratuity_amount'] ?? 0;
-            $totalCharge = $estimatedFare + $tipAmount;
+            $totalCharge = $estimatedFare + $extrasTotal + $tipAmount;
             $saveCard = $validated['save_payment_method'] ?? false;
-            
+
             // Create booking
             $booking = Booking::create([
                 'booking_type' => $bookingType,
@@ -278,6 +293,7 @@ class BookingController extends Controller
                 'estimated_distance' => $route ? $route['distance'] : null,
                 'estimated_duration' => $route ? $route['duration'] : null,
                 'estimated_fare' => $estimatedFare,
+                'extras_total' => $extrasTotal,
                 'final_fare' => $estimatedFare,
                 'gratuity_amount' => $tipAmount,
                 'gratuity_added_at' => $tipAmount > 0 ? now() : null,
@@ -291,6 +307,23 @@ class BookingController extends Controller
                 'payment_status' => 'pending',
             ]);
             
+            // Create booking extras (snapshot name + unit_price)
+            if (!empty($extrasData)) {
+                foreach ($extrasData as $extraItem) {
+                    $extra = Extra::find($extraItem['extra_id']);
+                    if ($extra) {
+                        BookingExtra::create([
+                            'booking_id' => $booking->id,
+                            'extra_id' => $extra->id,
+                            'name' => $extra->name,
+                            'unit_price' => $extra->price,
+                            'quantity' => $extraItem['quantity'],
+                            'total_price' => $extra->price * $extraItem['quantity'],
+                        ]);
+                    }
+                }
+            }
+
             // If payment method provided, process payment immediately
             if (!empty($validated['payment_method_id'])) {
                 $paymentResult = $this->stripeService->chargeBooking(
@@ -375,7 +408,7 @@ class BookingController extends Controller
             }
 
             // Calculate total charge
-            $totalCharge = $booking->estimated_fare + $booking->gratuity_amount;
+            $totalCharge = $booking->estimated_fare + $booking->extras_total + $booking->gratuity_amount;
             $saveCard = $validated['save_payment_method'] ?? false;
 
             // Process payment
@@ -430,7 +463,7 @@ class BookingController extends Controller
     public function show($bookingNumber)
     {
         $booking = Booking::where('booking_number', $bookingNumber)
-            ->with(['vehicleType', 'transactions'])
+            ->with(['vehicleType', 'transactions', 'bookingExtras'])
             ->firstOrFail();
 
         // Check if user has permission to view this booking
