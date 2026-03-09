@@ -49,7 +49,7 @@ class RevenueTrendChart extends ChartWidget
 
             $fareRows = Booking::whereBetween('pickup_date', [$start, $end])
                 ->where('payment_status', 'captured')
-                ->select($periodExpr, DB::raw('COALESCE(SUM(final_fare), 0) as total'))
+                ->select($periodExpr, DB::raw('COALESCE(SUM(COALESCE(final_fare, 0) + COALESCE(extras_total, 0) + COALESCE(tax_amount, 0)), 0) as total'))
                 ->groupBy('period')
                 ->pluck('total', 'period');
 
@@ -93,7 +93,7 @@ class RevenueTrendChart extends ChartWidget
 
             $fareRows = Booking::whereBetween('pickup_date', [$start, $end])
                 ->where('payment_status', 'captured')
-                ->select($periodExpr, DB::raw('COALESCE(SUM(final_fare), 0) as total'))
+                ->select($periodExpr, DB::raw('COALESCE(SUM(COALESCE(final_fare, 0) + COALESCE(extras_total, 0) + COALESCE(tax_amount, 0)), 0) as total'))
                 ->groupBy('period')
                 ->pluck('total', 'period');
 
@@ -154,7 +154,7 @@ class RevenueTrendChart extends ChartWidget
 
             $fareRows = Booking::whereBetween('pickup_date', [$start, $end])
                 ->where('payment_status', 'captured')
-                ->select($periodExpr, DB::raw('COALESCE(SUM(final_fare), 0) as total'))
+                ->select($periodExpr, DB::raw('COALESCE(SUM(COALESCE(final_fare, 0) + COALESCE(extras_total, 0) + COALESCE(tax_amount, 0)), 0) as total'))
                 ->groupBy('period')
                 ->pluck('total', 'period');
 
@@ -211,7 +211,7 @@ class RevenueTrendChart extends ChartWidget
 
             $fareRows = Booking::whereBetween('pickup_date', [$start, $end])
                 ->where('payment_status', 'captured')
-                ->select($periodExpr, DB::raw('COALESCE(SUM(final_fare), 0) as total'))
+                ->select($periodExpr, DB::raw('COALESCE(SUM(COALESCE(final_fare, 0) + COALESCE(extras_total, 0) + COALESCE(tax_amount, 0)), 0) as total'))
                 ->groupBy('period')
                 ->pluck('total', 'period');
 

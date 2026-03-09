@@ -29,15 +29,17 @@ class DashboardStatsOverview extends StatsOverviewWidget
             ->where('status', 'cancelled')->count();
         $activeCount = $totalBookings - $cancelledCount;
 
-        // Revenue - captured fares (completed payments)
+        // Revenue - captured fares + extras + tax (completed payments)
         $capturedFares = (float) Booking::whereBetween('pickup_date', [$start, $end])
             ->where('payment_status', 'captured')
-            ->sum('final_fare');
+            ->selectRaw('COALESCE(SUM(COALESCE(final_fare, 0) + COALESCE(extras_total, 0) + COALESCE(tax_amount, 0)), 0) as total')
+            ->value('total');
 
-        // Authorized fares (card held, not yet captured)
+        // Authorized fares + extras + tax (card held, not yet captured)
         $authorizedFares = (float) Booking::whereBetween('pickup_date', [$start, $end])
             ->where('payment_status', 'authorized')
-            ->sum('estimated_fare');
+            ->selectRaw('COALESCE(SUM(COALESCE(estimated_fare, 0) + COALESCE(extras_total, 0) + COALESCE(tax_amount, 0)), 0) as total')
+            ->value('total');
 
         // Gratuity (tips from customers)
         $gratuityTotal = (float) Booking::whereBetween('pickup_date', [$start, $end])

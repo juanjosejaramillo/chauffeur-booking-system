@@ -194,7 +194,7 @@ class BookingObserver
         }
 
         // Calculate total amount to charge
-        $amount = ($booking->final_fare ?? $booking->estimated_fare) + ($booking->gratuity_amount ?? 0);
+        $amount = ($booking->final_fare ?? $booking->estimated_fare) + ($booking->extras_total ?? 0) + ($booking->tax_amount ?? 0) + ($booking->gratuity_amount ?? 0);
 
         if ($amount <= 0) {
             \Log::warning('Auto-charge skipped: Invalid amount', [

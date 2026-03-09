@@ -72,7 +72,7 @@ class BookingForm
                                     && $record->payment_status === 'pending'
                                     && $record->hasSavedPaymentMethod()
                                 ) {
-                                    $amount = $record->final_fare ?? $record->estimated_fare;
+                                    $amount = ($record->final_fare ?? $record->estimated_fare) + ($record->extras_total ?? 0) + ($record->tax_amount ?? 0);
                                     return new HtmlString('<span class="text-amber-600 dark:text-amber-400 font-semibold">⚠️ Card will be charged $' . number_format($amount, 2) . ' when saved</span>');
                                 }
 
@@ -193,7 +193,7 @@ class BookingForm
                                 if (!$record) return 'Final Fare';
                                 $paymentMode = Setting::get('payment_mode', 'immediate');
                                 if ($paymentMode === 'post_service' && $record->payment_status === 'pending') {
-                                    return 'Final Fare (Amount to Charge)';
+                                    return 'Final Fare (Base Amount)';
                                 }
                                 return 'Final Fare';
                             })
@@ -204,9 +204,9 @@ class BookingForm
                                 if (!$record) return null;
                                 $paymentMode = Setting::get('payment_mode', 'immediate');
                                 if ($paymentMode === 'post_service' && $record->payment_status === 'pending' && $record->hasSavedPaymentMethod()) {
-                                    return 'Leave empty to charge the estimated fare, or enter a different amount';
+                                    return 'Leave empty to charge the estimated fare, or enter a different amount. Extras and tax are added automatically.';
                                 }
-                                return null;
+                                return 'Base fare only — extras and tax are separate';
                             })
                             ->visible(fn ($record) => $record && (
                                 $record->payment_status === 'captured' ||
@@ -235,20 +235,34 @@ class BookingForm
                             ->dehydrated()
                             ->live(onBlur: true)
                             ->columnSpan(1),
+                        Placeholder::make('extras_total_display')
+                            ->label('Extras Total')
+                            ->content(fn ($record) => $record ? new HtmlString('<span class="text-lg font-semibold text-primary-400">$' . number_format($record->extras_total ?? 0, 2) . '</span>') : '$0.00')
+                            ->helperText('Managed via the Extras tab below')
+                            ->visible(fn ($record) => $record && ($record->extras_total ?? 0) > 0)
+                            ->columnSpan(1),
+                        Placeholder::make('tax_amount_display')
+                            ->label('Tax Amount')
+                            ->content(fn ($record) => $record ? new HtmlString('<span class="text-lg font-semibold text-primary-400">$' . number_format($record->tax_amount ?? 0, 2) . '</span>') : '$0.00')
+                            ->helperText('Calculated automatically from fare + extras')
+                            ->visible(fn ($record) => $record && ($record->tax_amount ?? 0) > 0)
+                            ->columnSpan(1),
                         Placeholder::make('total_to_charge')
                             ->label('Total to Charge')
                             ->content(function ($record, Get $get) {
                                 if (!$record) return '$0.00';
                                 $fare = $get('final_fare') ?: ($record->final_fare ?? $record->estimated_fare);
                                 $tip = $get('gratuity_amount') ?: $record->gratuity_amount ?? 0;
-                                $total = floatval($fare) + floatval($tip);
+                                $extras = $record->extras_total ?? 0;
+                                $tax = $record->tax_amount ?? 0;
+                                $total = floatval($fare) + floatval($tip) + floatval($extras) + floatval($tax);
                                 return new HtmlString('<span class="text-lg font-bold text-amber-400">$' . number_format($total, 2) . '</span>');
                             })
                             ->visible(fn ($record) => $record && Setting::get('payment_mode', 'immediate') === 'post_service' && $record->payment_status === 'pending' && $record->hasSavedPaymentMethod())
                             ->columnSpan(1),
                         Placeholder::make('total_charged')
                             ->label('Total Charged')
-                            ->content(fn ($record) => $record ? new HtmlString('<span class="text-lg font-bold text-green-400">$' . number_format(($record->final_fare ?? $record->estimated_fare) + ($record->gratuity_amount ?? 0), 2) . '</span>') : '$0.00')
+                            ->content(fn ($record) => $record ? new HtmlString('<span class="text-lg font-bold text-green-400">$' . number_format(($record->final_fare ?? $record->estimated_fare) + ($record->extras_total ?? 0) + ($record->tax_amount ?? 0) + ($record->gratuity_amount ?? 0), 2) . '</span>') : '$0.00')
                             ->visible(fn ($record) => $record && $record->payment_status === 'captured')
                             ->columnSpan(1),
                         TextInput::make('total_refunded')
@@ -328,7 +342,7 @@ class BookingForm
                                 $paymentMode = Setting::get('payment_mode', 'immediate');
                                 $hasCard = $record->hasSavedPaymentMethod();
                                 $paymentStatus = $record->payment_status;
-                                $amount = $record->final_fare ?? $record->estimated_fare;
+                                $amount = ($record->final_fare ?? $record->estimated_fare) + ($record->extras_total ?? 0) + ($record->tax_amount ?? 0);
 
                                 // Calculate total with tip
                                 $tip = $record->gratuity_amount ?? 0;

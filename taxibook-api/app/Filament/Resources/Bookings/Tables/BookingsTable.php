@@ -79,12 +79,19 @@ class BookingsTable
                     ->sortable(),
                 TextColumn::make('estimated_fare')
                     ->label('Fare')
-                    ->money('USD')
                     ->sortable()
+                    ->formatStateUsing(fn ($record) => '$' . number_format($record->estimated_fare + ($record->extras_total ?? 0) + ($record->tax_amount ?? 0), 2))
                     ->description(function ($record) {
                         $descriptions = [];
+                        if ($record->extras_total > 0) {
+                            $descriptions[] = 'Base: $' . number_format($record->estimated_fare, 2);
+                            $descriptions[] = 'Extras: $' . number_format($record->extras_total, 2);
+                        }
+                        if (($record->tax_amount ?? 0) > 0) {
+                            $descriptions[] = 'Tax: $' . number_format($record->tax_amount, 2);
+                        }
                         if ($record->final_fare) {
-                            $descriptions[] = 'Final: $' . number_format($record->final_fare, 2);
+                            $descriptions[] = 'Final: $' . number_format($record->final_fare + ($record->extras_total ?? 0) + ($record->tax_amount ?? 0) + ($record->gratuity_amount ?? 0), 2);
                         }
                         if ($record->total_refunded > 0) {
                             $descriptions[] = 'Refunded: $' . number_format($record->total_refunded, 2);
@@ -154,8 +161,8 @@ class BookingsTable
                                 ->label('Amount to Capture')
                                 ->numeric()
                                 ->prefix('$')
-                                ->default(fn ($record) => $record->estimated_fare)
-                                ->helperText(fn ($record) => 'Authorized amount: $' . number_format($record->estimated_fare, 2))
+                                ->default(fn ($record) => $record->estimated_fare + ($record->extras_total ?? 0) + ($record->tax_amount ?? 0))
+                                ->helperText(fn ($record) => 'Authorized amount: $' . number_format($record->estimated_fare + ($record->extras_total ?? 0) + ($record->tax_amount ?? 0), 2))
                                 ->required(),
                         ])
                         ->action(function ($record, array $data) {

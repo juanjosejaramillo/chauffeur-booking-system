@@ -37,6 +37,13 @@ const PaymentForm = () => {
 
   const extrasTotal = Object.values(selectedExtras || {}).reduce((sum, e) => sum + e.price * e.quantity, 0);
 
+  // Tax: read rate from selected vehicle, calculate on (fare + extras)
+  const taxRate = selectedVehicle?.tax_rate || 0;
+  const taxEnabled = selectedVehicle?.tax_enabled ?? false;
+  const taxAmount = taxEnabled && taxRate > 0
+    ? Math.round(((selectedVehicle?.estimated_fare || 0) + extrasTotal) * (taxRate / 100) * 100) / 100
+    : 0;
+
   // Get payment mode from settings (default to 'immediate' for backward compatibility)
   const paymentMode = settings?.stripe?.payment_mode || 'immediate';
   const isPostServiceMode = paymentMode === 'post_service';
@@ -60,7 +67,7 @@ const PaymentForm = () => {
   const hasTrackedCheckout = useRef(false);
 
   const baseFare = selectedVehicle?.estimated_fare || selectedVehicle?.total_price || 0;
-  const totalAmount = baseFare + extrasTotal + gratuityAmount;
+  const totalAmount = baseFare + extrasTotal + taxAmount + gratuityAmount;
 
   useEffect(() => {
     // Track begin_checkout when payment page loads (only once)
@@ -369,6 +376,18 @@ const PaymentForm = () => {
                 </div>
               ))}
 
+              {/* Tax Line Item */}
+              {taxAmount > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-luxury-gray/60 text-sm">
+                    Tax ({taxRate}%)
+                  </span>
+                  <span className="text-sm font-medium text-luxury-black">
+                    {formatPrice(taxAmount)}
+                  </span>
+                </div>
+              )}
+
               {/* Gratuity Section */}
               <div className="pt-4 border-t border-luxury-gray/10">
                 <label className="block text-xs font-semibold text-luxury-gold uppercase tracking-luxury mb-4">
@@ -647,6 +666,12 @@ const PaymentForm = () => {
                   <p className="text-luxury-black font-medium">{formatPrice(extra.price * extra.quantity)}</p>
                 </div>
               ))}
+              {taxAmount > 0 && (
+                <div>
+                  <p className="text-luxury-gray/60 text-xs">Tax ({taxRate}%)</p>
+                  <p className="text-luxury-black font-medium">{formatPrice(taxAmount)}</p>
+                </div>
+              )}
               {gratuityAmount > 0 && (
                 <div>
                   <p className="text-luxury-gray/60 text-xs">Gratuity</p>

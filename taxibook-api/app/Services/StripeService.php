@@ -56,7 +56,7 @@ class StripeService
 
     public function createPaymentIntent(Booking $booking)
     {
-        $amountInCents = round(($booking->estimated_fare + $booking->extras_total) * 100);
+        $amountInCents = round(($booking->estimated_fare + $booking->extras_total + ($booking->tax_amount ?? 0)) * 100);
 
         $paymentIntentData = [
             'amount' => $amountInCents,
@@ -86,7 +86,7 @@ class StripeService
         Transaction::create([
             'booking_id' => $booking->id,
             'type' => 'authorization',
-            'amount' => $booking->estimated_fare,
+            'amount' => $booking->estimated_fare + ($booking->extras_total ?? 0) + ($booking->tax_amount ?? 0),
             'status' => 'pending',
             'stripe_transaction_id' => $paymentIntent->id,
             'stripe_response' => $paymentIntent->toArray(),
@@ -251,16 +251,24 @@ class StripeService
             throw new \Exception('No payment intent found for this booking');
         }
 
-        $amountInCents = $amount ? round($amount * 100) : null;
+        $defaultAmount = $booking->estimated_fare + ($booking->extras_total ?? 0) + ($booking->tax_amount ?? 0);
+        $captureAmount = $amount ?? $defaultAmount;
+        $amountInCents = round($captureAmount * 100);
 
         $paymentIntent = $this->stripe->paymentIntents->capture(
             $booking->stripe_payment_intent_id,
-            $amountInCents ? ['amount_to_capture' => $amountInCents] : []
+            ['amount_to_capture' => $amountInCents]
         );
 
         // Update booking
+        // $amount (if provided) is the total capture amount (fare + extras + tax).
+        // Decompose it so final_fare stores only the fare component.
+        $fareOnly = $amount
+            ? round($amount - ($booking->extras_total ?? 0) - ($booking->tax_amount ?? 0), 2)
+            : $booking->estimated_fare;
+
         $booking->update([
-            'final_fare' => $amount ?? $booking->estimated_fare,
+            'final_fare' => $fareOnly,
             'payment_status' => 'captured',
         ]);
 
@@ -268,7 +276,7 @@ class StripeService
         $transaction = Transaction::create([
             'booking_id' => $booking->id,
             'type' => 'capture',
-            'amount' => $amount ?? $booking->estimated_fare,
+            'amount' => $captureAmount,
             'status' => 'succeeded',
             'stripe_transaction_id' => $paymentIntent->id,
             'stripe_response' => $paymentIntent->toArray(),
@@ -570,9 +578,10 @@ class StripeService
             ]);
 
             // Update booking payment details
+            // final_fare stores only the fare component; extras, tax, and gratuity are tracked separately
             $booking->update([
                 'stripe_payment_intent_id' => $paymentIntent->id,
-                'final_fare' => $amount,
+                'final_fare' => $booking->final_fare ?? $booking->estimated_fare,
                 'payment_status' => 'captured',
             ]);
 

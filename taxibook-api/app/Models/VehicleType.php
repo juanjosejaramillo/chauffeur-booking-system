@@ -168,16 +168,26 @@ class VehicleType extends Model
             $subtotal *= $this->service_fee_multiplier;
         }
         
-        // Apply tax if enabled (on subtotal)
-        $total = $subtotal;
-        if ($this->tax_enabled && $this->tax_rate > 0) {
-            $total = $subtotal * (1 + $this->tax_rate / 100);
-        }
-        
-        // Ensure minimum fare
-        $total = max($total, $this->minimum_fare);
+        // Ensure minimum fare (on subtotal, before tax)
+        $subtotal = max($subtotal, $this->minimum_fare);
 
-        return round($total, 2);
+        return round($subtotal, 2);
+    }
+
+    /**
+     * Calculate tax on fare subtotal + extras.
+     *
+     * @param float $fareSubtotal  The fare returned by calculateFare / calculateHourlyFare
+     * @param float $extrasTotal   Sum of booking extras
+     * @return float Tax amount (0 when tax is disabled)
+     */
+    public function calculateTax(float $fareSubtotal, float $extrasTotal = 0): float
+    {
+        if (!$this->tax_enabled || $this->tax_rate <= 0) {
+            return 0;
+        }
+
+        return round(($fareSubtotal + $extrasTotal) * ($this->tax_rate / 100), 2);
     }
 
     /**

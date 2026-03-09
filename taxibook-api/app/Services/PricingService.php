@@ -46,6 +46,7 @@ class PricingService
 
         foreach ($vehicleTypes as $vehicleType) {
             $fare = $vehicleType->calculateFare($distance, $duration);
+            $taxAmount = $vehicleType->calculateTax($fare);
             $vehicleExtras = Extra::forVehicleType($vehicleType->id);
 
             $prices[] = [
@@ -58,6 +59,9 @@ class PricingService
                 'features' => $vehicleType->features ?? [],
                 'image_url' => $vehicleType->full_image_url,
                 'estimated_fare' => $fare,
+                'tax_amount' => $taxAmount,
+                'tax_rate' => (float) $vehicleType->tax_rate,
+                'tax_enabled' => (bool) $vehicleType->tax_enabled,
                 'fare_breakdown' => $this->getFareBreakdown($vehicleType, $distance, $duration, $fare),
                 'extras' => $vehicleExtras->map(fn ($e) => [
                     'id' => $e->id,
@@ -179,19 +183,20 @@ class PricingService
             'is_subtotal' => true,
         ];
 
-        // Tax (optional)
+        // Tax (optional) — calculated on subtotal; extras taxed separately at booking
+        $taxAmount = 0;
         if ($vehicleType->tax_enabled && $vehicleType->tax_rate > 0) {
-            $tax = $subtotal * ($vehicleType->tax_rate / 100);
+            $taxAmount = round($subtotal * ($vehicleType->tax_rate / 100), 2);
             $breakdown['tax'] = [
                 'label' => sprintf('Tax (%.2f%%)', $vehicleType->tax_rate),
-                'amount' => round($tax, 2),
+                'amount' => $taxAmount,
             ];
         }
 
         // Total
         $breakdown['total'] = [
             'label' => 'Total',
-            'amount' => $totalFare,
+            'amount' => $totalFare + $taxAmount,
         ];
 
         return $breakdown;
@@ -221,6 +226,7 @@ class PricingService
             }
 
             $fare = $vehicleType->calculateHourlyFare($hours);
+            $taxAmount = $vehicleType->calculateTax($fare);
             $vehicleExtras = Extra::forVehicleType($vehicleType->id);
 
             $prices[] = [
@@ -233,6 +239,9 @@ class PricingService
                 'features' => $vehicleType->features ?? [],
                 'image_url' => $vehicleType->full_image_url,
                 'estimated_fare' => $fare,
+                'tax_amount' => $taxAmount,
+                'tax_rate' => (float) $vehicleType->tax_rate,
+                'tax_enabled' => (bool) $vehicleType->tax_enabled,
                 'hourly_rate' => $vehicleType->hourly_rate,
                 'hours' => $hours,
                 'miles_included_per_hour' => $vehicleType->miles_included_per_hour,

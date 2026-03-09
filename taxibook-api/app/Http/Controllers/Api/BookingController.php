@@ -235,12 +235,13 @@ class BookingController extends Controller
                 ], 422);
             }
 
-            // Calculate route and pricing
+            // Calculate route and pricing (pass pickup datetime for traffic-aware routing)
             $route = $this->mapsService->getRoute(
                 $validated['pickup_lat'],
                 $validated['pickup_lng'],
                 $validated['dropoff_lat'],
-                $validated['dropoff_lng']
+                $validated['dropoff_lng'],
+                $pickupDate
             );
 
             if (!$route) {
@@ -268,9 +269,12 @@ class BookingController extends Controller
                 }
             }
 
+            // Calculate tax on fare + extras
+            $taxAmount = $vehicleType->calculateTax($estimatedFare, $extrasTotal);
+
             // Calculate total with optional tip
             $tipAmount = $validated['gratuity_amount'] ?? 0;
-            $totalCharge = $estimatedFare + $extrasTotal + $tipAmount;
+            $totalCharge = $estimatedFare + $extrasTotal + $taxAmount + $tipAmount;
             $saveCard = $validated['save_payment_method'] ?? false;
 
             // Create booking
@@ -294,6 +298,7 @@ class BookingController extends Controller
                 'estimated_duration' => $route ? $route['duration'] : null,
                 'estimated_fare' => $estimatedFare,
                 'extras_total' => $extrasTotal,
+                'tax_amount' => $taxAmount,
                 'final_fare' => $estimatedFare,
                 'gratuity_amount' => $tipAmount,
                 'gratuity_added_at' => $tipAmount > 0 ? now() : null,
@@ -408,7 +413,7 @@ class BookingController extends Controller
             }
 
             // Calculate total charge
-            $totalCharge = $booking->estimated_fare + $booking->extras_total + $booking->gratuity_amount;
+            $totalCharge = $booking->estimated_fare + $booking->extras_total + ($booking->tax_amount ?? 0) + $booking->gratuity_amount;
             $saveCard = $validated['save_payment_method'] ?? false;
 
             // Process payment

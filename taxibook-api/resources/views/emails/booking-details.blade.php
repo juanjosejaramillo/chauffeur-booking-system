@@ -113,23 +113,31 @@
 </div>
 
 <div class="info-box">
-    <div class="info-box-title">Fare Information</div>
+    <div class="info-box-title">Payment Information</div>
     <div style="background-color: #fafafa; border-radius: 8px; padding: 15px; margin-top: 15px;">
         <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-            <span>Base Fare:</span>
-            <span>${{ number_format($booking->estimated_fare * 0.8, 2) }}</span>
+            <span>Estimated Fare:</span>
+            <span style="font-weight: bold; font-size: 18px;">${{ number_format($booking->estimated_fare + ($booking->extras_total ?? 0) + ($booking->tax_amount ?? 0), 2) }}</span>
         </div>
-        <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-            <span>Service Fee:</span>
-            <span>${{ number_format($booking->estimated_fare * 0.15, 2) }}</span>
+        @if(($booking->extras_total ?? 0) > 0)
+        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; color: #666;">
+            <span>Extras:</span>
+            <span>${{ number_format($booking->extras_total, 2) }}</span>
         </div>
-        <div style="display: flex; justify-content: space-between; padding: 8px 0;">
-            <span>Estimated Tax:</span>
-            <span>${{ number_format($booking->estimated_fare * 0.05, 2) }}</span>
+        @endif
+        @if(($booking->tax_amount ?? 0) > 0)
+        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; color: #666;">
+            <span>Tax:</span>
+            <span>${{ number_format($booking->tax_amount, 2) }}</span>
         </div>
-        <div style="display: flex; justify-content: space-between; padding: 8px 0; border-top: 2px solid #4F46E5; padding-top: 10px; margin-top: 10px; font-weight: bold; font-size: 18px;">
-            <span>Total Estimated Fare:</span>
-            <span>${{ number_format($booking->estimated_fare, 2) }}</span>
+        @endif
+        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; color: #666;">
+            <span>Payment Status:</span>
+            <span>{{ ucfirst($booking->payment_status) }}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; color: #666;">
+            <span>Booking Status:</span>
+            <span>{{ ucfirst($booking->status) }}</span>
         </div>
     </div>
 </div>

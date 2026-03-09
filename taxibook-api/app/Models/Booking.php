@@ -36,6 +36,7 @@ class Booking extends Model
         'estimated_duration',
         'estimated_fare',
         'extras_total',
+        'tax_amount',
         'final_fare',
         'fare_breakdown',
         'gratuity_amount',
@@ -72,6 +73,7 @@ class Booking extends Model
             'estimated_distance' => 'decimal:2',
             'estimated_fare' => 'decimal:2',
             'extras_total' => 'decimal:2',
+            'tax_amount' => 'decimal:2',
             'final_fare' => 'decimal:2',
             'gratuity_amount' => 'decimal:2',
             'gratuity_added_at' => 'datetime',
@@ -199,7 +201,7 @@ class Booking extends Model
 
     public function getTotalAmountAttribute(): float
     {
-        return $this->final_fare + $this->gratuity_amount;
+        return $this->final_fare + $this->extras_total + $this->tax_amount + $this->gratuity_amount;
     }
 
     public function generateTipToken(): string
@@ -226,7 +228,7 @@ class Booking extends Model
      */
     public function getNetAmountAttribute(): float
     {
-        $chargedAmount = ($this->final_fare ?? $this->estimated_fare) + $this->gratuity_amount;
+        $chargedAmount = ($this->final_fare ?? $this->estimated_fare) + $this->extras_total + $this->tax_amount + $this->gratuity_amount;
         return $chargedAmount - $this->total_refunded;
     }
 
@@ -235,8 +237,8 @@ class Booking extends Model
      */
     public function isPartiallyRefunded(): bool
     {
-        return $this->total_refunded > 0 && 
-               $this->total_refunded < ($this->final_fare ?? $this->estimated_fare);
+        return $this->total_refunded > 0 &&
+               $this->total_refunded < (($this->final_fare ?? $this->estimated_fare) + $this->extras_total + $this->tax_amount);
     }
 
     /**
@@ -244,7 +246,7 @@ class Booking extends Model
      */
     public function isFullyRefunded(): bool
     {
-        return $this->total_refunded >= ($this->final_fare ?? $this->estimated_fare);
+        return $this->total_refunded >= (($this->final_fare ?? $this->estimated_fare) + $this->extras_total + $this->tax_amount);
     }
 
     /**
@@ -252,9 +254,9 @@ class Booking extends Model
      */
     public function getChargedAmountAttribute(): float
     {
-        if ($this->payment_status === 'captured' || 
+        if ($this->payment_status === 'captured' ||
             $this->payment_status === 'refunded') {
-            return ($this->final_fare ?? $this->estimated_fare) + $this->gratuity_amount;
+            return ($this->final_fare ?? $this->estimated_fare) + $this->extras_total + $this->tax_amount + $this->gratuity_amount;
         }
         return 0;
     }

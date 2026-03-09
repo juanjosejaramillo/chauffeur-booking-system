@@ -11,6 +11,14 @@ const ConfirmationLuxury = () => {
   const { booking, selectedVehicle, selectedExtras, tripDetails, customerInfo, gratuityAmount, resetBooking } = useBookingStore();
   const extrasTotal = Object.values(selectedExtras || {}).reduce((sum, e) => sum + e.price * e.quantity, 0);
 
+  // Helper: API returns decimal fields as strings (Laravel decimal:2 cast), so parseFloat all numeric booking fields
+  const pf = (v) => parseFloat(v) || 0;
+  const baseFare = pf(booking?.estimated_fare) || pf(selectedVehicle?.estimated_fare) || pf(selectedVehicle?.total_price);
+  const bookingExtrasTotal = pf(booking?.extras_total) || extrasTotal;
+  const bookingTaxAmount = pf(booking?.tax_amount);
+  const totalEstimated = baseFare + bookingExtrasTotal + bookingTaxAmount;
+  const totalPaid = totalEstimated + pf(gratuityAmount);
+
   // Get payment mode from settings
   const paymentMode = settings?.stripe?.payment_mode || 'immediate';
   const isPostServiceMode = paymentMode === 'post_service';
@@ -20,13 +28,13 @@ const ConfirmationLuxury = () => {
     // Track purchase when booking is confirmed (only once)
     if (!hasTrackedPurchase.current) {
       if (booking?.id && selectedVehicle) {
-        const baseFare = booking?.base_fare || selectedVehicle.estimated_fare || selectedVehicle.total_price || 0;
-        const totalAmount = baseFare + (gratuityAmount || 0);
+        const trackFare = pf(booking?.base_fare) || pf(selectedVehicle.estimated_fare) || pf(selectedVehicle.total_price);
+        const totalAmount = trackFare + pf(gratuityAmount);
         const vehicleName = selectedVehicle.display_name || selectedVehicle.name || 'Chauffeur Service';
         const vehicleDescription = selectedVehicle.description || 'Chauffeur Service';
         
         // Track with Google Ads
-        GoogleTracking.trackPurchase(booking.id, baseFare, vehicleName, vehicleDescription);
+        GoogleTracking.trackPurchase(booking.id, trackFare, vehicleName, vehicleDescription);
         
         // Track booking conversion with Clarity
         ClarityTracking.trackConversion({
@@ -195,16 +203,16 @@ const ConfirmationLuxury = () => {
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-xs text-luxury-gray/60 uppercase tracking-wide">Estimated Fare</span>
                     <span className="text-xl font-display text-luxury-black">
-                      {formatPrice((selectedVehicle?.estimated_fare || selectedVehicle?.total_price) + extrasTotal)}
+                      {formatPrice(totalPaid)}
                     </span>
                   </div>
-                  {extrasTotal > 0 && (
+                  {(bookingExtrasTotal > 0 || bookingTaxAmount > 0 || pf(gratuityAmount) > 0) && (
                     <p className="text-xs text-luxury-gray/60 mb-1">
-                      Includes {formatPrice(extrasTotal)} in extras
+                      Includes{bookingExtrasTotal > 0 ? ` ${formatPrice(bookingExtrasTotal)} in extras` : ''}{bookingTaxAmount > 0 ? `${bookingExtrasTotal > 0 ? ',' : ''} ${formatPrice(bookingTaxAmount)} tax` : ''}{pf(gratuityAmount) > 0 ? `${(bookingExtrasTotal > 0 || bookingTaxAmount > 0) ? ',' : ''} ${formatPrice(pf(gratuityAmount))} gratuity` : ''}
                     </p>
                   )}
                   <p className="text-xs text-luxury-gray/60">
-                    Your card will be charged after service is completed. You'll have the option to add a gratuity for your driver after your trip.
+                    Your card will be charged after service is completed.{pf(gratuityAmount) === 0 ? " You'll have the option to add a gratuity for your driver after your trip." : ''}
                   </p>
                 </>
               ) : (
@@ -214,7 +222,7 @@ const ConfirmationLuxury = () => {
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-luxury-gray/60">Trip Fare:</span>
                       <span className="text-sm font-medium text-luxury-black">
-                        {formatPrice(selectedVehicle?.estimated_fare || selectedVehicle?.total_price)}
+                        {formatPrice(baseFare)}
                       </span>
                     </div>
                     {Object.values(selectedExtras || {}).map((extra) => (
@@ -225,6 +233,14 @@ const ConfirmationLuxury = () => {
                         </span>
                       </div>
                     ))}
+                    {bookingTaxAmount > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-luxury-gray/60">Tax:</span>
+                        <span className="text-sm font-medium text-luxury-black">
+                          {formatPrice(bookingTaxAmount)}
+                        </span>
+                      </div>
+                    )}
                     {gratuityAmount > 0 && (
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-luxury-gray/60">Gratuity:</span>
@@ -236,7 +252,7 @@ const ConfirmationLuxury = () => {
                     <div className="flex justify-between items-center pt-2 border-t border-luxury-gray/10">
                       <span className="text-sm font-semibold text-luxury-black">Total Paid:</span>
                       <span className="text-xl font-display text-luxury-black">
-                        {formatPrice((selectedVehicle?.estimated_fare || selectedVehicle?.total_price) + extrasTotal + gratuityAmount)}
+                        {formatPrice(totalPaid)}
                       </span>
                     </div>
                   </div>
