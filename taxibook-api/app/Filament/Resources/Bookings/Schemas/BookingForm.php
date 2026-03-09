@@ -72,7 +72,7 @@ class BookingForm
                                     && $record->payment_status === 'pending'
                                     && $record->hasSavedPaymentMethod()
                                 ) {
-                                    $amount = ($record->final_fare ?? $record->estimated_fare) + ($record->extras_total ?? 0) + ($record->tax_amount ?? 0);
+                                    $amount = ($record->final_fare ?? $record->estimated_fare) + ($record->extras_total ?? 0) + ($record->tax_amount ?? 0) + ($record->gratuity_amount ?? 0);
                                     return new HtmlString('<span class="text-amber-600 dark:text-amber-400 font-semibold">⚠️ Card will be charged $' . number_format($amount, 2) . ' when saved</span>');
                                 }
 
@@ -187,26 +187,21 @@ class BookingForm
                             ->prefix('$')
                             ->numeric()
                             ->required()
+                            ->visible(fn ($record) => !$record)
                             ->columnSpan(1),
                         TextInput::make('final_fare')
-                            ->label(function ($record) {
-                                if (!$record) return 'Final Fare';
-                                $paymentMode = Setting::get('payment_mode', 'immediate');
-                                if ($paymentMode === 'post_service' && $record->payment_status === 'pending') {
-                                    return 'Final Fare (Base Amount)';
-                                }
-                                return 'Final Fare';
-                            })
+                            ->label('Trip Fare')
                             ->prefix('$')
                             ->numeric()
                             ->placeholder(fn ($record) => $record ? number_format($record->estimated_fare, 2) : '0.00')
                             ->helperText(function ($record) {
                                 if (!$record) return null;
+                                $estimated = number_format($record->estimated_fare, 2);
                                 $paymentMode = Setting::get('payment_mode', 'immediate');
                                 if ($paymentMode === 'post_service' && $record->payment_status === 'pending' && $record->hasSavedPaymentMethod()) {
-                                    return 'Leave empty to charge the estimated fare, or enter a different amount. Extras and tax are added automatically.';
+                                    return "Estimated: \${$estimated}. Adjust if needed — extras and tax are added automatically.";
                                 }
-                                return 'Base fare only — extras and tax are separate';
+                                return "Estimated: \${$estimated}";
                             })
                             ->visible(fn ($record) => $record && (
                                 $record->payment_status === 'captured' ||
