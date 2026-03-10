@@ -147,16 +147,16 @@ const TipPaymentForm = ({ booking, token }) => {
         fontFamily: 'Inter, system-ui, sans-serif',
         fontSize: '16px',
         fontWeight: '300',
-        color: '#1A1A1A',
+        color: '#F0EDE8',
         letterSpacing: '0.025em',
         '::placeholder': {
-          color: '#9CA3AF',
+          color: '#6B6B6B',
         },
         iconColor: '#C9A961',
       },
       invalid: {
-        color: '#DC2626',
-        iconColor: '#DC2626',
+        color: '#FCA5A5',
+        iconColor: '#FCA5A5',
       },
     },
   };
@@ -166,38 +166,38 @@ const TipPaymentForm = ({ booking, token }) => {
       {/* Processing Overlay */}
       {processing && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
-          <div className="bg-white rounded-lg p-8 max-w-sm w-full mx-4">
+          <div className="bg-luxury-gray border border-luxury-ash/20 p-8 max-w-sm w-full mx-4">
             <div className="flex flex-col items-center">
               <div className="animate-spin h-12 w-12 border-4 border-luxury-gold border-t-transparent rounded-full mb-4"></div>
-              <p className="text-lg font-medium text-luxury-black mb-2">Processing Payment</p>
-              <p className="text-sm text-luxury-gray/60 text-center">Please wait while we process your tip...</p>
+              <p className="text-lg font-medium text-luxury-white mb-2">Processing Payment</p>
+              <p className="text-sm text-luxury-silver text-center">Please wait while we process your tip...</p>
             </div>
           </div>
         </div>
       )}
       
       {/* Trip Details Card */}
-      <div className="bg-luxury-white shadow-luxury mb-8">
-        <div className="border-b border-luxury-gray/10 p-6">
+      <div className="bg-luxury-gray shadow-luxury border border-luxury-ash/20 mb-8">
+        <div className="border-b border-luxury-ash/30 p-6">
           <h3 className="text-xs font-semibold text-luxury-gold uppercase tracking-luxury mb-4">
             Trip Details
           </h3>
           <div className="space-y-3">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-luxury-gray/60">Booking Number</span>
-              <span className="text-sm font-medium text-luxury-black">#{booking.booking_number}</span>
+              <span className="text-sm text-luxury-silver">Booking Number</span>
+              <span className="text-sm font-medium text-luxury-white">#{booking.booking_number}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-luxury-gray/60">Date</span>
-              <span className="text-sm font-medium text-luxury-black">{booking.pickup_date}</span>
+              <span className="text-sm text-luxury-silver">Date</span>
+              <span className="text-sm font-medium text-luxury-white">{booking.pickup_date}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-luxury-gray/60">Vehicle</span>
-              <span className="text-sm font-medium text-luxury-black">{booking.vehicle_type}</span>
+              <span className="text-sm text-luxury-silver">Vehicle</span>
+              <span className="text-sm font-medium text-luxury-white">{booking.vehicle_type}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-luxury-gray/60">Fare Paid</span>
-              <span className="text-sm font-medium text-luxury-black">{formatPrice(booking.fare_paid)}</span>
+              <span className="text-sm text-luxury-silver">Fare Paid</span>
+              <span className="text-sm font-medium text-luxury-white">{formatPrice(booking.fare_paid)}</span>
             </div>
           </div>
         </div>
@@ -217,12 +217,12 @@ const TipPaymentForm = ({ booking, token }) => {
                 onClick={() => handleTipSelect(parseFloat(option.amount))}
                 className={`py-4 px-4 rounded border-2 transition-all ${
                   selectedTip === parseFloat(option.amount) && !customAmount
-                    ? 'border-luxury-gold bg-luxury-light-gray'
-                    : 'border-luxury-gray/20 hover:border-luxury-gray/40'
+                    ? 'border-luxury-gold bg-luxury-slate'
+                    : 'border-luxury-ash hover:border-luxury-ash/60'
                 }`}
               >
-                <div className="text-lg font-medium text-luxury-black">{option.percentage}%</div>
-                <div className="text-sm text-luxury-gray/60">{formatPrice(option.amount)}</div>
+                <div className="text-lg font-medium text-luxury-white">{option.percentage}%</div>
+                <div className="text-sm text-luxury-silver">{formatPrice(option.amount)}</div>
               </button>
             ))}
           </div>
@@ -233,7 +233,7 @@ const TipPaymentForm = ({ booking, token }) => {
               Or Enter Custom Amount
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-luxury-gray/60">$</span>
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-luxury-silver">$</span>
               <input
                 type="number"
                 value={customAmount}
@@ -242,17 +242,17 @@ const TipPaymentForm = ({ booking, token }) => {
                 min="0"
                 step="0.01"
                 className={`w-full pl-8 pr-3 py-3 border-2 rounded transition-colors ${
-                  customAmount ? 'border-luxury-gold bg-luxury-light-gray' : 'border-luxury-gray/20 focus:border-luxury-gold'
+                  customAmount ? 'border-luxury-gold bg-luxury-slate' : 'border-luxury-ash focus:border-luxury-gold'
                 } focus:outline-none`}
               />
             </div>
           </div>
 
           {/* Selected Amount Display */}
-          <div className="bg-luxury-light-gray p-4 rounded mb-6">
+          <div className="bg-luxury-slate p-4 rounded mb-6">
             <div className="flex justify-between items-center">
-              <span className="text-sm font-medium text-luxury-gray/70">Selected Tip:</span>
-              <span className="text-xl font-display text-luxury-black">{formatPrice(selectedTip)}</span>
+              <span className="text-sm font-medium text-luxury-silver">Selected Tip:</span>
+              <span className="text-xl font-display text-luxury-white">{formatPrice(selectedTip)}</span>
             </div>
           </div>
 
@@ -265,7 +265,7 @@ const TipPaymentForm = ({ booking, token }) => {
                   <label className="block text-xs font-semibold text-luxury-gold uppercase tracking-luxury mb-3">
                     Card Information
                   </label>
-                  <div className="p-4 border-2 border-luxury-gray/20 rounded focus-within:border-luxury-gold transition-colors">
+                  <div className="p-4 border-2 border-luxury-ash rounded focus-within:border-luxury-gold transition-colors">
                     <CardElement options={cardElementOptions} />
                   </div>
                 </div>
@@ -277,11 +277,11 @@ const TipPaymentForm = ({ booking, token }) => {
                     id="save-card-tip"
                     checked={saveCard}
                     onChange={(e) => setSaveCard(e.target.checked)}
-                    className="mt-1 h-4 w-4 text-luxury-gold focus:ring-luxury-gold border-luxury-gray/30 rounded"
+                    className="mt-1 h-4 w-4 text-luxury-gold focus:ring-luxury-gold border-luxury-ash rounded"
                   />
                   <label htmlFor="save-card-tip" className="ml-3 text-sm">
-                    <span className="font-medium text-luxury-black">Save payment method for future use</span>
-                    <p className="text-xs text-luxury-gray/60 mt-1">
+                    <span className="font-medium text-luxury-white">Save payment method for future use</span>
+                    <p className="text-xs text-luxury-silver mt-1">
                       Save your card for faster future bookings
                     </p>
                   </label>
@@ -289,7 +289,7 @@ const TipPaymentForm = ({ booking, token }) => {
               </>
             ) : (
               <div className="bg-luxury-gold/10 border border-luxury-gold/30 rounded p-4 mb-6">
-                <p className="text-sm text-luxury-black">
+                <p className="text-sm text-luxury-white">
                   Using saved card ending in {booking.saved_card_last4 || '****'}
                 </p>
               </div>
@@ -297,8 +297,8 @@ const TipPaymentForm = ({ booking, token }) => {
 
             {/* Error Message */}
             {error && (
-              <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6">
-                <p className="text-sm text-red-700">{error}</p>
+              <div className="bg-red-900/30 border-l-4 border-red-500 p-4 mb-6">
+                <p className="text-sm text-red-300">{error}</p>
               </div>
             )}
 
@@ -326,7 +326,7 @@ const TipPaymentForm = ({ booking, token }) => {
           <div className="text-center mt-4">
             <button
               onClick={() => navigate('/')}
-              className="text-sm text-luxury-gray/60 hover:text-luxury-gray transition-colors"
+              className="text-sm text-luxury-muted hover:text-luxury-silver transition-colors"
             >
               Skip - No tip at this time
             </button>
@@ -336,7 +336,7 @@ const TipPaymentForm = ({ booking, token }) => {
 
       {/* Note */}
       <div className="bg-luxury-gold/10 border border-luxury-gold/30 p-4 rounded">
-        <p className="text-xs text-luxury-black">
+        <p className="text-xs text-luxury-white">
           <strong>Note:</strong> This gratuity is optional and goes directly to your driver as appreciation for their service.
         </p>
       </div>
@@ -391,7 +391,7 @@ const TipPaymentPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-luxury-cream to-luxury-light-gray flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-luxury-charcoal to-luxury-black flex items-center justify-center">
         <div className="animate-spin h-12 w-12 border-4 border-luxury-gold border-t-transparent rounded-full"></div>
       </div>
     );
@@ -399,13 +399,13 @@ const TipPaymentPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-luxury-cream to-luxury-light-gray flex items-center justify-center">
-        <div className="bg-luxury-white shadow-luxury p-8 max-w-md text-center">
+      <div className="min-h-screen bg-gradient-to-b from-luxury-charcoal to-luxury-black flex items-center justify-center">
+        <div className="bg-luxury-gray shadow-luxury border border-luxury-ash/20 p-8 max-w-md text-center">
           <svg className="w-16 h-16 text-red-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
-          <h2 className="font-display text-2xl text-luxury-black mb-2">Error</h2>
-          <p className="text-luxury-gray/60 mb-6">{error}</p>
+          <h2 className="font-display text-2xl text-luxury-white mb-2">Error</h2>
+          <p className="text-luxury-silver mb-6">{error}</p>
           <button
             onClick={() => navigate('/')}
             className="btn-luxury-gold uppercase tracking-luxury text-sm"
@@ -418,14 +418,14 @@ const TipPaymentPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-luxury-cream to-luxury-light-gray py-12">
+    <div className="min-h-screen bg-gradient-to-b from-luxury-charcoal to-luxury-black py-12">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="font-display text-4xl text-luxury-black mb-2">
+          <h1 className="font-display text-4xl text-luxury-white mb-2">
             Add Gratuity
           </h1>
-          <p className="text-luxury-gray/60 text-sm tracking-wide">
+          <p className="text-luxury-silver text-sm tracking-wide">
             Thank your driver for exceptional service
           </p>
         </div>

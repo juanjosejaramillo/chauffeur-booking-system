@@ -7,7 +7,7 @@ import TipAlready from './pages/TipAlready';
 function App() {
   return (
     <Router>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-luxury-charcoal">
         <Routes>
           <Route path="/" element={<BookingWizard />} />
           <Route path="/tip/:token" element={<TipPayment />} />

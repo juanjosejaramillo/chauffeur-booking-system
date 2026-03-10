@@ -240,18 +240,18 @@ const PaymentForm = () => {
         fontFamily: 'Inter, system-ui, sans-serif',
         fontSize: '14px',
         fontWeight: '300',
-        color: '#1A1A1A',
+        color: '#F0EDE8',
         letterSpacing: '0.025em',
         '::placeholder': {
-          color: '#9CA3AF',
+          color: '#6B6B6B',
         },
         iconColor: '#C9A961',
         lineHeight: '40px',
         padding: '12px',
       },
       invalid: {
-        color: '#DC2626',
-        iconColor: '#DC2626',
+        color: '#FCA5A5',
+        iconColor: '#FCA5A5',
       },
     },
   };
@@ -260,7 +260,7 @@ const PaymentForm = () => {
     <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="text-center mb-8 sm:mb-12">
-        <h2 className="font-display text-2xl sm:text-3xl text-luxury-black mb-4">
+        <h2 className="font-display text-2xl sm:text-3xl text-luxury-white mb-4">
           {isPostServiceMode ? 'Secure Your Booking' : 'Complete Your Payment'}
         </h2>
         {booking?.booking_number && (
@@ -268,7 +268,7 @@ const PaymentForm = () => {
             Booking #{booking.booking_number}
           </p>
         )}
-        <p className="text-luxury-gray/60 text-sm tracking-wide">
+        <p className="text-luxury-silver text-sm tracking-wide">
           {isPostServiceMode
             ? 'Enter your card details to reserve your ride'
             : 'Enter your payment details to confirm your booking'}
@@ -277,7 +277,7 @@ const PaymentForm = () => {
 
       {/* Post-Service Mode Info Banner */}
       {isPostServiceMode && (
-        <div className="mb-6 sm:mb-8 p-5 sm:p-6 bg-gradient-to-br from-amber-50/80 via-yellow-50/50 to-orange-50/30 border border-luxury-gold/20 shadow-luxury rounded-sm">
+        <div className="mb-6 sm:mb-8 p-5 sm:p-6 bg-gradient-to-br from-luxury-gold/10 via-luxury-slate to-luxury-gray border border-luxury-gold/20 shadow-luxury rounded-sm">
           <div className="flex items-start gap-4">
             <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-luxury-gold/20 to-luxury-gold/5 flex items-center justify-center flex-shrink-0 border border-luxury-gold/20">
               <svg className="w-6 h-6 sm:w-7 sm:h-7 text-luxury-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -285,12 +285,12 @@ const PaymentForm = () => {
               </svg>
             </div>
             <div className="flex-1">
-              <h3 className="font-bold text-luxury-black tracking-wide text-sm sm:text-base mb-2">Your card will not be charged now</h3>
-              <p className="text-sm text-luxury-gray/80 leading-relaxed mb-3">
+              <h3 className="font-bold text-luxury-white tracking-wide text-sm sm:text-base mb-2">Your card will not be charged now</h3>
+              <p className="text-sm text-luxury-silver leading-relaxed mb-3">
                 We securely save your payment method and only charge after your ride is completed.
                 Estimated fare: <span className="font-semibold text-luxury-gold">{formatPrice(baseFare)}</span>
               </p>
-              <p className="text-xs text-luxury-gray/60 leading-relaxed">
+              <p className="text-xs text-luxury-silver leading-relaxed">
                 By proceeding, you authorize us to charge your card after service is provided.
                 {hasAnyLegalLinks && (
                   <>
@@ -351,15 +351,15 @@ const PaymentForm = () => {
         {/* Left Column - Payment Details */}
         <div className="lg:col-span-2">
           {/* Fare Summary with Gratuity */}
-          <div className="bg-luxury-white shadow-luxury p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8">
+          <div className="bg-luxury-gray shadow-luxury border border-luxury-ash/20 p-4 sm:p-6 lg:p-8 mb-6 sm:mb-8">
             <h3 className="text-xs font-semibold text-luxury-gold uppercase tracking-luxury mb-6">
               Fare Summary
             </h3>
             
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-luxury-gray/60 text-sm">Base Fare</span>
-                <span className="font-display text-xl text-luxury-black">
+                <span className="text-luxury-silver text-sm">Base Fare</span>
+                <span className="font-display text-xl text-luxury-white">
                   {formatPrice(baseFare)}
                 </span>
               </div>
@@ -367,10 +367,10 @@ const PaymentForm = () => {
               {/* Extras Line Items */}
               {Object.values(selectedExtras || {}).map((extra) => (
                 <div key={extra.id} className="flex justify-between items-center">
-                  <span className="text-luxury-gray/60 text-sm">
+                  <span className="text-luxury-silver text-sm">
                     {extra.name} {extra.quantity > 1 ? `x${extra.quantity}` : ''}
                   </span>
-                  <span className="text-sm font-medium text-luxury-black">
+                  <span className="text-sm font-medium text-luxury-white">
                     {formatPrice(extra.price * extra.quantity)}
                   </span>
                 </div>
@@ -379,21 +379,21 @@ const PaymentForm = () => {
               {/* Tax Line Item */}
               {taxAmount > 0 && (
                 <div className="flex justify-between items-center">
-                  <span className="text-luxury-gray/60 text-sm">
+                  <span className="text-luxury-silver text-sm">
                     Tax ({taxRate}%)
                   </span>
-                  <span className="text-sm font-medium text-luxury-black">
+                  <span className="text-sm font-medium text-luxury-white">
                     {formatPrice(taxAmount)}
                   </span>
                 </div>
               )}
 
               {/* Gratuity Section */}
-              <div className="pt-4 border-t border-luxury-gray/10">
+              <div className="pt-4 border-t border-luxury-ash/30">
                 <label className="block text-xs font-semibold text-luxury-gold uppercase tracking-luxury mb-4">
                   Add Gratuity (Optional)
                 </label>
-                <p className="text-xs text-luxury-gray/60 mb-4">
+                <p className="text-xs text-luxury-silver mb-4">
                   You can also add a tip after your trip
                 </p>
                 
@@ -405,12 +405,12 @@ const PaymentForm = () => {
                       onClick={() => selectGratuity(option.percentage)}
                       className={`py-2 sm:py-3 px-1 sm:px-2 rounded border-2 transition-all text-center ${
                         gratuityPercentage === option.percentage && gratuityPercentage !== 'custom'
-                          ? 'border-luxury-gold bg-luxury-light-gray'
-                          : 'border-luxury-gray/20 hover:border-luxury-gray/40'
+                          ? 'border-luxury-gold bg-luxury-slate'
+                          : 'border-luxury-ash hover:border-luxury-ash/60'
                       }`}
                     >
                       <div className="text-xs sm:text-sm font-medium">{option.label}</div>
-                      <div className="text-[10px] sm:text-xs text-luxury-gray/60 truncate">
+                      <div className="text-[10px] sm:text-xs text-luxury-silver truncate">
                         {formatPrice(calculateTip(option.percentage))}
                       </div>
                     </button>
@@ -418,9 +418,9 @@ const PaymentForm = () => {
                 </div>
 
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                  <label className="text-xs sm:text-sm text-luxury-gray/60 whitespace-nowrap">Custom amount:</label>
+                  <label className="text-xs sm:text-sm text-luxury-silver whitespace-nowrap">Custom amount:</label>
                   <div className="relative flex-1">
-                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-luxury-gray/60">$</span>
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-luxury-silver">$</span>
                     <input
                       type="number"
                       value={customTip}
@@ -430,8 +430,8 @@ const PaymentForm = () => {
                       step="0.01"
                       className={`w-full pl-8 pr-3 py-2 border-2 rounded transition-colors text-sm ${
                         gratuityPercentage === 'custom'
-                          ? 'border-luxury-gold bg-luxury-light-gray'
-                          : 'border-luxury-gray/20 focus:border-luxury-gold'
+                          ? 'border-luxury-gold bg-luxury-slate'
+                          : 'border-luxury-ash focus:border-luxury-gold'
                       } focus:outline-none`}
                     />
                   </div>
@@ -446,9 +446,9 @@ const PaymentForm = () => {
               </div>
 
               {/* Total */}
-              <div className="flex justify-between items-center pt-4 border-t border-luxury-gray/10">
-                <span className="text-luxury-black font-semibold text-sm sm:text-base">Total Amount</span>
-                <span className="font-display text-xl sm:text-2xl text-luxury-black">
+              <div className="flex justify-between items-center pt-4 border-t border-luxury-ash/30">
+                <span className="text-luxury-white font-semibold text-sm sm:text-base">Total Amount</span>
+                <span className="font-display text-xl sm:text-2xl text-luxury-white">
                   {formatPrice(totalAmount)}
                 </span>
               </div>
@@ -456,7 +456,7 @@ const PaymentForm = () => {
           </div>
 
           {/* Card Form */}
-          <div className="bg-luxury-white shadow-luxury p-4 sm:p-6 lg:p-8">
+          <div className="bg-luxury-gray shadow-luxury border border-luxury-ash/20 p-4 sm:p-6 lg:p-8">
             <h3 className="text-xs font-semibold text-luxury-gold uppercase tracking-luxury mb-6">
               Card Details
             </h3>
@@ -465,8 +465,8 @@ const PaymentForm = () => {
               <div className="space-y-4">
                 {/* Card Number */}
                 <div>
-                  <label className="block text-xs text-luxury-gray/60 mb-2">Card Number</label>
-                  <div className="p-3 sm:p-4 border-2 border-luxury-gray/20 focus-within:border-luxury-gold transition-colors duration-300 rounded">
+                  <label className="block text-xs text-luxury-silver mb-2">Card Number</label>
+                  <div className="p-3 sm:p-4 border-2 border-luxury-ash focus-within:border-luxury-gold transition-colors duration-300 rounded">
                     <CardNumberElement options={cardElementOptions} />
                   </div>
                 </div>
@@ -474,14 +474,14 @@ const PaymentForm = () => {
                 {/* Expiry and CVC in a row on desktop, stacked on mobile */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs text-luxury-gray/60 mb-2">Expiry Date</label>
-                    <div className="p-3 sm:p-4 border-2 border-luxury-gray/20 focus-within:border-luxury-gold transition-colors duration-300 rounded">
+                    <label className="block text-xs text-luxury-silver mb-2">Expiry Date</label>
+                    <div className="p-3 sm:p-4 border-2 border-luxury-ash focus-within:border-luxury-gold transition-colors duration-300 rounded">
                       <CardExpiryElement options={cardElementOptions} />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs text-luxury-gray/60 mb-2">Security Code</label>
-                    <div className="p-3 sm:p-4 border-2 border-luxury-gray/20 focus-within:border-luxury-gold transition-colors duration-300 rounded">
+                    <label className="block text-xs text-luxury-silver mb-2">Security Code</label>
+                    <div className="p-3 sm:p-4 border-2 border-luxury-ash focus-within:border-luxury-gold transition-colors duration-300 rounded">
                       <CardCvcElement options={cardElementOptions} />
                     </div>
                   </div>
@@ -489,14 +489,14 @@ const PaymentForm = () => {
 
                 {/* Postal Code */}
                 <div>
-                  <label className="block text-xs text-luxury-gray/60 mb-2">Postal Code</label>
+                  <label className="block text-xs text-luxury-silver mb-2">Postal Code</label>
                   <input
                     type="text"
                     value={postalCode}
                     onChange={(e) => setPostalCode(e.target.value)}
                     placeholder="12345"
                     required
-                    className="w-full p-3 sm:p-4 border-2 border-luxury-gray/20 focus:border-luxury-gold transition-colors duration-300 rounded text-sm text-luxury-black placeholder-luxury-gray/50 focus:outline-none"
+                    className="w-full p-3 sm:p-4 bg-luxury-slate border-2 border-luxury-ash focus:border-luxury-gold transition-colors duration-300 rounded text-sm text-luxury-light-gray placeholder-luxury-muted focus:outline-none"
                   />
                 </div>
               </div>
@@ -514,14 +514,14 @@ const PaymentForm = () => {
                         saveCard: e.target.checked
                       });
                     }}
-                    className="mt-1 h-4 w-4 text-luxury-gold focus:ring-luxury-gold border-luxury-gray/30 rounded"
+                    className="mt-1 h-4 w-4 text-luxury-gold focus:ring-luxury-gold border-luxury-ash rounded"
                   />
                   <label htmlFor="save-card" className="ml-3 text-sm">
-                    <span className="font-medium text-luxury-black">Save payment method for future use</span>
-                    <p className="text-xs text-luxury-gray/60 mt-1">
+                    <span className="font-medium text-luxury-white">Save payment method for future use</span>
+                    <p className="text-xs text-luxury-silver mt-1">
                       Save your card for faster future bookings and easy post-trip tipping
                     </p>
-                    <p className="text-xs text-luxury-gray/50 mt-1">
+                    <p className="text-xs text-luxury-muted mt-1">
                       🔒 Secured by Stripe
                     </p>
                   </label>
@@ -530,11 +530,11 @@ const PaymentForm = () => {
 
               {/* Payment Notice - Only show for immediate payment mode */}
               {!isPostServiceMode && (
-                <div className="mt-6 p-6 bg-luxury-light-gray border-l-4 border-luxury-gold">
-                  <h4 className="text-xs font-semibold text-luxury-black uppercase tracking-luxury mb-3">
+                <div className="mt-6 p-6 bg-luxury-slate border-l-4 border-luxury-gold">
+                  <h4 className="text-xs font-semibold text-luxury-white uppercase tracking-luxury mb-3">
                     Immediate Payment
                   </h4>
-                  <p className="text-xs text-luxury-gray/70 leading-relaxed">
+                  <p className="text-xs text-luxury-silver leading-relaxed">
                     Your card will be charged {formatPrice(totalAmount)} immediately upon booking confirmation.
                     {gratuityAmount > 0 && ` This includes a ${formatPrice(gratuityAmount)} gratuity.`}
                     {hasAnyLegalLinks ? (
@@ -594,8 +594,8 @@ const PaymentForm = () => {
 
               {/* Error Message */}
               {(localError || error) && (
-                <div className="mt-6 bg-red-50 border-l-4 border-red-500 p-4 animate-fade-in">
-                  <p className="text-sm text-red-700">{localError || error}</p>
+                <div className="mt-6 bg-red-900/30 border-l-4 border-red-500 p-4 animate-fade-in">
+                  <p className="text-sm text-red-300">{localError || error}</p>
                 </div>
               )}
 
@@ -605,7 +605,7 @@ const PaymentForm = () => {
                   type="button"
                   onClick={prevStep}
                   disabled={processing || loading}
-                  className="w-full sm:flex-1 px-4 py-3 border-2 border-luxury-black text-luxury-black font-medium tracking-wide transition-all duration-300 ease-out hover:bg-luxury-black hover:text-luxury-white hover:shadow-luxury active:scale-[0.98] uppercase text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed order-2 sm:order-1"
+                  className="w-full sm:flex-1 px-4 py-3 border-2 border-luxury-ash text-luxury-light-gray font-medium tracking-wide transition-all duration-300 ease-out hover:border-luxury-gold hover:text-luxury-gold hover:shadow-luxury active:scale-[0.98] uppercase text-xs sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed order-2 sm:order-1"
                 >
                   Back
                 </button>
@@ -647,46 +647,46 @@ const PaymentForm = () => {
         {/* Right Column - Security & Summary */}
         <div className="space-y-6 sm:space-y-8 mt-6 lg:mt-0">
           {/* Booking Summary */}
-          <div className="bg-luxury-white shadow-luxury p-4 sm:p-6 lg:p-8">
+          <div className="bg-luxury-gray shadow-luxury border border-luxury-ash/20 p-4 sm:p-6 lg:p-8">
             <h3 className="text-xs font-semibold text-luxury-gold uppercase tracking-luxury mb-4">
               Booking Summary
             </h3>
             <div className="space-y-3 text-sm">
               <div>
-                <p className="text-luxury-gray/60 text-xs">Vehicle</p>
-                <p className="text-luxury-black font-medium">{selectedVehicle?.display_name}</p>
+                <p className="text-luxury-silver text-xs">Vehicle</p>
+                <p className="text-luxury-white font-medium">{selectedVehicle?.display_name}</p>
               </div>
               <div>
-                <p className="text-luxury-gray/60 text-xs">Trip Fare</p>
-                <p className="text-luxury-black font-medium">{formatPrice(baseFare)}</p>
+                <p className="text-luxury-silver text-xs">Trip Fare</p>
+                <p className="text-luxury-white font-medium">{formatPrice(baseFare)}</p>
               </div>
               {Object.values(selectedExtras || {}).map((extra) => (
                 <div key={extra.id}>
-                  <p className="text-luxury-gray/60 text-xs">{extra.name} {extra.quantity > 1 ? `x${extra.quantity}` : ''}</p>
-                  <p className="text-luxury-black font-medium">{formatPrice(extra.price * extra.quantity)}</p>
+                  <p className="text-luxury-silver text-xs">{extra.name} {extra.quantity > 1 ? `x${extra.quantity}` : ''}</p>
+                  <p className="text-luxury-white font-medium">{formatPrice(extra.price * extra.quantity)}</p>
                 </div>
               ))}
               {taxAmount > 0 && (
                 <div>
-                  <p className="text-luxury-gray/60 text-xs">Tax ({taxRate}%)</p>
-                  <p className="text-luxury-black font-medium">{formatPrice(taxAmount)}</p>
+                  <p className="text-luxury-silver text-xs">Tax ({taxRate}%)</p>
+                  <p className="text-luxury-white font-medium">{formatPrice(taxAmount)}</p>
                 </div>
               )}
               {gratuityAmount > 0 && (
                 <div>
-                  <p className="text-luxury-gray/60 text-xs">Gratuity</p>
-                  <p className="text-luxury-black font-medium">{formatPrice(gratuityAmount)}</p>
+                  <p className="text-luxury-silver text-xs">Gratuity</p>
+                  <p className="text-luxury-white font-medium">{formatPrice(gratuityAmount)}</p>
                 </div>
               )}
-              <div className="pt-3 border-t border-luxury-gray/10">
-                <p className="text-luxury-gray/60 text-xs">Total to Pay</p>
-                <p className="text-luxury-black font-bold text-lg">{formatPrice(totalAmount)}</p>
+              <div className="pt-3 border-t border-luxury-ash/30">
+                <p className="text-luxury-silver text-xs">Total to Pay</p>
+                <p className="text-luxury-white font-bold text-lg">{formatPrice(totalAmount)}</p>
               </div>
             </div>
           </div>
 
           {/* Security Notice */}
-          <div className="bg-luxury-white shadow-luxury p-4 sm:p-6 lg:p-8">
+          <div className="bg-luxury-gray shadow-luxury border border-luxury-ash/20 p-4 sm:p-6 lg:p-8">
             <div className="flex items-center gap-3 mb-4">
               <svg className="w-6 h-6 text-luxury-gold" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -695,25 +695,25 @@ const PaymentForm = () => {
                 Secure Payment
               </h3>
             </div>
-            <p className="text-xs text-luxury-gray/70 leading-relaxed mb-4">
+            <p className="text-xs text-luxury-silver leading-relaxed mb-4">
               Your payment information is encrypted and securely processed through Stripe.
             </p>
-            <div className="flex items-center gap-2 pt-4 border-t border-luxury-gray/10">
-              <svg className="w-4 h-4 text-luxury-gray/50" fill="currentColor" viewBox="0 0 20 20">
+            <div className="flex items-center gap-2 pt-4 border-t border-luxury-ash/30">
+              <svg className="w-4 h-4 text-luxury-muted" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
               </svg>
-              <span className="text-xs text-luxury-gray/60">
+              <span className="text-xs text-luxury-silver">
                 Powered by Stripe
               </span>
             </div>
           </div>
 
           {/* Tip Info */}
-          <div className="bg-luxury-light-gray p-6">
-            <h3 className="text-xs font-semibold text-luxury-black uppercase tracking-luxury mb-3">
+          <div className="bg-luxury-slate p-6">
+            <h3 className="text-xs font-semibold text-luxury-white uppercase tracking-luxury mb-3">
               About Gratuity
             </h3>
-            <ul className="space-y-2 text-xs text-luxury-gray/70">
+            <ul className="space-y-2 text-xs text-luxury-silver">
               <li className="flex items-start gap-2">
                 <span className="text-luxury-gold mt-0.5">•</span>
                 <span>Tips are optional and go directly to your driver</span>
@@ -731,7 +731,7 @@ const PaymentForm = () => {
 
           {/* Contact Support */}
           <div className="text-center">
-            <p className="text-xs text-luxury-gray/60 mb-2">
+            <p className="text-xs text-luxury-silver mb-2">
               Need assistance?
             </p>
             <a href={`tel:${settings.support_phone}`} className="text-luxury-gold hover:text-luxury-gold-dark text-sm font-medium">
@@ -772,7 +772,7 @@ const PaymentLuxury = () => {
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
           </svg>
-          <p className="mt-4 text-luxury-gray/60">Loading payment system...</p>
+          <p className="mt-4 text-luxury-silver">Loading payment system...</p>
         </div>
       </div>
     );

@@ -23,7 +23,7 @@ const VerificationModalLuxury = ({ isOpen, email, onVerify, onResend, onChangeEm
 
   const handleChange = (index, value) => {
     if (value.length > 1) return; // Only allow single digit
-    
+
     const newCode = [...code];
     newCode[index] = value;
     setCode(newCode);
@@ -52,13 +52,13 @@ const VerificationModalLuxury = ({ isOpen, email, onVerify, onResend, onChangeEm
     e.preventDefault();
     const pastedData = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
     const newCode = [...code];
-    
+
     for (let i = 0; i < pastedData.length; i++) {
       newCode[i] = pastedData[i];
     }
-    
+
     setCode(newCode);
-    
+
     if (pastedData.length === 6) {
       onVerify(pastedData);
     } else if (pastedData.length > 0) {
@@ -83,18 +83,18 @@ const VerificationModalLuxury = ({ isOpen, email, onVerify, onResend, onChangeEm
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-luxury-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
-      <div className="bg-luxury-white w-full max-w-md mx-4 shadow-luxury-lg animate-slide-up">
+    <div className="fixed inset-0 bg-luxury-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+      <div className="bg-luxury-gray border border-luxury-ash/20 w-full max-w-md mx-4 shadow-luxury-lg animate-slide-up">
         <div className="p-8">
           {/* Header */}
           <div className="text-center mb-8">
-            <h2 className="font-display text-3xl text-luxury-black mb-4">
+            <h2 className="font-display text-3xl text-luxury-white mb-4">
               Verify Your Email
             </h2>
-            <p className="text-luxury-gray/70 text-sm">
+            <p className="text-luxury-silver text-sm">
               We sent a verification code to
             </p>
-            <p className="text-luxury-black font-medium mt-1">
+            <p className="text-luxury-light-gray font-medium mt-1">
               {email}
             </p>
             <button
@@ -123,9 +123,9 @@ const VerificationModalLuxury = ({ isOpen, email, onVerify, onResend, onChangeEm
                   onChange={(e) => handleChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   onPaste={index === 0 ? handlePaste : undefined}
-                  className={`w-12 h-14 text-center text-xl font-light border-2 transition-all duration-200
-                    ${digit ? 'border-luxury-gold bg-luxury-light-gray' : 'border-luxury-gray/20 bg-transparent'}
-                    focus:border-luxury-gold focus:outline-none focus:bg-luxury-light-gray`}
+                  className={`w-12 h-14 text-center text-xl font-light text-luxury-light-gray border-2 transition-all duration-200
+                    ${digit ? 'border-luxury-gold bg-luxury-slate' : 'border-luxury-ash bg-luxury-slate'}
+                    focus:border-luxury-gold focus:outline-none focus:bg-luxury-graphite`}
                   disabled={loading}
                 />
               ))}
@@ -134,18 +134,18 @@ const VerificationModalLuxury = ({ isOpen, email, onVerify, onResend, onChangeEm
 
           {/* Error Message */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500">
-              <p className="text-sm text-red-700">{error}</p>
+            <div className="mb-6 p-4 bg-red-900/30 border-l-4 border-red-500">
+              <p className="text-sm text-red-300">{error}</p>
             </div>
           )}
 
           {/* Resend Section */}
           <div className="text-center mb-8">
             {resendTimer > 0 ? (
-              <p className="text-sm text-luxury-gray/60">
+              <p className="text-sm text-luxury-silver">
                 Didn't receive the code? Check your spam folder or wait{' '}
-                <span className="text-luxury-black font-medium">{resendTimer}s</span> to{' '}
-                <span className="text-luxury-gray/40">resend code</span>
+                <span className="text-luxury-light-gray font-medium">{resendTimer}s</span> to{' '}
+                <span className="text-luxury-muted">resend code</span>
               </p>
             ) : (
               <button
@@ -168,7 +168,7 @@ const VerificationModalLuxury = ({ isOpen, email, onVerify, onResend, onChangeEm
           </button>
 
           {/* Footer */}
-          <p className="text-center text-xs text-luxury-gray/50 mt-6">
+          <p className="text-center text-xs text-luxury-muted mt-6">
             This code expires in 10 minutes
           </p>
         </div>

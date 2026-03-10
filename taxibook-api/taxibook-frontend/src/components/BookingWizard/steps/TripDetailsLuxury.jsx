@@ -681,23 +681,29 @@ const TripDetailsLuxury = () => {
   }, [routeInfo]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-luxury-cream to-luxury-light-gray">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="min-h-screen bg-gradient-to-b from-luxury-charcoal to-luxury-black relative">
+      {/* Top gold accent bar */}
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-luxury-gold/60 to-transparent" />
+      {/* Gold vignette glow at top */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] pointer-events-none" style={{ background: 'radial-gradient(ellipse at center, rgba(201,169,97,0.08) 0%, transparent 70%)' }} />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 relative">
         {/* Header with logo on left and text in center */}
         <div className="flex items-center justify-between mb-12 animate-fade-in">
-          <img 
-            src="/luxride-logo.svg" 
-            alt="LuxRide" 
-            className="h-16 sm:h-20 lg:h-24 object-contain"
+          <img
+            src="/luxride-logo.svg"
+            alt="LuxRide"
+            className="h-16 sm:h-20 lg:h-24 object-contain brightness-0 invert"
             style={{ backgroundColor: 'transparent' }}
           />
           <div className="text-center flex-1">
-            <h1 className="font-display text-4xl md:text-5xl text-luxury-black mb-4">
+            <h1 className="font-display text-4xl md:text-5xl text-luxury-white mb-3">
               LuxRide
             </h1>
-            <p className="text-luxury-gray/70 text-lg tracking-wide">
+            <p className="text-luxury-silver text-lg tracking-wide italic">
               Experience seamless luxury transportation
             </p>
+            {/* Gold divider */}
+            <div className="mt-4 mx-auto w-16 h-[1px] bg-gradient-to-r from-transparent via-luxury-gold to-transparent" />
           </div>
           <div className="w-16 sm:w-20 lg:w-24"></div> {/* Spacer for balance */}
         </div>
@@ -705,7 +711,9 @@ const TripDetailsLuxury = () => {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* Form Section */}
           <div className="lg:col-span-2 space-y-6">
-            <form onSubmit={handleSubmit} className="bg-luxury-white p-8 shadow-luxury space-y-8">
+            <form onSubmit={handleSubmit} className="bg-luxury-gray border border-luxury-ash/20 p-8 shadow-luxury space-y-8 relative overflow-hidden">
+              {/* Gold top accent */}
+              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-luxury-gold/50 to-transparent" />
               {/* Booking Type Selector */}
               <div className="animate-slide-up">
                 <label className="block text-xs font-medium text-luxury-gold uppercase tracking-luxury mb-3">
@@ -720,8 +728,8 @@ const TripDetailsLuxury = () => {
                     }}
                     className={`py-4 px-6 border-2 transition-all duration-200 ${
                       tripDetails.bookingType === 'one_way'
-                        ? 'border-luxury-gold bg-luxury-gold/10 text-luxury-black'
-                        : 'border-luxury-gray/20 bg-white text-luxury-gray hover:border-luxury-gold/50'
+                        ? 'border-luxury-gold bg-luxury-gold/10 text-luxury-light-gray'
+                        : 'border-luxury-ash bg-luxury-slate text-luxury-silver hover:border-luxury-gold/50'
                     }`}
                   >
                     <div className="text-center">
@@ -737,8 +745,8 @@ const TripDetailsLuxury = () => {
                     }}
                     className={`py-4 px-6 border-2 transition-all duration-200 ${
                       tripDetails.bookingType === 'hourly'
-                        ? 'border-luxury-gold bg-luxury-gold/10 text-luxury-black'
-                        : 'border-luxury-gray/20 bg-white text-luxury-gray hover:border-luxury-gold/50'
+                        ? 'border-luxury-gold bg-luxury-gold/10 text-luxury-light-gray'
+                        : 'border-luxury-ash bg-luxury-slate text-luxury-silver hover:border-luxury-gold/50'
                     }`}
                   >
                     <div className="text-center">
@@ -759,7 +767,7 @@ const TripDetailsLuxury = () => {
                   value={tripDetails.pickupAddress}
                   onChange={(e) => handleAddressChange(e.target.value, 'pickup')}
                   onFocus={() => tripDetails.pickupAddress.length >= 2 && setShowPickupSuggestions(true)}
-                  className="w-full px-4 py-3 bg-white border border-luxury-gray/20 text-luxury-black placeholder-luxury-gray/50 focus:outline-none focus:ring-2 focus:ring-luxury-gold focus:border-transparent transition-all duration-200 text-lg"
+                  className="w-full px-4 py-3 bg-luxury-slate border border-luxury-ash text-luxury-light-gray placeholder-luxury-muted focus:outline-none focus:ring-2 focus:ring-luxury-gold focus:border-transparent transition-all duration-200 text-lg"
                   placeholder="Airport, hotel, or address"
                   required
                 />
@@ -771,24 +779,24 @@ const TripDetailsLuxury = () => {
                 )}
                 
                 {showPickupSuggestions && pickupSuggestions.length > 0 && (
-                  <div 
+                  <div
                     ref={pickupDropdownRef}
-                    className="absolute z-[100] w-full mt-2 bg-white border border-luxury-gray/20 shadow-xl max-h-60 overflow-auto isolate"
-                    style={{ backgroundColor: '#FFFFFF' }}
+                    className="absolute z-[100] w-full mt-2 bg-luxury-graphite border border-luxury-ash shadow-luxury-lg max-h-60 overflow-auto isolate"
+                    style={{ backgroundColor: '#262626' }}
                   >
                     {pickupSuggestions.map((suggestion) => (
                       <button
                         key={suggestion.id}
                         type="button"
                         onClick={() => selectSuggestion(suggestion, 'pickup')}
-                        onMouseDown={(e) => e.preventDefault()} 
-                        className={`w-full text-left px-6 py-4 transition-all duration-200 
-                          ${suggestion.isAirport 
-                            ? 'bg-luxury-light-gray hover:bg-luxury-gold/10' 
+                        onMouseDown={(e) => e.preventDefault()}
+                        className={`w-full text-left px-6 py-4 transition-all duration-200
+                          ${suggestion.isAirport
+                            ? 'bg-luxury-slate hover:bg-luxury-gold/10'
                             : suggestion.isHotel
-                            ? 'bg-luxury-cream/50 hover:bg-luxury-gold/10'
-                            : 'hover:bg-luxury-cream'} 
-                          border-b border-luxury-light-gray last:border-b-0`}
+                            ? 'bg-luxury-slate/50 hover:bg-luxury-gold/10'
+                            : 'hover:bg-luxury-slate'}
+                          border-b border-luxury-ash/30 last:border-b-0`}
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -804,21 +812,21 @@ const TripDetailsLuxury = () => {
                                 </svg>
                               )}
                               {suggestion.isVenue && !suggestion.isAirport && !suggestion.isHotel && (
-                                <svg className="w-4 h-4 text-luxury-gray/50 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 text-luxury-silver flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
                               )}
                               {!suggestion.isVenue && (
-                                <svg className="w-4 h-4 text-luxury-gray/40 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 text-luxury-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                                 </svg>
                               )}
-                              <p className="text-sm font-medium text-luxury-black">
+                              <p className="text-sm font-medium text-luxury-light-gray">
                                 {suggestion.place_name}
                               </p>
                             </div>
-                            <p className="text-xs text-luxury-gray/60 mt-1 ml-6">
+                            <p className="text-xs text-luxury-silver mt-1 ml-6">
                               {suggestion.place_formatted || suggestion.full_address || ''}
                             </p>
                           </div>
@@ -827,7 +835,7 @@ const TripDetailsLuxury = () => {
                               <svg className="w-3 h-3 text-luxury-gold fill-current" viewBox="0 0 20 20">
                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                               </svg>
-                              <span className="text-xs text-luxury-gray">{suggestion.rating}</span>
+                              <span className="text-xs text-luxury-silver">{suggestion.rating}</span>
                             </div>
                           )}
                         </div>
@@ -848,7 +856,7 @@ const TripDetailsLuxury = () => {
                     value={tripDetails.dropoffAddress}
                     onChange={(e) => handleAddressChange(e.target.value, 'dropoff')}
                     onFocus={() => tripDetails.dropoffAddress.length >= 2 && setShowDropoffSuggestions(true)}
-                    className="w-full px-4 py-3 bg-white border border-luxury-gray/20 text-luxury-black placeholder-luxury-gray/50 focus:outline-none focus:ring-2 focus:ring-luxury-gold focus:border-transparent transition-all duration-200 text-lg"
+                    className="w-full px-4 py-3 bg-luxury-slate border border-luxury-ash text-luxury-light-gray placeholder-luxury-muted focus:outline-none focus:ring-2 focus:ring-luxury-gold focus:border-transparent transition-all duration-200 text-lg"
                     placeholder="Your destination"
                     required
                   />
@@ -860,24 +868,24 @@ const TripDetailsLuxury = () => {
                 )}
                 
                 {showDropoffSuggestions && dropoffSuggestions.length > 0 && (
-                  <div 
+                  <div
                     ref={dropoffDropdownRef}
-                    className="absolute z-[100] w-full mt-2 bg-white border border-luxury-gray/20 shadow-xl max-h-60 overflow-auto isolate"
-                    style={{ backgroundColor: '#FFFFFF' }}
+                    className="absolute z-[100] w-full mt-2 bg-luxury-graphite border border-luxury-ash shadow-luxury-lg max-h-60 overflow-auto isolate"
+                    style={{ backgroundColor: '#262626' }}
                   >
                     {dropoffSuggestions.map((suggestion) => (
                       <button
                         key={suggestion.id}
                         type="button"
                         onClick={() => selectSuggestion(suggestion, 'dropoff')}
-                        onMouseDown={(e) => e.preventDefault()} 
-                        className={`w-full text-left px-6 py-4 transition-all duration-200 
-                          ${suggestion.isAirport 
-                            ? 'bg-luxury-light-gray hover:bg-luxury-gold/10' 
+                        onMouseDown={(e) => e.preventDefault()}
+                        className={`w-full text-left px-6 py-4 transition-all duration-200
+                          ${suggestion.isAirport
+                            ? 'bg-luxury-slate hover:bg-luxury-gold/10'
                             : suggestion.isHotel
-                            ? 'bg-luxury-cream/50 hover:bg-luxury-gold/10'
-                            : 'hover:bg-luxury-cream'} 
-                          border-b border-luxury-light-gray last:border-b-0`}
+                            ? 'bg-luxury-slate/50 hover:bg-luxury-gold/10'
+                            : 'hover:bg-luxury-slate'}
+                          border-b border-luxury-ash/30 last:border-b-0`}
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -893,21 +901,21 @@ const TripDetailsLuxury = () => {
                                 </svg>
                               )}
                               {suggestion.isVenue && !suggestion.isAirport && !suggestion.isHotel && (
-                                <svg className="w-4 h-4 text-luxury-gray/50 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 text-luxury-silver flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                 </svg>
                               )}
                               {!suggestion.isVenue && (
-                                <svg className="w-4 h-4 text-luxury-gray/40 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 text-luxury-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                                 </svg>
                               )}
-                              <p className="text-sm font-medium text-luxury-black">
+                              <p className="text-sm font-medium text-luxury-light-gray">
                                 {suggestion.place_name}
                               </p>
                             </div>
-                            <p className="text-xs text-luxury-gray/60 mt-1 ml-6">
+                            <p className="text-xs text-luxury-silver mt-1 ml-6">
                               {suggestion.place_formatted || suggestion.full_address || ''}
                             </p>
                           </div>
@@ -916,7 +924,7 @@ const TripDetailsLuxury = () => {
                               <svg className="w-3 h-3 text-luxury-gold fill-current" viewBox="0 0 20 20">
                                 <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                               </svg>
-                              <span className="text-xs text-luxury-gray">{suggestion.rating}</span>
+                              <span className="text-xs text-luxury-silver">{suggestion.rating}</span>
                             </div>
                           )}
                         </div>
@@ -936,7 +944,7 @@ const TripDetailsLuxury = () => {
                   <select
                     value={tripDetails.durationHours || ''}
                     onChange={(e) => setTripDetails({ durationHours: parseInt(e.target.value) })}
-                    className="w-full px-4 py-3 bg-white border border-luxury-gray/20 text-luxury-black focus:outline-none focus:ring-2 focus:ring-luxury-gold focus:border-transparent transition-all duration-200 text-lg"
+                    className="w-full px-4 py-3 bg-luxury-slate border border-luxury-ash text-luxury-light-gray focus:outline-none focus:ring-2 focus:ring-luxury-gold focus:border-transparent transition-all duration-200 text-lg"
                     required
                   >
                     <option value="">Select duration...</option>
@@ -949,7 +957,7 @@ const TripDetailsLuxury = () => {
                       );
                     })}
                   </select>
-                  <p className="mt-2 text-sm text-luxury-gray/70">
+                  <p className="mt-2 text-sm text-luxury-silver">
                     Select how many hours you need the vehicle
                   </p>
                 </div>
@@ -976,7 +984,7 @@ const TripDetailsLuxury = () => {
                     minDate={minDateTime}
                     maxDate={getMaxDateTime()}
                     placeholderText="Select date"
-                    className="w-full px-4 py-3 bg-white border border-luxury-gray/20 text-luxury-black placeholder-luxury-gray/50 focus:outline-none focus:ring-2 focus:ring-luxury-gold focus:border-transparent transition-all duration-200 text-sm"
+                    className="w-full px-4 py-3 bg-luxury-slate border border-luxury-ash text-luxury-light-gray placeholder-luxury-muted focus:outline-none focus:ring-2 focus:ring-luxury-gold focus:border-transparent transition-all duration-200 text-sm"
                     calendarClassName="luxury-calendar"
                     wrapperClassName="w-full"
                     required
@@ -1017,7 +1025,7 @@ const TripDetailsLuxury = () => {
                     }
                     maxTime={new Date(new Date().setHours(23, 59, 59, 999))}
                     placeholderText="Select time"
-                    className="w-full px-4 py-3 bg-white border border-luxury-gray/20 text-luxury-black placeholder-luxury-gray/50 focus:outline-none focus:ring-2 focus:ring-luxury-gold focus:border-transparent transition-all duration-200 text-sm"
+                    className="w-full px-4 py-3 bg-luxury-slate border border-luxury-ash text-luxury-light-gray placeholder-luxury-muted focus:outline-none focus:ring-2 focus:ring-luxury-gold focus:border-transparent transition-all duration-200 text-sm"
                     calendarClassName="luxury-calendar"
                     wrapperClassName="w-full"
                     required
@@ -1038,8 +1046,8 @@ const TripDetailsLuxury = () => {
 
               {/* Error Message */}
               {(localError || error) && (
-                <div className="bg-red-50 border-l-4 border-red-500 p-4 animate-fade-in">
-                  <p className="text-sm text-red-700">
+                <div className="bg-red-900/30 border-l-4 border-red-500 p-4 animate-fade-in">
+                  <p className="text-sm text-red-300">
                     {localError || error}
                   </p>
                 </div>
@@ -1049,7 +1057,7 @@ const TripDetailsLuxury = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full px-4 py-4 sm:py-5 bg-luxury-gold text-luxury-white font-semibold tracking-wide transition-all duration-300 ease-out hover:bg-luxury-gold-dark hover:shadow-luxury active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed animate-slide-up uppercase text-xs sm:text-sm"
+                className="w-full px-4 py-4 sm:py-5 bg-luxury-gold text-luxury-white font-semibold tracking-wide transition-all duration-300 ease-out hover:bg-luxury-gold-dark hover:shadow-luxury-glow active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed animate-slide-up uppercase text-xs sm:text-sm"
                 style={{ animationDelay: '0.3s' }}
               >
                 {loading ? 'Processing...' : 'Select Vehicle'}
@@ -1057,33 +1065,32 @@ const TripDetailsLuxury = () => {
             </form>
 
             {/* Trust Indicators */}
-            <div className="bg-luxury-white p-6 shadow-luxury animate-fade-in">
-              <div className="flex items-center justify-between text-xs text-luxury-gray/60">
-                <span className="flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  Secure Booking
-                </span>
-                <span className="flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
-                  </svg>
-                  24/7 Support
-                </span>
-                <span className="flex items-center gap-2">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                  </svg>
-                  Licensed Chauffeurs
-                </span>
-              </div>
+            <div className="flex items-center justify-between text-xs text-luxury-silver animate-fade-in px-2">
+              <span className="flex items-center gap-2">
+                <svg className="w-3.5 h-3.5 text-luxury-gold" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Secure Booking
+              </span>
+              <span className="flex items-center gap-2">
+                <svg className="w-3.5 h-3.5 text-luxury-gold" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
+                </svg>
+                24/7 Support
+              </span>
+              <span className="flex items-center gap-2">
+                <svg className="w-3.5 h-3.5 text-luxury-gold" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                Licensed Chauffeurs
+              </span>
             </div>
           </div>
 
           {/* Map Section */}
           <div className="lg:col-span-3">
-            <div className="bg-luxury-white p-2 shadow-luxury h-[600px] animate-fade-in">
+            <div className="bg-luxury-gray border border-luxury-ash/30 p-1.5 shadow-luxury h-[600px] animate-fade-in relative overflow-hidden">
+              <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-luxury-gold/30 to-transparent" />
               <div ref={mapContainer} className="w-full h-full" />
             </div>
           </div>

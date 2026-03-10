@@ -1,15 +1,21 @@
-/* React DatePicker Luxury Theme Overrides */
+/* React DatePicker Luxury Dark Theme Overrides */
 
 /* Define luxury colors to match brand */
 :root {
   --luxury-gold: #C9A961;
-  --luxury-gold-light: #E4D4A8;
+  --luxury-gold-light: #D4C48E;
   --luxury-gold-dark: #A08A4F;
-  --luxury-black: #0A0A0A;
-  --luxury-charcoal: #1A1A1A;
-  --luxury-gray: #2A2A2A;
-  --luxury-light-gray: #F8F7F4;
-  --luxury-cream: #FAF9F6;
+  --luxury-black: #060606;
+  --luxury-charcoal: #0D0D0D;
+  --luxury-gray: #161616;
+  --luxury-slate: #1E1E1E;
+  --luxury-graphite: #262626;
+  --luxury-ash: #333333;
+  --luxury-muted: #6B6B6B;
+  --luxury-silver: #9A9A9A;
+  --luxury-light-gray: #F0EDE8;
+  --luxury-cream: #E8E3DB;
+  --luxury-white: #F5F2ED;
 }
 
 /* Main wrapper */
@@ -24,10 +30,10 @@
 /* Calendar container */
 .react-datepicker {
   font-family: 'Inter', sans-serif;
-  border: 1px solid rgba(201, 169, 97, 0.2);
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--luxury-ash);
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(201,169,97,0.08);
   border-radius: 8px;
-  background: white;
+  background: var(--luxury-graphite);
 }
 
 /* Header */
@@ -62,7 +68,7 @@
 
 /* Calendar days */
 .react-datepicker__day {
-  color: var(--luxury-charcoal);
+  color: var(--luxury-light-gray);
   font-size: 14px;
   line-height: 1.8rem;
   width: 1.8rem;
@@ -72,8 +78,8 @@
 }
 
 .react-datepicker__day:hover {
-  background-color: var(--luxury-light-gray);
-  color: var(--luxury-black);
+  background-color: var(--luxury-slate);
+  color: var(--luxury-white);
 }
 
 .react-datepicker__day--selected,
@@ -86,11 +92,11 @@
 .react-datepicker__day--today {
   font-weight: 600;
   color: var(--luxury-gold);
-  background-color: var(--luxury-cream);
+  background-color: var(--luxury-slate);
 }
 
 .react-datepicker__day--disabled {
-  color: #ccc;
+  color: var(--luxury-muted);
   cursor: not-allowed;
 }
 
@@ -100,11 +106,11 @@
 
 /* Time picker */
 .react-datepicker__time-container {
-  border-left: 1px solid rgba(201, 169, 97, 0.2);
+  border-left: 1px solid var(--luxury-ash);
 }
 
 .react-datepicker__time-container .react-datepicker__time {
-  background: white;
+  background: var(--luxury-graphite);
 }
 
 .react-datepicker__time-container .react-datepicker__time .react-datepicker__time-box {
@@ -114,12 +120,13 @@
 .react-datepicker__time-list-item {
   padding: 8px 10px;
   font-size: 13px;
+  color: var(--luxury-light-gray);
   transition: all 0.2s ease;
 }
 
 .react-datepicker__time-list-item:hover {
-  background-color: var(--luxury-light-gray) !important;
-  color: var(--luxury-black);
+  background-color: var(--luxury-slate) !important;
+  color: var(--luxury-white);
 }
 
 .react-datepicker__time-list-item--selected {
@@ -129,7 +136,7 @@
 }
 
 .react-datepicker__time-list-item--disabled {
-  color: #ccc;
+  color: var(--luxury-muted);
   cursor: not-allowed;
 }
 
@@ -164,34 +171,39 @@
 /* Month/Year dropdowns */
 .react-datepicker__month-dropdown,
 .react-datepicker__year-dropdown {
-  background-color: white;
-  border: 1px solid rgba(0, 0, 0, 0.1);
+  background-color: var(--luxury-graphite);
+  border: 1px solid var(--luxury-ash);
+}
+
+.react-datepicker__month-option,
+.react-datepicker__year-option {
+  color: var(--luxury-light-gray);
 }
 
 .react-datepicker__month-option:hover,
 .react-datepicker__year-option:hover {
-  background-color: rgba(212, 175, 55, 0.1);
+  background-color: var(--luxury-slate);
 }
 
 .react-datepicker__month-option--selected,
 .react-datepicker__year-option--selected {
-  background-color: #D4AF37;
+  background-color: var(--luxury-gold);
   color: white;
 }
 
 /* Triangle arrow */
 .react-datepicker__triangle {
-  border-bottom-color: #D4AF37 !important;
+  border-bottom-color: var(--luxury-gold) !important;
 }
 
 .react-datepicker__triangle::before {
-  border-bottom-color: rgba(0, 0, 0, 0.1) !important;
+  border-bottom-color: var(--luxury-ash) !important;
 }
 
 /* Input focus state */
 .react-datepicker__input-container input:focus {
   outline: none;
   ring: 2px;
-  ring-color: #D4AF37;
+  ring-color: var(--luxury-gold);
   border-color: transparent;
 }

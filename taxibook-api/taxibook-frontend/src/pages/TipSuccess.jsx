@@ -35,42 +35,42 @@ const TipSuccess = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-luxury-cream to-luxury-light-gray flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-luxury-charcoal to-luxury-black flex items-center justify-center">
         <div className="animate-spin h-12 w-12 border-4 border-luxury-gold border-t-transparent rounded-full"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-luxury-cream to-luxury-light-gray flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-b from-luxury-charcoal to-luxury-black flex items-center justify-center py-12 px-4">
       <div className="max-w-md w-full">
-        <div className="bg-luxury-white shadow-luxury p-8 text-center">
+        <div className="bg-luxury-gray shadow-luxury border border-luxury-ash/20 p-8 text-center">
           {/* Success Icon */}
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-6">
-            <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-emerald-900/30 rounded-full mb-6">
+            <svg className="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
 
           {/* Success Message */}
-          <h1 className="font-display text-3xl text-luxury-black mb-4">
+          <h1 className="font-display text-3xl text-luxury-white mb-4">
             Thank You!
           </h1>
-          <p className="text-luxury-gray/60 mb-6">
+          <p className="text-luxury-silver mb-6">
             Your gratuity has been successfully processed
           </p>
 
           {/* Details */}
           {booking && (
-            <div className="bg-luxury-light-gray rounded p-6 mb-8">
+            <div className="bg-luxury-slate rounded p-6 mb-8">
               <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-luxury-gray/60">Booking</span>
-                  <span className="text-sm font-medium text-luxury-black">#{booking.booking_number}</span>
+                  <span className="text-sm text-luxury-silver">Booking</span>
+                  <span className="text-sm font-medium text-luxury-white">#{booking.booking_number}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-sm text-luxury-gray/60">Tip Amount</span>
-                  <span className="text-lg font-bold text-luxury-black">
+                  <span className="text-sm text-luxury-silver">Tip Amount</span>
+                  <span className="text-lg font-bold text-luxury-white">
                     {formatPrice(booking.tip_amount || 0)}
                   </span>
                 </div>
@@ -80,7 +80,7 @@ const TipSuccess = () => {
 
           {/* Message */}
           <div className="mb-8">
-            <p className="text-sm text-luxury-gray/70">
+            <p className="text-sm text-luxury-silver">
               Your driver appreciates your generosity! This gratuity goes directly to them as recognition for their exceptional service.
             </p>
           </div>
@@ -104,7 +104,7 @@ const TipSuccess = () => {
 
         {/* Support Info */}
         <div className="text-center mt-6">
-          <p className="text-xs text-luxury-gray/60">
+          <p className="text-xs text-luxury-silver">
             Need assistance? Contact us at
           </p>
           <a href={`tel:${settings.support_phone}`} className="text-luxury-gold hover:text-luxury-gold-dark text-sm font-medium">

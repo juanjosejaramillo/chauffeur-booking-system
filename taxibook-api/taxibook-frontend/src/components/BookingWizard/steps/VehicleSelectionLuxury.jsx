@@ -111,7 +111,7 @@ const VehicleSelectionLuxury = () => {
       <div className="flex items-center justify-center py-20">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-luxury-gold mx-auto mb-4"></div>
-          <p className="text-luxury-gray/60">Calculating your fare...</p>
+          <p className="text-luxury-silver">Calculating your fare...</p>
         </div>
       </div>
     );
@@ -121,11 +121,11 @@ const VehicleSelectionLuxury = () => {
     <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="text-center mb-8 sm:mb-12">
-        <h2 className="font-display text-2xl sm:text-3xl text-luxury-black mb-3 sm:mb-4">
+        <h2 className="font-display text-2xl sm:text-3xl text-luxury-white mb-3 sm:mb-4">
           Select Your Vehicle
         </h2>
         {tripDetails.bookingType === 'hourly' && tripDetails.durationHours && (
-          <div className="flex items-center justify-center gap-2 text-sm text-luxury-gray/70">
+          <div className="flex items-center justify-center gap-2 text-sm text-luxury-silver">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -133,7 +133,7 @@ const VehicleSelectionLuxury = () => {
           </div>
         )}
         {tripDetails.bookingType === 'one_way' && routeInfo && (
-          <div className="flex items-center justify-center gap-4 sm:gap-8 text-xs sm:text-sm text-luxury-gray/70">
+          <div className="flex items-center justify-center gap-4 sm:gap-8 text-xs sm:text-sm text-luxury-silver">
             <span className="flex items-center gap-1 sm:gap-2">
               <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
@@ -161,9 +161,9 @@ const VehicleSelectionLuxury = () => {
             <div
               key={vehicle.vehicle_type_id}
               onClick={() => handleSelectVehicle(vehicle)}
-              className={`relative bg-luxury-white cursor-pointer transition-all duration-300 hover:shadow-luxury-lg group overflow-hidden rounded-lg ${
+              className={`relative bg-luxury-gray border border-luxury-ash/20 cursor-pointer transition-all duration-300 hover:shadow-luxury-lg group overflow-hidden rounded-lg ${
                 isSelected
-                  ? 'ring-2 ring-luxury-gold shadow-luxury-lg'
+                  ? 'ring-2 ring-luxury-gold shadow-luxury-glow animate-gold-pulse'
                   : 'shadow-luxury hover:scale-[1.01]'
               }`}
             >
@@ -180,11 +180,11 @@ const VehicleSelectionLuxury = () => {
               <div className="p-4 sm:p-5">
                 {/* Title and Description at Top */}
                 <div className="mb-3">
-                  <h3 className="font-display text-lg sm:text-xl text-luxury-black">
+                  <h3 className="font-display text-lg sm:text-xl text-luxury-white">
                     {vehicle.display_name || vehicle.name}
                   </h3>
                   {vehicle.description && (
-                    <p className="text-xs sm:text-sm text-luxury-gray/60 mt-1">
+                    <p className="text-xs sm:text-sm text-luxury-silver mt-1">
                       {vehicle.description}
                     </p>
                   )}
@@ -214,19 +214,19 @@ const VehicleSelectionLuxury = () => {
                       <div className="text-right">
                         {tripDetails.bookingType === 'hourly' ? (
                           <>
-                            <p className="text-lg sm:text-xl font-light text-luxury-black">
+                            <p className="text-lg sm:text-xl font-light text-luxury-white">
                               {formatPrice(vehicle.estimated_fare || vehicle.total_price)}
                             </p>
-                            <p className="text-[10px] sm:text-xs text-luxury-gray/50">
+                            <p className="text-[10px] sm:text-xs text-luxury-muted">
                               ${vehicle.hourly_rate}/hr
                             </p>
                           </>
                         ) : (
                           <>
-                            <p className="text-lg sm:text-xl font-light text-luxury-black">
+                            <p className="text-lg sm:text-xl font-light text-luxury-white">
                               {formatPrice(vehicle.estimated_fare || vehicle.total_price)}
                             </p>
-                            <p className="text-[10px] sm:text-xs text-luxury-gray/50">USD</p>
+                            <p className="text-[10px] sm:text-xs text-luxury-muted">USD</p>
                           </>
                         )}
                       </div>
@@ -235,7 +235,7 @@ const VehicleSelectionLuxury = () => {
                       <button
                         type="button"
                         onClick={(e) => handleToggleExpand(e, vehicle.vehicle_type_id)}
-                        className="p-1.5 sm:p-2 hover:bg-luxury-light-gray rounded-full transition-colors"
+                        className="p-1.5 sm:p-2 hover:bg-luxury-slate rounded-full transition-colors"
                         aria-label={isExpanded ? "Hide details" : "Show details"}
                       >
                         <svg
@@ -254,13 +254,13 @@ const VehicleSelectionLuxury = () => {
 
                   {/* Bottom Row: Capacity Info */}
                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                    <span className="flex items-center gap-1.5 text-xs sm:text-sm text-luxury-gray/60">
+                    <span className="flex items-center gap-1.5 text-xs sm:text-sm text-luxury-silver">
                       <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
                       <span className="whitespace-nowrap">{vehicle.max_passengers} passengers</span>
                     </span>
-                    <span className="flex items-center gap-1.5 text-xs sm:text-sm text-luxury-gray/60">
+                    <span className="flex items-center gap-1.5 text-xs sm:text-sm text-luxury-silver">
                       <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                       </svg>
@@ -271,12 +271,12 @@ const VehicleSelectionLuxury = () => {
 
                 {/* Expandable Details */}
                 {isExpanded && (
-                  <div className="mt-4 pt-4 border-t border-luxury-gray/10 animate-fadeIn space-y-3">
+                  <div className="mt-4 pt-4 border-t border-luxury-ash/30 animate-fadeIn space-y-3">
                     {/* Hourly Booking Details */}
                     {tripDetails.bookingType === 'hourly' && (
-                      <div className="bg-luxury-cream/30 p-3 rounded-lg">
-                        <h4 className="text-sm font-medium text-luxury-black mb-2">Hourly Service Details</h4>
-                        <div className="space-y-1.5 text-xs text-luxury-gray/70">
+                      <div className="bg-luxury-slate/50 p-3 rounded-lg">
+                        <h4 className="text-sm font-medium text-luxury-white mb-2">Hourly Service Details</h4>
+                        <div className="space-y-1.5 text-xs text-luxury-silver">
                           <div className="flex items-center gap-2">
                             <svg className="w-4 h-4 text-luxury-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -288,14 +288,14 @@ const VehicleSelectionLuxury = () => {
                           </div>
                           {vehicle.excess_mile_rate > 0 && (
                             <div className="flex items-center gap-2">
-                              <svg className="w-4 h-4 text-luxury-gray/50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-4 h-4 text-luxury-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                               </svg>
                               <span>Extra miles: ${vehicle.excess_mile_rate}/mile</span>
                             </div>
                           )}
-                          <div className="flex items-center gap-2 pt-1 border-t border-luxury-gray/10 mt-2">
-                            <span className="text-sm font-medium text-luxury-black">
+                          <div className="flex items-center gap-2 pt-1 border-t border-luxury-ash/30 mt-2">
+                            <span className="text-sm font-medium text-luxury-white">
                               {vehicle.hours} hours × ${vehicle.hourly_rate}/hour = {formatPrice(vehicle.estimated_fare)}
                             </span>
                           </div>
@@ -309,7 +309,7 @@ const VehicleSelectionLuxury = () => {
                         {vehicle.features.map((feature, idx) => (
                           <span
                             key={idx}
-                            className="px-2 sm:px-3 py-0.5 sm:py-1 bg-luxury-light-gray text-[10px] sm:text-xs text-luxury-gray/70 uppercase tracking-wide"
+                            className="px-2 sm:px-3 py-0.5 sm:py-1 bg-luxury-slate border border-luxury-ash/30 text-[10px] sm:text-xs text-luxury-silver uppercase tracking-wide"
                           >
                             {feature}
                           </span>
@@ -330,7 +330,7 @@ const VehicleSelectionLuxury = () => {
           <h3 className="text-xs font-semibold text-luxury-gold uppercase tracking-luxury mb-4 sm:mb-6">
             Enhance Your Ride
           </h3>
-          <div className="bg-luxury-white shadow-luxury rounded-lg overflow-hidden">
+          <div className="bg-luxury-gray border border-luxury-ash/20 shadow-luxury rounded-lg overflow-hidden">
             {selectedVehicle.extras.map((extra, idx) => {
               const selected = selectedExtras[extra.id];
               const quantity = selected ? selected.quantity : 0;
@@ -338,13 +338,13 @@ const VehicleSelectionLuxury = () => {
                 <div
                   key={extra.id}
                   className={`flex items-center justify-between p-4 sm:p-5 ${
-                    idx < selectedVehicle.extras.length - 1 ? 'border-b border-luxury-gray/10' : ''
+                    idx < selectedVehicle.extras.length - 1 ? 'border-b border-luxury-ash/30' : ''
                   }`}
                 >
                   <div className="flex-1 min-w-0 mr-4">
-                    <p className="text-sm sm:text-base font-medium text-luxury-black">{extra.name}</p>
+                    <p className="text-sm sm:text-base font-medium text-luxury-white">{extra.name}</p>
                     {extra.description && (
-                      <p className="text-xs text-luxury-gray/60 mt-0.5">{extra.description}</p>
+                      <p className="text-xs text-luxury-silver mt-0.5">{extra.description}</p>
                     )}
                     <p className="text-xs sm:text-sm text-luxury-gold font-medium mt-1">
                       {formatPrice(extra.price)} each
@@ -358,13 +358,13 @@ const VehicleSelectionLuxury = () => {
                         setExtraQuantity(extra, quantity - 1);
                       }}
                       disabled={quantity === 0}
-                      className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full border-2 border-luxury-gray/20 text-luxury-gray/60 transition-all hover:border-luxury-gold hover:text-luxury-gold disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-luxury-gray/20 disabled:hover:text-luxury-gray/60"
+                      className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full border-2 border-luxury-ash text-luxury-silver transition-all hover:border-luxury-gold hover:text-luxury-gold disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-luxury-ash disabled:hover:text-luxury-silver"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                       </svg>
                     </button>
-                    <span className="w-6 text-center text-sm font-medium text-luxury-black">{quantity}</span>
+                    <span className="w-6 text-center text-sm font-medium text-luxury-white">{quantity}</span>
                     <button
                       type="button"
                       onClick={(e) => {
@@ -372,7 +372,7 @@ const VehicleSelectionLuxury = () => {
                         setExtraQuantity(extra, quantity + 1);
                       }}
                       disabled={quantity >= extra.max_quantity}
-                      className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full border-2 border-luxury-gray/20 text-luxury-gray/60 transition-all hover:border-luxury-gold hover:text-luxury-gold disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-luxury-gray/20 disabled:hover:text-luxury-gray/60"
+                      className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full border-2 border-luxury-ash text-luxury-silver transition-all hover:border-luxury-gold hover:text-luxury-gold disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:border-luxury-ash disabled:hover:text-luxury-silver"
                     >
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -384,10 +384,10 @@ const VehicleSelectionLuxury = () => {
             })}
             {/* Extras Subtotal */}
             {Object.keys(selectedExtras).length > 0 && (
-              <div className="px-4 sm:px-5 py-3 bg-luxury-light-gray border-t border-luxury-gray/10">
+              <div className="px-4 sm:px-5 py-3 bg-luxury-slate border border-luxury-ash/30 border-t border-luxury-ash/30">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs sm:text-sm text-luxury-gray/70">Extras Subtotal</span>
-                  <span className="text-sm sm:text-base font-medium text-luxury-black">
+                  <span className="text-xs sm:text-sm text-luxury-silver">Extras Subtotal</span>
+                  <span className="text-sm sm:text-base font-medium text-luxury-white">
                     {formatPrice(Object.values(selectedExtras).reduce((sum, e) => sum + e.price * e.quantity, 0))}
                   </span>
                 </div>
@@ -399,8 +399,8 @@ const VehicleSelectionLuxury = () => {
 
       {/* Error Message */}
       {(localError || error) && (
-        <div className="bg-red-50 border-l-4 border-red-500 p-3 sm:p-4 mb-4 sm:mb-6">
-          <p className="text-xs sm:text-sm text-red-700">
+        <div className="bg-red-900/30 border-l-4 border-red-500 p-3 sm:p-4 mb-4 sm:mb-6">
+          <p className="text-xs sm:text-sm text-red-300">
             {localError || error}
           </p>
         </div>
@@ -411,7 +411,7 @@ const VehicleSelectionLuxury = () => {
         <button
           type="button"
           onClick={prevStep}
-          className="w-full sm:flex-1 px-4 py-3 border-2 border-luxury-black text-luxury-black font-medium tracking-wide transition-all duration-300 ease-out hover:bg-luxury-black hover:text-luxury-white hover:shadow-luxury active:scale-[0.98] uppercase text-xs sm:text-sm order-2 sm:order-1"
+          className="w-full sm:flex-1 px-4 py-3 border-2 border-luxury-ash text-luxury-light-gray font-medium tracking-wide transition-all duration-300 ease-out hover:border-luxury-gold hover:text-luxury-gold hover:shadow-luxury active:scale-[0.98] uppercase text-xs sm:text-sm order-2 sm:order-1"
         >
           Back
         </button>

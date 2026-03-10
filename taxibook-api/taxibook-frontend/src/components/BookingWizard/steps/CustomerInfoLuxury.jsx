@@ -255,7 +255,7 @@ const CustomerInfoLuxury = () => {
         return (
           <div key={field.key} className="relative">
             <label className="block text-xs font-medium text-luxury-gold uppercase tracking-luxury mb-3">
-              {field.label} {!field.required && <span className="text-luxury-gray/40 normal-case tracking-normal">(Optional)</span>}
+              {field.label} {!field.required && <span className="text-luxury-muted normal-case tracking-normal">(Optional)</span>}
             </label>
             <input
               type={field.type}
@@ -275,7 +275,7 @@ const CustomerInfoLuxury = () => {
               max={field.validation_rules?.max}
             />
             {field.helper_text && (
-              <p className="text-xs text-luxury-gray/50 mt-2">{field.helper_text}</p>
+              <p className="text-xs text-luxury-muted mt-2">{field.helper_text}</p>
             )}
           </div>
         );
@@ -284,7 +284,7 @@ const CustomerInfoLuxury = () => {
         return (
           <div key={field.key} className="relative">
             <label className="block text-xs font-medium text-luxury-gold uppercase tracking-luxury mb-3">
-              {field.label} {!field.required && <span className="text-luxury-gray/40 normal-case tracking-normal">(Optional)</span>}
+              {field.label} {!field.required && <span className="text-luxury-muted normal-case tracking-normal">(Optional)</span>}
             </label>
             <select
               name={field.key}
@@ -301,7 +301,7 @@ const CustomerInfoLuxury = () => {
               ))}
             </select>
             {field.helper_text && (
-              <p className="text-xs text-luxury-gray/50 mt-2">{field.helper_text}</p>
+              <p className="text-xs text-luxury-muted mt-2">{field.helper_text}</p>
             )}
           </div>
         );
@@ -315,14 +315,14 @@ const CustomerInfoLuxury = () => {
                 name={field.key}
                 checked={value === true || value === 'true'}
                 onChange={(e) => handleAdditionalFieldChange(field.key, e.target.checked)}
-                className="w-5 h-5 text-luxury-gold border-luxury-gray/20 rounded focus:ring-luxury-gold"
+                className="w-5 h-5 text-luxury-gold border-luxury-ash rounded focus:ring-luxury-gold"
               />
-              <span className="text-sm text-luxury-black">
+              <span className="text-sm text-luxury-white">
                 {field.label}
               </span>
             </label>
             {field.helper_text && (
-              <p className="text-xs text-luxury-gray/50 mt-2 ml-8">{field.helper_text}</p>
+              <p className="text-xs text-luxury-muted mt-2 ml-8">{field.helper_text}</p>
             )}
           </div>
         );
@@ -331,22 +331,22 @@ const CustomerInfoLuxury = () => {
         return (
           <div key={field.key} className="relative">
             <label className="block text-xs font-medium text-luxury-gold uppercase tracking-luxury mb-3">
-              {field.label} {!field.required && <span className="text-luxury-gray/40 normal-case tracking-normal">(Optional)</span>}
+              {field.label} {!field.required && <span className="text-luxury-muted normal-case tracking-normal">(Optional)</span>}
             </label>
             <textarea
               name={field.key}
               value={value}
               onChange={(e) => handleAdditionalFieldChange(field.key, e.target.value)}
               rows={3}
-              className="w-full px-0 py-3 bg-transparent border-b-2 border-luxury-gray/20
-                       text-luxury-charcoal placeholder-luxury-gray/50
+              className="w-full px-0 py-3 bg-transparent border-b-2 border-luxury-ash
+                       text-luxury-light-gray placeholder-luxury-muted
                        transition-all duration-300
                        focus:border-luxury-gold focus:outline-none resize-none"
               placeholder={field.placeholder}
               required={field.required}
             />
             {field.helper_text && (
-              <p className="text-xs text-luxury-gray/50 mt-2">{field.helper_text}</p>
+              <p className="text-xs text-luxury-muted mt-2">{field.helper_text}</p>
             )}
           </div>
         );
@@ -361,10 +361,10 @@ const CustomerInfoLuxury = () => {
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <h2 className="font-display text-3xl text-luxury-black mb-4">
+          <h2 className="font-display text-3xl text-luxury-white mb-4">
             Your Information
           </h2>
-          <p className="text-luxury-gray/60 text-sm tracking-wide">
+          <p className="text-luxury-silver text-sm tracking-wide">
             Please provide your contact details for the booking
           </p>
         </div>
@@ -424,7 +424,7 @@ const CustomerInfoLuxury = () => {
                 </div>
               )}
             </div>
-            <p className="text-xs text-luxury-gray/50 mt-2">
+            <p className="text-xs text-luxury-muted mt-2">
               {emailVerified 
                 ? 'Email verified' 
                 : "We'll verify your email before confirming the booking"}
@@ -445,7 +445,7 @@ const CustomerInfoLuxury = () => {
               placeholder="+1 (555) 123-4567"
               required
             />
-            <p className="text-xs text-luxury-gray/50 mt-2">
+            <p className="text-xs text-luxury-muted mt-2">
               Your chauffeur may contact you on this number
             </p>
           </div>
@@ -456,29 +456,29 @@ const CustomerInfoLuxury = () => {
           {/* Special Instructions */}
           <div className="relative">
             <label className="block text-xs font-medium text-luxury-gold uppercase tracking-luxury mb-3">
-              Special Requests <span className="text-luxury-gray/40 normal-case tracking-normal">(Optional)</span>
+              Special Requests <span className="text-luxury-muted normal-case tracking-normal">(Optional)</span>
             </label>
             <textarea
               name="specialInstructions"
               value={customerInfo.specialInstructions}
               onChange={handleInputChange}
               rows={4}
-              className="w-full px-0 py-3 bg-transparent border-b-2 border-luxury-gray/20
-                       text-luxury-charcoal placeholder-luxury-gray/50
+              className="w-full px-0 py-3 bg-transparent border-b-2 border-luxury-ash
+                       text-luxury-light-gray placeholder-luxury-muted
                        transition-all duration-300
                        focus:border-luxury-gold focus:outline-none resize-none"
               placeholder="Any special requests or preferences for your journey..."
               maxLength={500}
             />
-            <p className="text-xs text-luxury-gray/40 mt-2 text-right">
+            <p className="text-xs text-luxury-muted mt-2 text-right">
               {customerInfo.specialInstructions.length}/500
             </p>
           </div>
           
           {/* Error Message */}
           {localError && (
-            <div className="bg-red-50 border-l-4 border-red-500 p-4 animate-fade-in">
-              <p className="text-sm text-red-700">{localError}</p>
+            <div className="bg-red-900/30 border-l-4 border-red-500 p-4 animate-fade-in">
+              <p className="text-sm text-red-300">{localError}</p>
             </div>
           )}
           
@@ -487,7 +487,7 @@ const CustomerInfoLuxury = () => {
             <button
               type="button"
               onClick={prevStep}
-              className="w-full sm:flex-1 px-4 py-3 border-2 border-luxury-black text-luxury-black font-medium tracking-wide transition-all duration-300 ease-out hover:bg-luxury-black hover:text-luxury-white hover:shadow-luxury active:scale-[0.98] uppercase text-xs sm:text-sm order-2 sm:order-1"
+              className="w-full sm:flex-1 px-4 py-3 border-2 border-luxury-ash text-luxury-light-gray font-medium tracking-wide transition-all duration-300 ease-out hover:border-luxury-gold hover:text-luxury-gold hover:shadow-luxury active:scale-[0.98] uppercase text-xs sm:text-sm order-2 sm:order-1"
             >
               Back
             </button>

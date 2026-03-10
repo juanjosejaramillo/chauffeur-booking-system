@@ -95,15 +95,15 @@ const ConfirmationLuxury = () => {
     <div className="max-w-3xl mx-auto">
       {/* Success Icon */}
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full mb-4">
-          <svg className="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="inline-flex items-center justify-center w-20 h-20 bg-emerald-900/30 rounded-full mb-4">
+          <svg className="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
           </svg>
         </div>
-        <h2 className="font-display text-3xl text-luxury-black mb-2">
+        <h2 className="font-display text-3xl text-luxury-white mb-2">
           Booking Confirmed!
         </h2>
-        <p className="text-luxury-gray/60 text-sm">
+        <p className="text-luxury-silver text-sm">
           Your reservation has been successfully processed
         </p>
       </div>
@@ -113,16 +113,16 @@ const ConfirmationLuxury = () => {
         <p className="text-xs font-semibold text-luxury-gold uppercase tracking-luxury mb-2">
           Booking Reference
         </p>
-        <p className="font-mono text-2xl text-luxury-black tracking-wider">
+        <p className="font-mono text-2xl text-luxury-white tracking-wider">
           {booking?.booking_number}
         </p>
-        <p className="text-xs text-luxury-gray/60 mt-2">
+        <p className="text-xs text-luxury-silver mt-2">
           Please keep this reference for your records
         </p>
       </div>
 
       {/* Booking Details */}
-      <div className="bg-luxury-white shadow-luxury p-8 mb-8">
+      <div className="bg-luxury-gray shadow-luxury border border-luxury-ash/20 p-8 mb-8">
         <h3 className="text-xs font-semibold text-luxury-gold uppercase tracking-luxury mb-6">
           Trip Details
         </h3>
@@ -136,9 +136,9 @@ const ConfirmationLuxury = () => {
               </svg>
             </div>
             <div className="flex-1">
-              <p className="text-xs text-luxury-gray/60 uppercase tracking-wide mb-1">Pickup</p>
-              <p className="text-sm text-luxury-black font-medium">{tripDetails.pickupAddress}</p>
-              <p className="text-sm text-luxury-gray/60 mt-1">
+              <p className="text-xs text-luxury-silver uppercase tracking-wide mb-1">Pickup</p>
+              <p className="text-sm text-luxury-white font-medium">{tripDetails.pickupAddress}</p>
+              <p className="text-sm text-luxury-silver mt-1">
                 {formatDate(tripDetails.pickupDate)} at {formatTime(`${tripDetails.pickupDate} ${tripDetails.pickupTime}`)}
               </p>
             </div>
@@ -152,8 +152,8 @@ const ConfirmationLuxury = () => {
               </svg>
             </div>
             <div className="flex-1">
-              <p className="text-xs text-luxury-gray/60 uppercase tracking-wide mb-1">Dropoff</p>
-              <p className="text-sm text-luxury-black font-medium">{tripDetails.dropoffAddress}</p>
+              <p className="text-xs text-luxury-silver uppercase tracking-wide mb-1">Dropoff</p>
+              <p className="text-sm text-luxury-white font-medium">{tripDetails.dropoffAddress}</p>
             </div>
           </div>
 
@@ -166,9 +166,9 @@ const ConfirmationLuxury = () => {
               </svg>
             </div>
             <div className="flex-1">
-              <p className="text-xs text-luxury-gray/60 uppercase tracking-wide mb-1">Vehicle</p>
-              <p className="text-sm text-luxury-black font-medium">{selectedVehicle?.name}</p>
-              <p className="text-sm text-luxury-gray/60">{selectedVehicle?.description}</p>
+              <p className="text-xs text-luxury-silver uppercase tracking-wide mb-1">Vehicle</p>
+              <p className="text-sm text-luxury-white font-medium">{selectedVehicle?.name}</p>
+              <p className="text-sm text-luxury-silver">{selectedVehicle?.description}</p>
             </div>
           </div>
 
@@ -180,17 +180,17 @@ const ConfirmationLuxury = () => {
               </svg>
             </div>
             <div className="flex-1">
-              <p className="text-xs text-luxury-gray/60 uppercase tracking-wide mb-1">Passenger</p>
-              <p className="text-sm text-luxury-black font-medium">
+              <p className="text-xs text-luxury-silver uppercase tracking-wide mb-1">Passenger</p>
+              <p className="text-sm text-luxury-white font-medium">
                 {customerInfo.firstName} {customerInfo.lastName}
               </p>
-              <p className="text-sm text-luxury-gray/60">{customerInfo.email}</p>
-              <p className="text-sm text-luxury-gray/60">{customerInfo.phone}</p>
+              <p className="text-sm text-luxury-silver">{customerInfo.email}</p>
+              <p className="text-sm text-luxury-silver">{customerInfo.phone}</p>
             </div>
           </div>
 
           {/* Payment Summary */}
-          <div className="flex items-start gap-4 pt-4 border-t border-luxury-gray/10">
+          <div className="flex items-start gap-4 pt-4 border-t border-luxury-ash/30">
             <div className="flex-shrink-0 w-8 h-8 bg-luxury-gold/20 rounded-full flex items-center justify-center">
               <svg className="w-4 h-4 text-luxury-gold" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z" />
@@ -201,62 +201,62 @@ const ConfirmationLuxury = () => {
               {isPostServiceMode ? (
                 <>
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-xs text-luxury-gray/60 uppercase tracking-wide">Estimated Fare</span>
-                    <span className="text-xl font-display text-luxury-black">
+                    <span className="text-xs text-luxury-silver uppercase tracking-wide">Estimated Fare</span>
+                    <span className="text-xl font-display text-luxury-white">
                       {formatPrice(totalPaid)}
                     </span>
                   </div>
                   {(bookingExtrasTotal > 0 || bookingTaxAmount > 0 || pf(gratuityAmount) > 0) && (
-                    <p className="text-xs text-luxury-gray/60 mb-1">
+                    <p className="text-xs text-luxury-silver mb-1">
                       Includes{bookingExtrasTotal > 0 ? ` ${formatPrice(bookingExtrasTotal)} in extras` : ''}{bookingTaxAmount > 0 ? `${bookingExtrasTotal > 0 ? ',' : ''} ${formatPrice(bookingTaxAmount)} tax` : ''}{pf(gratuityAmount) > 0 ? `${(bookingExtrasTotal > 0 || bookingTaxAmount > 0) ? ',' : ''} ${formatPrice(pf(gratuityAmount))} gratuity` : ''}
                     </p>
                   )}
-                  <p className="text-xs text-luxury-gray/60">
+                  <p className="text-xs text-luxury-silver">
                     Your card will be charged after service is completed.{pf(gratuityAmount) === 0 ? " You'll have the option to add a gratuity for your driver after your trip." : ''}
                   </p>
                 </>
               ) : (
                 <>
-                  <p className="text-xs text-luxury-gray/60 uppercase tracking-wide mb-1">Payment Summary</p>
+                  <p className="text-xs text-luxury-silver uppercase tracking-wide mb-1">Payment Summary</p>
                   <div className="space-y-1">
                     <div className="flex justify-between items-center">
-                      <span className="text-sm text-luxury-gray/60">Trip Fare:</span>
-                      <span className="text-sm font-medium text-luxury-black">
+                      <span className="text-sm text-luxury-silver">Trip Fare:</span>
+                      <span className="text-sm font-medium text-luxury-white">
                         {formatPrice(baseFare)}
                       </span>
                     </div>
                     {Object.values(selectedExtras || {}).map((extra) => (
                       <div key={extra.id} className="flex justify-between items-center">
-                        <span className="text-sm text-luxury-gray/60">{extra.name}{extra.quantity > 1 ? ` x${extra.quantity}` : ''}:</span>
-                        <span className="text-sm font-medium text-luxury-black">
+                        <span className="text-sm text-luxury-silver">{extra.name}{extra.quantity > 1 ? ` x${extra.quantity}` : ''}:</span>
+                        <span className="text-sm font-medium text-luxury-white">
                           {formatPrice(extra.price * extra.quantity)}
                         </span>
                       </div>
                     ))}
                     {bookingTaxAmount > 0 && (
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-luxury-gray/60">Tax:</span>
-                        <span className="text-sm font-medium text-luxury-black">
+                        <span className="text-sm text-luxury-silver">Tax:</span>
+                        <span className="text-sm font-medium text-luxury-white">
                           {formatPrice(bookingTaxAmount)}
                         </span>
                       </div>
                     )}
                     {gratuityAmount > 0 && (
                       <div className="flex justify-between items-center">
-                        <span className="text-sm text-luxury-gray/60">Gratuity:</span>
-                        <span className="text-sm font-medium text-luxury-black">
+                        <span className="text-sm text-luxury-silver">Gratuity:</span>
+                        <span className="text-sm font-medium text-luxury-white">
                           {formatPrice(gratuityAmount)}
                         </span>
                       </div>
                     )}
-                    <div className="flex justify-between items-center pt-2 border-t border-luxury-gray/10">
-                      <span className="text-sm font-semibold text-luxury-black">Total Paid:</span>
-                      <span className="text-xl font-display text-luxury-black">
+                    <div className="flex justify-between items-center pt-2 border-t border-luxury-ash/30">
+                      <span className="text-sm font-semibold text-luxury-white">Total Paid:</span>
+                      <span className="text-xl font-display text-luxury-white">
                         {formatPrice(totalPaid)}
                       </span>
                     </div>
                   </div>
-                  <p className="text-xs text-luxury-gray/60 mt-2">
+                  <p className="text-xs text-luxury-silver mt-2">
                     Payment has been processed successfully
                   </p>
                 </>
@@ -267,11 +267,11 @@ const ConfirmationLuxury = () => {
       </div>
 
       {/* What's Next */}
-      <div className="bg-luxury-light-gray p-6 mb-8">
-        <h3 className="text-xs font-semibold text-luxury-black uppercase tracking-luxury mb-4">
+      <div className="bg-luxury-slate border border-luxury-ash/20 p-6 mb-8">
+        <h3 className="text-xs font-semibold text-luxury-white uppercase tracking-luxury mb-4">
           What's Next?
         </h3>
-        <ul className="space-y-3 text-sm text-luxury-gray/70">
+        <ul className="space-y-3 text-sm text-luxury-silver">
           <li className="flex items-start gap-2">
             <span className="text-luxury-gold mt-0.5">•</span>
             <span>A confirmation email has been sent to {customerInfo.email}</span>
@@ -287,7 +287,7 @@ const ConfirmationLuxury = () => {
       <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4">
         <button
           onClick={() => window.print()}
-          className="w-full sm:flex-1 px-4 py-3 border-2 border-luxury-black text-luxury-black font-medium tracking-wide transition-all duration-300 ease-out hover:bg-luxury-black hover:text-luxury-white hover:shadow-luxury active:scale-[0.98] uppercase text-xs sm:text-sm order-2 sm:order-1"
+          className="w-full sm:flex-1 px-4 py-3 border-2 border-luxury-ash text-luxury-light-gray font-medium tracking-wide transition-all duration-300 ease-out hover:border-luxury-gold hover:text-luxury-gold hover:shadow-luxury active:scale-[0.98] uppercase text-xs sm:text-sm order-2 sm:order-1"
         >
           Print Confirmation
         </button>
@@ -300,8 +300,8 @@ const ConfirmationLuxury = () => {
       </div>
 
       {/* Support */}
-      <div className="text-center mt-8 pt-8 border-t border-luxury-gray/10">
-        <p className="text-xs text-luxury-gray/60 mb-2">
+      <div className="text-center mt-8 pt-8 border-t border-luxury-ash/30">
+        <p className="text-xs text-luxury-silver mb-2">
           Need assistance with your booking?
         </p>
         <a href={`tel:${settings.support_phone}`} className="text-luxury-gold hover:text-luxury-gold-dark text-sm font-medium">

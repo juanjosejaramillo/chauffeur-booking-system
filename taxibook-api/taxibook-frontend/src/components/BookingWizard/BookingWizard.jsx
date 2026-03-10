@@ -212,17 +212,17 @@ const BookingWizard = () => {
         renderStep()
       ) : (
         // Other steps use the contained layout
-        <div className="min-h-screen bg-gradient-to-b from-luxury-cream to-luxury-light-gray py-6 sm:py-12">
+        <div className="min-h-screen bg-gradient-to-b from-luxury-charcoal to-luxury-black py-6 sm:py-12">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Header with logo and title on same level */}
             <div className="flex items-center justify-between mb-6 sm:mb-8">
-              <img 
-                src="/luxride-logo.svg" 
-                alt="LuxRide" 
-                className="h-14 sm:h-16 lg:h-20 object-contain"
+              <img
+                src="/luxride-logo.svg"
+                alt="LuxRide"
+                className="h-14 sm:h-16 lg:h-20 object-contain brightness-0 invert"
                 style={{ backgroundColor: 'transparent' }}
               />
-              <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl text-luxury-black">
+              <h1 className="font-display text-2xl sm:text-3xl lg:text-4xl text-luxury-white">
                 Complete Your Booking
               </h1>
               <div className="w-14 sm:w-16 lg:w-20"></div> {/* Spacer for centering */}
@@ -230,7 +230,7 @@ const BookingWizard = () => {
             <div className="mb-6 sm:mb-8">
               <WizardProgressLuxury />
             </div>
-            <div className="bg-luxury-white shadow-luxury p-4 sm:p-6 lg:p-8">
+            <div className="bg-luxury-gray shadow-luxury border border-luxury-ash/20 p-4 sm:p-6 lg:p-8">
               {renderStep()}
             </div>
           </div>

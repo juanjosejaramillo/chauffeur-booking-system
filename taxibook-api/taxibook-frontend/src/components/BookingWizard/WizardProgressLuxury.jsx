@@ -67,7 +67,7 @@ const WizardProgressLuxury = () => {
   return (
     <nav aria-label="Booking progress" className="mb-8 px-2">
       <div className="sm:hidden flex items-center justify-center mb-2">
-        <span className="text-xs text-luxury-gray/60">
+        <span className="text-xs text-luxury-silver">
           Step {currentStep} of {steps.length}
         </span>
       </div>
@@ -79,7 +79,7 @@ const WizardProgressLuxury = () => {
           >
             {stepIdx !== 0 && (
               <div className={`w-6 sm:w-12 md:w-16 h-px mx-1 sm:mx-2 transition-all duration-500 ${
-                step.id <= currentStep ? 'bg-luxury-gold' : 'bg-luxury-gray/20'
+                step.id <= currentStep ? 'bg-luxury-gold' : 'bg-luxury-ash/40'
               }`} />
             )}
             <div className="relative flex flex-col items-center">
@@ -88,8 +88,8 @@ const WizardProgressLuxury = () => {
                   step.id < currentStep
                     ? 'bg-luxury-gold text-luxury-white'
                     : step.id === currentStep
-                    ? 'bg-luxury-black text-luxury-white ring-2 ring-luxury-gold ring-offset-1 sm:ring-offset-2 ring-offset-luxury-cream'
-                    : 'bg-transparent border border-luxury-gray/30 text-luxury-gray/50'
+                    ? 'bg-luxury-gray text-luxury-white ring-2 ring-luxury-gold ring-offset-1 sm:ring-offset-2 ring-offset-luxury-charcoal'
+                    : 'bg-transparent border border-luxury-ash/40 text-luxury-muted'
                 }`}
               >
                 {step.id < currentStep ? (
@@ -101,7 +101,7 @@ const WizardProgressLuxury = () => {
                 )}
               </span>
               <span className={`absolute top-9 sm:top-12 text-[9px] sm:text-xs uppercase tracking-tight sm:tracking-wide whitespace-nowrap transition-all duration-500 ${
-                step.id <= currentStep ? 'text-luxury-black font-medium' : 'text-luxury-gray/40'
+                step.id <= currentStep ? 'text-luxury-light-gray font-medium' : 'text-luxury-muted'
               } ${step.id === currentStep ? 'font-semibold' : ''}`}>
                 {step.name}
               </span>
