@@ -32,6 +32,8 @@ jobs:
             git remote set-url origin https://github.com/juanjosejaramillo/chauffeur-booking-system.git
 
             cd taxibook-api
+            # Clear cached service providers before composer (prevents dev-only class errors)
+            rm -f bootstrap/cache/packages.php bootstrap/cache/services.php
             composer install --no-dev --optimize-autoloader --no-interaction
 
             # Backup database before migrations
