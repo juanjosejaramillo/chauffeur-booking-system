@@ -29,6 +29,18 @@ jobs:
 
             cd taxibook-api
             composer install --no-dev --optimize-autoloader --no-interaction
+
+            # Backup database before migrations
+            DB_DATABASE=$(grep ^DB_DATABASE .env | cut -d= -f2)
+            DB_USERNAME=$(grep ^DB_USERNAME .env | cut -d= -f2)
+            DB_PASSWORD=$(grep ^DB_PASSWORD .env | cut -d= -f2)
+            mkdir -p ~/backups
+            mysqldump -u "$DB_USERNAME" -p"$DB_PASSWORD" "$DB_DATABASE" > ~/backups/backup_$(date +%Y%m%d_%H%M%S).sql
+            echo "Database backup created successfully"
+
+            # Run migrations (non-destructive — only adds new tables/columns, never drops)
+            php artisan migrate --force
+
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
