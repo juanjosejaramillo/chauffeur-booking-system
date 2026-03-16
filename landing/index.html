@@ -458,9 +458,10 @@
     .hero__title em { font-style: italic; }
     .hero__sub {
       font-family: var(--serif); font-size: clamp(17px, 2.2vw, 21px);
-      font-weight: 300; font-style: italic; color: var(--silver);
+      font-weight: 300; font-style: italic; color: var(--white);
       margin-bottom: 44px;
       opacity: 0; animation: fadeUp 1s var(--ease) 0.7s forwards;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.7);
     }
     .hero__cta {
       opacity: 0; animation: fadeUp 1s var(--ease) 0.9s forwards;
@@ -782,8 +783,9 @@
       max-width: 600px; margin: 0 auto 16px; line-height: 1.25;
     }
     .cta__sub {
-      font-size: 14px; color: var(--silver);
+      font-size: 14px; color: var(--white);
       max-width: 440px; margin: 0 auto 40px; line-height: 1.8;
+      text-shadow: 0 1px 4px rgba(0,0,0,0.7);
     }
     .cta__btns { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
 
@@ -836,7 +838,7 @@
       .trust__grid { grid-template-columns: repeat(2, 1fr); gap: 20px; }
       .services__grid { grid-template-columns: 1fr; }
       .fleet__grid { grid-template-columns: 1fr; }
-      .fleet__grid > :last-child { grid-column: span 1; max-width: 100%; }
+      .fleet__grid > :last-child { grid-column: span 1; max-width: 100%; justify-self: stretch; }
       .why__grid { grid-template-columns: 1fr 1fr; gap: 28px; }
       .about__grid { grid-template-columns: 1fr; }
       .about__img { order: -1; }
