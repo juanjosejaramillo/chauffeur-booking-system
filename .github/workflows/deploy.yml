@@ -3,6 +3,9 @@ name: Deploy to Hostinger
 on:
   workflow_dispatch:
 
+env:
+  SITE_ROOT: /home/u388638774/domains/luxridesuv.com/public_html
+
 jobs:
   deploy-backend:
     name: Deploy Laravel Backend
@@ -19,7 +22,8 @@ jobs:
           port: ${{ secrets.HOSTINGER_PORT }}
           envs: GH_PAT
           script: |
-            cd ~/public_html/admin
+            SITE_ROOT=/home/u388638774/domains/luxridesuv.com/public_html
+            cd $SITE_ROOT/admin
 
             # Authenticate with GitHub (private repo) then pull
             git remote set-url origin https://${GH_PAT}@github.com/juanjosejaramillo/chauffeur-booking-system.git
@@ -81,8 +85,9 @@ jobs:
           key: ${{ secrets.HOSTINGER_SSH_KEY }}
           port: ${{ secrets.HOSTINGER_PORT }}
           script: |
-            rm -rf ~/public_html/book/assets
-            rm -f ~/public_html/book/index.html
+            SITE_ROOT=/home/u388638774/domains/luxridesuv.com/public_html
+            rm -rf $SITE_ROOT/book/assets
+            rm -f $SITE_ROOT/book/index.html
 
       - name: Upload build to Hostinger
         uses: appleboy/scp-action@v1
@@ -92,6 +97,6 @@ jobs:
           key: ${{ secrets.HOSTINGER_SSH_KEY }}
           port: ${{ secrets.HOSTINGER_PORT }}
           source: "taxibook-api/taxibook-frontend/dist/*"
-          target: "~/public_html/book"
+          target: "/home/u388638774/domains/luxridesuv.com/public_html/book"
           strip_components: 3
           overwrite: true
