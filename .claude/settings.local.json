@@ -9,7 +9,8 @@
       "Bash(npm install:*)",
       "Bash(rm:*)",
       "Bash(test:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "WebSearch"
     ],
     "deny": [],
     "ask": []
