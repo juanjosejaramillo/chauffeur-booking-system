@@ -41,6 +41,8 @@ jobs:
             # Run migrations (non-destructive — only adds new tables/columns, never drops)
             php artisan migrate --force
 
+            # Clear all caches then rebuild
+            php artisan optimize:clear
             php artisan config:cache
             php artisan route:cache
             php artisan view:cache
